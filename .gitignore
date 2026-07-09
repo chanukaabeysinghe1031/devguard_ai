@@ -1,0 +1,77 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+# ML / Data
+backend/data/models/*.pkl
+backend/data/models/*.joblib
+backend/data/chroma/
+backend/data/uploads/*
+!backend/data/uploads/.gitkeep
+backend/dataset/raw/*
+!backend/dataset/raw/.gitkeep
+backend/dataset/processed/*
+!backend/dataset/processed/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Secrets
+*.pem
+*.key
+credentials.json
+secrets/
