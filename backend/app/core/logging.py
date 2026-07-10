@@ -19,10 +19,11 @@ def setup_logging(settings: Settings) -> None:
         structlog.processors.format_exc_info,
     ]
 
-    if settings.log_format == "json":
-        renderer: structlog.types.Processor = structlog.processors.JSONRenderer()
-    else:
-        renderer = structlog.dev.ConsoleRenderer()
+    renderer: structlog.types.Processor = (
+        structlog.processors.JSONRenderer()
+        if settings.log_format == "json"
+        else structlog.dev.ConsoleRenderer()
+    )
 
     structlog.configure(
         processors=[
@@ -49,8 +50,7 @@ def setup_logging(settings: Settings) -> None:
     root_logger.addHandler(handler)
     root_logger.setLevel(settings.log_level.upper())
 
-    for noisy_logger in ("uvicorn.access", "sqlalchemy.engine"):
-        logging.getLogger(noisy_logger).setLevel(logging.WARNING)
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 
 def get_logger(name: str) -> structlog.stdlib.BoundLogger:

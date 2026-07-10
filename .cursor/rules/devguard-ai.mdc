@@ -1,0 +1,54 @@
+---
+description: DevGuard AI project architecture and development rules
+alwaysApply: true
+---
+
+Before making changes, read:
+
+- docs/MASTER_ARCHITECTURE.md
+- docs/PROJECT_CONSTITUTION.md
+- docs/IMPLEMENTATION_ROADMAP.md
+- docs/SYSTEM_ARCHITECTURE.md
+
+Follow these rules:
+
+1. Do not change the approved architecture without permission.
+2. Work on only the requested module.
+3. Do not implement future modules early.
+4. Use Clean Architecture and clear dependency boundaries.
+5. Use Python type hints and TypeScript strict typing.
+6. Do not hardcode secrets or environment-specific values.
+7. Add error handling, logging, and tests.
+8. Explain planned file changes before modifying code.
+9. Make sure the current module runs successfully before continuing.
+10. Keep MSc implementation features separate from future SaaS features.
+
+Current module:
+
+Module 1 — Project Foundation
+
+Allowed work:
+
+- Project structure
+- FastAPI application shell
+- React application shell
+- Configuration management
+- Structured logging
+- PostgreSQL connection
+- Docker and Docker Compose
+- Health and readiness endpoints
+- Foundation tests
+- Setup documentation
+
+Not allowed yet:
+
+- Authentication
+- File uploads
+- Dataset collection
+- Machine learning
+- Evidence extraction
+- ChromaDB integration
+- RAG
+- LLM integration
+- Analysis orchestration
+- Full dashboard implementation

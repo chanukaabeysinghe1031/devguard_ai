@@ -1,4 +1,4 @@
-"""Async database session management."""
+"""Async SQLAlchemy engine and session management."""
 
 from collections.abc import AsyncGenerator
 
@@ -14,11 +14,9 @@ def init_db(settings: Settings) -> None:
     """Initialise async engine and session factory."""
     global _engine, _session_factory
     _engine = create_async_engine(
-        str(settings.database_url),
-        echo=settings.app_debug,
+        settings.database_url,
+        echo=settings.debug,
         pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
     )
     _session_factory = async_sessionmaker(
         bind=_engine,
@@ -30,10 +28,11 @@ def init_db(settings: Settings) -> None:
 
 async def close_db() -> None:
     """Dispose database engine on shutdown."""
-    global _engine
+    global _engine, _session_factory
     if _engine is not None:
         await _engine.dispose()
-        _engine = None
+    _engine = None
+    _session_factory = None
 
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:

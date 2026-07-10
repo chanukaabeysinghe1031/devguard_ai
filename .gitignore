@@ -2,66 +2,53 @@
 .env
 .env.local
 .env.*.local
+!.env.example
+!backend/.env.example
+!frontend/.env.example
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 .venv/
 venv/
 ENV/
+*.egg-info/
+dist/
+build/
 
-# Testing
+# Testing & linting
 .pytest_cache/
 .coverage
 htmlcov/
+.ruff_cache/
+.mypy_cache/
 .tox/
 .nox/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
 
 # Node / Frontend
 node_modules/
 frontend/dist/
 frontend/.vite/
-*.local
 
-# ML / Data
-backend/data/models/*.pkl
-backend/data/models/*.joblib
-backend/data/chroma/
+# ML / Data / uploads (future modules)
 backend/data/uploads/*
 !backend/data/uploads/.gitkeep
+backend/data/models/*
+!backend/data/models/.gitkeep
 backend/dataset/raw/*
 !backend/dataset/raw/.gitkeep
-backend/dataset/processed/*
-!backend/dataset/processed/.gitkeep
+backend/data/chroma/
 
 # Logs
 *.log
 logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
 
 # OS
 .DS_Store
@@ -69,6 +56,7 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+postgres_data/
 
 # Secrets
 *.pem

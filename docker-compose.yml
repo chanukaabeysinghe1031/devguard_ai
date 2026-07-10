@@ -5,32 +5,19 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-devguard}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devguard_secret}
-      POSTGRES_DB: ${POSTGRES_DB:-devguard_ai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-devguard}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-devguard} -d ${POSTGRES_DB:-devguard_ai}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-devguard} -d ${POSTGRES_DB:-devguard}",
+        ]
       interval: 10s
-      timeout: 5s
-      retries: 5
-
-  chromadb:
-    image: chromadb/chroma:latest
-    container_name: devguard_chromadb
-    restart: unless-stopped
-    ports:
-      - "${CHROMA_PORT:-8001}:8000"
-    volumes:
-      - chroma_data:/chroma/chroma
-    environment:
-      IS_PERSISTENT: "TRUE"
-      ANONYMIZED_TELEMETRY: "FALSE"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
-      interval: 15s
       timeout: 5s
       retries: 5
 
@@ -46,21 +33,30 @@ services:
       - .env
     environment:
       POSTGRES_HOST: postgres
-      CHROMA_HOST: chromadb
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-devguard}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-devguard}
     volumes:
       - ./backend:/app
-      - upload_data:/app/data/uploads
-      - model_data:/app/data/models
     depends_on:
       postgres:
         condition: service_healthy
-      chromadb:
-        condition: service_healthy
-    profiles:
-      - full
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devguard_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    env_file:
+      - .env
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
-  chroma_data:
-  upload_data:
-  model_data:

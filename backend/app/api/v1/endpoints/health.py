@@ -1,31 +1,46 @@
-"""Health check and system status endpoints."""
+"""Health check endpoints."""
 
-from datetime import UTC, datetime
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import __version__
 from app.api.dependencies import get_session, get_settings_dep
 from app.core.config import Settings
-from app.schemas import HealthResponse
+from app.core.exceptions import build_error_response
 
 router = APIRouter(tags=["Health"])
 
 
-@router.get("/health", response_model=HealthResponse, summary="Application health check")
-async def health_check(settings: Settings = Depends(get_settings_dep)) -> HealthResponse:
-    return HealthResponse(
-        status="healthy",
-        app_name=settings.app_name,
-        version=__version__,
-        environment=settings.app_env,
-        timestamp=datetime.now(UTC),
-    )
+@router.get("/health", summary="Liveness probe")
+async def liveness(settings: Settings = Depends(get_settings_dep)) -> dict[str, str]:
+    return {
+        "status": "healthy",
+        "service": settings.service_name,
+        "version": settings.app_version,
+    }
 
 
-@router.get("/health/ready", summary="Readiness probe including database connectivity")
-async def readiness_check(session: AsyncSession = Depends(get_session)) -> dict[str, str]:
-    await session.execute(text("SELECT 1"))
+@router.get("/health/ready", summary="Readiness probe with database connectivity check")
+async def readiness(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, str]:
+    try:
+        await session.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        return build_error_response(
+            request,
+            detail="Database is unavailable",
+            error_code="SERVICE_UNAVAILABLE",
+            status_code=503,
+        )
+    except Exception:
+        return build_error_response(
+            request,
+            detail="Database is unavailable",
+            error_code="SERVICE_UNAVAILABLE",
+            status_code=503,
+        )
+
     return {"status": "ready", "database": "connected"}
