@@ -35,6 +35,16 @@ async def close_db() -> None:
     _session_factory = None
 
 
+def ensure_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Return the async session factory, initialising the engine if needed."""
+    if _session_factory is None:
+        from app.core.config import get_settings
+
+        init_db(get_settings())
+    assert _session_factory is not None
+    return _session_factory
+
+
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency yielding an async database session."""
     if _session_factory is None:

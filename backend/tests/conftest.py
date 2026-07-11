@@ -8,6 +8,8 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+pytest_plugins = ["tests.conftest_db"]
+
 os.environ.setdefault("PROJECT_NAME", "DevGuard AI")
 os.environ.setdefault("APP_VERSION", "1.0.0")
 os.environ.setdefault("ENVIRONMENT", "development")

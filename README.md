@@ -9,7 +9,7 @@ DevGuard AI analyses CI/CD pipeline failures, Infrastructure-as-Code files, and 
 | Module | Scope | Status |
 |--------|-------|--------|
 | **Module 1** | Project foundation (backend, frontend, Docker, health API, DB connection) | ✅ Complete |
-| **Module 2** | Database schema and migrations | 🚧 In progress (Alembic initial migration) |
+| **Module 2** | Database schema and migrations | 🚧 In progress (failure category seed) |
 | Module 3+ | Auth, uploads, ML, RAG, LLM, dashboard | Planned |
 
 ## Technology Stack
@@ -118,6 +118,28 @@ alembic current
 alembic history
 alembic downgrade base
 ```
+
+## Failure Category Seed Data
+
+Run database migrations before seeding. Seeding is idempotent — running it multiple times will not create duplicate categories.
+
+```bash
+# Seed approved failure categories (Docker)
+docker compose exec backend python -m app.infrastructure.database.seed
+
+# Inspect seeded categories in PostgreSQL
+docker compose exec postgres psql -U devguard -d devguard -c \
+  "SELECT slug, name, is_active FROM failure_categories ORDER BY slug;"
+```
+
+Without Docker, from `backend/` with your virtualenv active:
+
+```bash
+alembic upgrade head
+python -m app.infrastructure.database.seed
+```
+
+**Note:** Migrations must be applied (`alembic upgrade head`) before running the seed command.
 
 ## Test Commands
 
