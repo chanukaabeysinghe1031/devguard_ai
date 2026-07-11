@@ -4,6 +4,7 @@ pydantic>=2.9.0
 pydantic-settings>=2.5.0
 sqlalchemy[asyncio]>=2.0.35
 asyncpg>=0.29.0
+alembic>=1.13.0
 structlog>=24.4.0
 
 # Development / testing

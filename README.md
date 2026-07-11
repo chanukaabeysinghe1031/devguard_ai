@@ -9,7 +9,7 @@ DevGuard AI analyses CI/CD pipeline failures, Infrastructure-as-Code files, and 
 | Module | Scope | Status |
 |--------|-------|--------|
 | **Module 1** | Project foundation (backend, frontend, Docker, health API, DB connection) | ✅ Complete |
-| Module 2 | Database schema and migrations | Planned |
+| **Module 2** | Database schema and migrations | 🚧 In progress (Alembic initial migration) |
 | Module 3+ | Auth, uploads, ML, RAG, LLM, dashboard | Planned |
 
 ## Technology Stack
@@ -82,6 +82,42 @@ Services:
 | Swagger UI | http://localhost:8000/docs |
 | Health (liveness) | http://localhost:8000/api/v1/health |
 | Health (readiness) | http://localhost:8000/api/v1/health/ready |
+
+## Database Migrations (Alembic)
+
+Migrations run from the `backend/` directory. With Docker Compose, use `docker compose exec backend`.
+
+```bash
+# Apply all pending migrations
+docker compose exec backend alembic upgrade head
+
+# Show current revision
+docker compose exec backend alembic current
+
+# Show migration history
+docker compose exec backend alembic history
+
+# Roll back all migrations (removes all application tables and enum types)
+docker compose exec backend alembic downgrade base
+```
+
+**Warning:** `alembic downgrade base` deletes all local development data in the application tables. Use only when you intentionally want to reset the schema.
+
+For future schema changes after ORM model updates:
+
+```bash
+docker compose exec backend alembic revision --autogenerate -m "describe change"
+docker compose exec backend alembic upgrade head
+```
+
+Without Docker, from `backend/` with your virtualenv active:
+
+```bash
+alembic upgrade head
+alembic current
+alembic history
+alembic downgrade base
+```
 
 ## Test Commands
 
