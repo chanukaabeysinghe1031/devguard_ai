@@ -9,7 +9,7 @@ DevGuard AI analyses CI/CD pipeline failures, Infrastructure-as-Code files, and 
 | Module | Scope | Status |
 |--------|-------|--------|
 | **Module 1** | Project foundation (backend, frontend, Docker, health API, DB connection) | ✅ Complete |
-| **Module 2** | Database schema and migrations | 🚧 In progress (failure category seed) |
+| **Module 2** | Database schema and migrations | 🚧 In progress (repository layer) |
 | Module 3+ | Auth, uploads, ML, RAG, LLM, dashboard | Planned |
 
 ## Technology Stack
@@ -140,6 +140,24 @@ python -m app.infrastructure.database.seed
 ```
 
 **Note:** Migrations must be applied (`alembic upgrade head`) before running the seed command.
+
+## Repository Layer
+
+DevGuard AI follows Clean Architecture for database access:
+
+| Layer | Location | Responsibility |
+|-------|----------|----------------|
+| Domain interfaces | `app/domain/interfaces/repositories.py` | Async repository contracts (no SQLAlchemy) |
+| Domain entities | `app/domain/entities/` | Domain-safe types returned by repositories |
+| Infrastructure | `app/infrastructure/repositories/` | SQLAlchemy implementations |
+
+Implemented repositories:
+
+- `UserRepository` — user lookup, listing, soft deactivation (no physical delete)
+- `FailureCategoryRepository` — taxonomy lookup and active listing (no delete)
+- `PipelineRunRepository` — pipeline run CRUD with user/status queries and pagination
+
+**Transaction ownership:** Repository methods use the injected `AsyncSession`, flush when needed, and do not commit. The service layer will own transaction boundaries in later modules. Tests may commit explicitly when verifying persistence.
 
 ## Test Commands
 

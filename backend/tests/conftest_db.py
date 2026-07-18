@@ -86,6 +86,23 @@ def migrated_test_database() -> str:
     return TEST_DATABASE_URL
 
 
+TEST_TRUNCATE_TABLES = """
+TRUNCATE TABLE
+    analysis_history,
+    feedback,
+    evaluations,
+    recommendations,
+    evidence_items,
+    predictions,
+    pipeline_runs,
+    uploaded_files,
+    users,
+    failure_categories,
+    model_versions
+RESTART IDENTITY CASCADE
+"""
+
+
 @pytest.fixture
 async def db_session(migrated_test_database: str) -> AsyncGenerator[AsyncSession, None]:
     init_db(_test_settings(migrated_test_database))
@@ -93,6 +110,21 @@ async def db_session(migrated_test_database: str) -> AsyncGenerator[AsyncSession
 
     async with session_factory() as session:
         await session.execute(text("TRUNCATE TABLE failure_categories RESTART IDENTITY CASCADE"))
+        await session.commit()
+        yield session
+
+    await close_db()
+
+
+@pytest.fixture
+async def repository_db_session(
+    migrated_test_database: str,
+) -> AsyncGenerator[AsyncSession, None]:
+    init_db(_test_settings(migrated_test_database))
+    session_factory = ensure_session_factory()
+
+    async with session_factory() as session:
+        await session.execute(text(TEST_TRUNCATE_TABLES))
         await session.commit()
         yield session
 
