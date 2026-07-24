@@ -28,8 +28,48 @@ TEST_DATABASE_URL = os.environ.get(
     ),
 )
 
+BACKEND_DIR = Path(__file__).resolve().parent.parent
 
-async def _ensure_test_database_exists() -> None:
+# All 27 application tables registered in app.infrastructure.database.models.
+# `analysis_history` is deliberately absent — it was deprecated by ADR-012 /
+# Migration 003 and must never be recreated for the MVP.
+ALL_APPLICATION_TABLES: tuple[str, ...] = (
+    "audit_logs",
+    "feedback",
+    "notifications",
+    "incident_reports",
+    "incident_resolutions",
+    "incident_assignments",
+    "incident_notes",
+    "incident_events",
+    "retrieved_documents",
+    "recommendation_steps",
+    "recommendations",
+    "evidence_items",
+    "predictions",
+    "analysis_runs",
+    "uploaded_files",
+    "incidents",
+    "pipeline_runs",
+    "project_integrations",
+    "projects",
+    "organization_members",
+    "organizations",
+    "knowledge_chunks",
+    "knowledge_documents",
+    "evaluations",
+    "model_versions",
+    "failure_categories",
+    "users",
+)
+
+TEST_TRUNCATE_TABLES = (
+    f"TRUNCATE TABLE {', '.join(ALL_APPLICATION_TABLES)} RESTART IDENTITY CASCADE"
+)
+
+
+async def ensure_database_exists(database_name: str) -> None:
+    """Create ``database_name`` on the target PostgreSQL server if missing."""
     conn = await asyncpg.connect(
         user=os.environ.get("POSTGRES_USER", "devguard"),
         password=os.environ.get("POSTGRES_PASSWORD", "change_me"),
@@ -40,28 +80,53 @@ async def _ensure_test_database_exists() -> None:
     try:
         exists = await conn.fetchval(
             "SELECT 1 FROM pg_database WHERE datname = $1",
-            TEST_DATABASE_NAME,
+            database_name,
         )
         if not exists:
-            await conn.execute(f'CREATE DATABASE "{TEST_DATABASE_NAME}"')
+            await conn.execute(f'CREATE DATABASE "{database_name}"')
     finally:
         await conn.close()
 
 
-def _run_alembic_upgrade(database_url: str) -> None:
-    backend_dir = Path(__file__).resolve().parent.parent
-    alembic_cfg = Config(str(backend_dir / "alembic.ini"))
+async def _ensure_test_database_exists() -> None:
+    await ensure_database_exists(TEST_DATABASE_NAME)
+
+
+def run_alembic_upgrade(database_url: str, revision: str = "head") -> None:
+    """Run ``alembic upgrade <revision>`` against ``database_url``."""
+    alembic_cfg = Config(str(BACKEND_DIR / "alembic.ini"))
     original_url = os.environ.get("DATABASE_URL")
     os.environ["DATABASE_URL"] = database_url
     get_settings.cache_clear()
     try:
-        command.upgrade(alembic_cfg, "head")
+        command.upgrade(alembic_cfg, revision)
     finally:
         if original_url is None:
             os.environ.pop("DATABASE_URL", None)
         else:
             os.environ["DATABASE_URL"] = original_url
         get_settings.cache_clear()
+
+
+def run_alembic_downgrade(database_url: str, revision: str = "base") -> None:
+    """Run ``alembic downgrade <revision>`` against ``database_url``."""
+    alembic_cfg = Config(str(BACKEND_DIR / "alembic.ini"))
+    original_url = os.environ.get("DATABASE_URL")
+    os.environ["DATABASE_URL"] = database_url
+    get_settings.cache_clear()
+    try:
+        command.downgrade(alembic_cfg, revision)
+    finally:
+        if original_url is None:
+            os.environ.pop("DATABASE_URL", None)
+        else:
+            os.environ["DATABASE_URL"] = original_url
+        get_settings.cache_clear()
+
+
+def _run_alembic_upgrade(database_url: str) -> None:
+    """Backward-compatible alias for the session-scoped fixture below."""
+    run_alembic_upgrade(database_url, "head")
 
 
 def _test_settings(database_url: str) -> Settings:
@@ -86,30 +151,13 @@ def migrated_test_database() -> str:
     return TEST_DATABASE_URL
 
 
-TEST_TRUNCATE_TABLES = """
-TRUNCATE TABLE
-    analysis_history,
-    feedback,
-    evaluations,
-    recommendations,
-    evidence_items,
-    predictions,
-    pipeline_runs,
-    uploaded_files,
-    users,
-    failure_categories,
-    model_versions
-RESTART IDENTITY CASCADE
-"""
-
-
 @pytest.fixture
 async def db_session(migrated_test_database: str) -> AsyncGenerator[AsyncSession, None]:
     init_db(_test_settings(migrated_test_database))
     session_factory = ensure_session_factory()
 
     async with session_factory() as session:
-        await session.execute(text("TRUNCATE TABLE failure_categories RESTART IDENTITY CASCADE"))
+        await session.execute(text(TEST_TRUNCATE_TABLES))
         await session.commit()
         yield session
 

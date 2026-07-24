@@ -46,6 +46,20 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     log_format: Literal["json", "console"] = Field(default="json", alias="LOG_FORMAT")
 
+    # Development-only bootstrap seed settings. Never enable in production.
+    bootstrap_enabled: bool = Field(default=False, alias="BOOTSTRAP_ENABLED")
+    bootstrap_org_name: str = Field(default="DevGuard Default", alias="BOOTSTRAP_ORG_NAME")
+    bootstrap_org_slug: str = Field(default="default", alias="BOOTSTRAP_ORG_SLUG")
+    bootstrap_owner_email: str = Field(
+        default="owner@devguard.local",
+        alias="BOOTSTRAP_OWNER_EMAIL",
+    )
+    bootstrap_owner_password: str = Field(default="", alias="BOOTSTRAP_OWNER_PASSWORD")
+    bootstrap_owner_full_name: str = Field(
+        default="DevGuard Owner",
+        alias="BOOTSTRAP_OWNER_FULL_NAME",
+    )
+
     @field_validator("backend_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: Any) -> list[str]:

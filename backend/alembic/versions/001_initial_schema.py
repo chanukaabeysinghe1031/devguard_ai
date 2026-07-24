@@ -13,9 +13,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 # Shared PostgreSQL enum types (created once, referenced by multiple tables)
-USER_ROLE = postgresql.ENUM(
-    "admin", "analyst", "viewer", name="user_role", create_type=False
-)
+USER_ROLE = postgresql.ENUM("admin", "analyst", "viewer", name="user_role", create_type=False)
 FILE_TYPE = postgresql.ENUM(
     "log", "workflow_yaml", "terraform", "other", name="file_type", create_type=False
 )

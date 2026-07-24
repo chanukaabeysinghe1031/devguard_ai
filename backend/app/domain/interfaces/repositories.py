@@ -54,8 +54,8 @@ class FailureCategoryRepository(AsyncRepository[FailureCategoryEntity], ABC):
     """Failure category persistence contract."""
 
     @abstractmethod
-    async def get_by_slug(self, slug: str) -> FailureCategoryEntity | None:
-        """Return a category by stable lowercase slug."""
+    async def get_by_code(self, code: str) -> FailureCategoryEntity | None:
+        """Return a category by stable lowercase code."""
 
     @abstractmethod
     async def list_active(
@@ -71,14 +71,14 @@ class PipelineRunRepository(AsyncRepository[PipelineRunEntity], ABC):
     """Pipeline run persistence contract."""
 
     @abstractmethod
-    async def list_by_user(
+    async def list_by_project(
         self,
-        user_id: UUID,
+        project_id: UUID,
         *,
         offset: int = 0,
         limit: int = 100,
     ) -> list[PipelineRunEntity]:
-        """Return a user's pipeline runs ordered by created_at descending."""
+        """Return a project's pipeline runs ordered by created_at descending."""
 
     @abstractmethod
     async def list_by_status(

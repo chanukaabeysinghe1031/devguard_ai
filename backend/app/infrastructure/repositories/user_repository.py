@@ -26,10 +26,12 @@ def _to_entity(model: User) -> UserEntity:
     return UserEntity(
         id=model.id,
         email=model.email,
-        hashed_password=model.hashed_password,
+        password_hash=model.password_hash,
         full_name=model.full_name,
-        role=model.role,
+        platform_role=model.platform_role,
+        avatar_url=model.avatar_url,
         is_active=model.is_active,
+        last_login_at=model.last_login_at,
         created_at=model.created_at,
         updated_at=model.updated_at,
     )
@@ -39,10 +41,12 @@ def _to_model(entity: UserEntity) -> User:
     return User(
         id=entity.id,
         email=entity.email,
-        hashed_password=entity.hashed_password,
+        password_hash=entity.password_hash,
         full_name=entity.full_name,
-        role=entity.role,
+        platform_role=entity.platform_role,
+        avatar_url=entity.avatar_url,
         is_active=entity.is_active,
+        last_login_at=entity.last_login_at,
     )
 
 
@@ -96,10 +100,12 @@ class SQLAlchemyUserRepository(SQLAlchemyAsyncRepository[User], UserRepository):
                 raise DuplicateEntityError(f"User with email '{entity.email}' already exists.")
 
         model.email = entity.email
-        model.hashed_password = entity.hashed_password
+        model.password_hash = entity.password_hash
         model.full_name = entity.full_name
-        model.role = entity.role
+        model.platform_role = entity.platform_role
+        model.avatar_url = entity.avatar_url
         model.is_active = entity.is_active
+        model.last_login_at = entity.last_login_at
 
         try:
             persisted = await super().update(model)

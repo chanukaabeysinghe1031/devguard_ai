@@ -59,7 +59,25 @@ async def run_async_migrations() -> None:
 
 
 def run_migrations_online() -> None:
-    asyncio.run(run_async_migrations())
+    """Run online migrations, including when a caller already has an event loop.
+
+    Alembic's CLI has no running loop, so ``asyncio.run()`` is used.
+    Pytest-asyncio (and similar) invoke ``command.upgrade`` / ``command.downgrade``
+    from inside a running loop; nesting ``asyncio.run()`` raises RuntimeError.
+    In that case, run the async migration coroutine on a dedicated thread with
+    its own event loop.
+    """
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(run_async_migrations())
+        return
+
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(asyncio.run, run_async_migrations())
+        future.result()
 
 
 if context.is_offline_mode():

@@ -1,61 +1,71 @@
-"""LLM-generated recommendation model."""
+"""Recommendation parent/summary model for AI remediation guidance."""
 
 from __future__ import annotations
 
 import uuid
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import CheckConstraint, Float, ForeignKey, Index, String, Text
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.domain.enums import RiskLevel
-from app.infrastructure.database.base import Base, CreatedAtMixin, UUIDPrimaryKeyMixin
-from app.infrastructure.database.enums import risk_level_enum
+from app.infrastructure.database.base import (
+    Base,
+    CreatedAtMixin,
+    UpdatedAtMixin,
+    UUIDPrimaryKeyMixin,
+)
 
 if TYPE_CHECKING:
+    from app.infrastructure.database.models.analysis_run import AnalysisRun
     from app.infrastructure.database.models.feedback import Feedback
-    from app.infrastructure.database.models.pipeline_run import PipelineRun
     from app.infrastructure.database.models.prediction import Prediction
+    from app.infrastructure.database.models.recommendation_step import RecommendationStep
 
 
-class Recommendation(Base, UUIDPrimaryKeyMixin, CreatedAtMixin):
+class Recommendation(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin):
+    """Parent/summary record for AI remediation guidance produced by an analysis run.
+
+    Ordered steps are NOT stored as columns here — they live in
+    ``recommendation_steps``. ``legacy_remediation_steps`` is retained only for
+    backward-compatibility with pre-Migration-004 data and is deprecated; it is
+    never the source of truth.
+    """
+
     __tablename__ = "recommendations"
     __table_args__ = (
         CheckConstraint(
-            "confidence_score >= 0 AND confidence_score <= 1",
+            "confidence_score IS NULL OR (confidence_score >= 0 AND confidence_score <= 1)",
             name="ck_recommendations_confidence_score_range",
         ),
-        Index("ix_recommendations_pipeline_run_id", "pipeline_run_id"),
+        Index("ix_recommendations_analysis_run_id", "analysis_run_id"),
         Index("ix_recommendations_prediction_id", "prediction_id"),
     )
 
-    pipeline_run_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+    analysis_run_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("analysis_runs.id", ondelete="CASCADE"),
         nullable=False,
     )
     prediction_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("predictions.id", ondelete="SET NULL"),
         nullable=True,
     )
-    root_cause: Mapped[str] = mapped_column(Text, nullable=False)
-    explanation: Mapped[str] = mapped_column(Text, nullable=False)
-    remediation_steps: Mapped[list[dict[str, Any]]] = mapped_column(
+    root_cause_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confidence_score: Mapped[float | None] = mapped_column(Numeric(5, 4), nullable=True)
+    llm_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    legacy_remediation_steps: Mapped[list[dict[str, Any]] | None] = mapped_column(
         JSONB,
-        nullable=False,
-        default=list,
+        nullable=True,
+        comment="Deprecated pre-Migration-004 JSON blob; recommendation_steps is authoritative.",
     )
-    risk_level: Mapped[RiskLevel] = mapped_column(
-        risk_level_enum,
-        nullable=False,
-        default=RiskLevel.MEDIUM,
-    )
-    confidence_score: Mapped[float] = mapped_column(Float, nullable=False)
-    preventive_actions: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
-    future_improvements: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
-    llm_model: Mapped[str] = mapped_column(String(128), nullable=False)
-    rag_sources: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
 
-    pipeline_run: Mapped[PipelineRun] = relationship(back_populates="recommendations")
+    analysis_run: Mapped[AnalysisRun] = relationship(back_populates="recommendations")
     prediction: Mapped[Prediction | None] = relationship(back_populates="recommendations")
+    steps: Mapped[list[RecommendationStep]] = relationship(
+        back_populates="recommendation",
+        cascade="all, delete-orphan",
+        order_by="RecommendationStep.step_number",
+        lazy="selectin",
+    )
     feedback_items: Mapped[list[Feedback]] = relationship(back_populates="recommendation")

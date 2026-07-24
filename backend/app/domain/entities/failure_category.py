@@ -11,7 +11,7 @@ from uuid import UUID
 class FailureCategoryEntity:
     id: UUID | None
     name: str
-    slug: str
+    code: str
     description: str | None
     is_active: bool = True
     created_at: datetime | None = None
