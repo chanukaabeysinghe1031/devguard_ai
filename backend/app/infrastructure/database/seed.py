@@ -13,8 +13,6 @@ Bootstrap passwords are read from the environment and are never logged.
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import os
 from dataclasses import dataclass
 from typing import TypedDict
 
@@ -32,10 +30,6 @@ from app.infrastructure.database.models.user import User
 from app.infrastructure.database.session import close_db, ensure_session_factory
 
 logger = structlog.get_logger(__name__)
-
-_PBKDF2_ALGORITHM = "pbkdf2_sha256"
-_PBKDF2_ITERATIONS = 260_000
-_PBKDF2_SALT_BYTES = 16
 
 
 class ApprovedCategory(TypedDict):
@@ -137,15 +131,10 @@ class SeedResult:
 
 
 def _hash_password(password: str) -> str:
-    """Hash a password using PBKDF2-HMAC-SHA256.
+    """Hash a password using the shared security helper (bcrypt)."""
+    from app.core.security import hash_password
 
-    Format: ``pbkdf2_sha256$<salt_hex>$<hash_hex>``. Deliberately avoids adding
-    a bcrypt dependency for this schema-only seed script; the authentication
-    module may choose a different scheme when implemented and approved.
-    """
-    salt = os.urandom(_PBKDF2_SALT_BYTES)
-    derived = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, _PBKDF2_ITERATIONS)
-    return f"{_PBKDF2_ALGORITHM}${salt.hex()}${derived.hex()}"
+    return hash_password(password)
 
 
 async def seed_failure_categories(session: AsyncSession) -> CategorySeedResult:

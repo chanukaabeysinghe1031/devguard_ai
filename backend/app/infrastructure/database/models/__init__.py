@@ -25,6 +25,7 @@ from app.infrastructure.database.models.project import Project
 from app.infrastructure.database.models.project_integration import ProjectIntegration
 from app.infrastructure.database.models.recommendation import Recommendation
 from app.infrastructure.database.models.recommendation_step import RecommendationStep
+from app.infrastructure.database.models.refresh_token import RefreshToken
 from app.infrastructure.database.models.retrieved_document import RetrievedDocument
 from app.infrastructure.database.models.uploaded_file import UploadedFile
 from app.infrastructure.database.models.user import User
@@ -55,6 +56,7 @@ __all__ = [
     "ProjectIntegration",
     "Recommendation",
     "RecommendationStep",
+    "RefreshToken",
     "RetrievedDocument",
     "UploadedFile",
     "User",

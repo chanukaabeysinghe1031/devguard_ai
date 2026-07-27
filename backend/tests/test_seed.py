@@ -218,7 +218,10 @@ async def test_bootstrap_creates_org_owner_and_membership(db_session) -> None:
     assert owner is not None
     assert owner.platform_role == PlatformRole.PLATFORM_ADMIN
     assert owner.password_hash != BOOTSTRAP_PASSWORD
-    assert owner.password_hash.startswith("pbkdf2_sha256$")
+    assert owner.password_hash.startswith("$2")  # bcrypt
+    from app.core.security import verify_password
+
+    assert verify_password(BOOTSTRAP_PASSWORD, owner.password_hash)
 
     membership = await db_session.scalar(
         select(OrganizationMember).where(

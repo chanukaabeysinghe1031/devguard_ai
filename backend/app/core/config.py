@@ -60,6 +60,13 @@ class Settings(BaseSettings):
         alias="BOOTSTRAP_OWNER_FULL_NAME",
     )
 
+    # JWT / authentication (Module 3). Never commit real secrets.
+    jwt_secret_key: str = Field(default="", alias="JWT_SECRET_KEY")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    jwt_issuer: str = Field(default="devguard-ai", alias="JWT_ISSUER")
+    access_token_expire_minutes: int = Field(default=15, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_days: int = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
+
     @field_validator("backend_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: Any) -> list[str]:

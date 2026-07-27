@@ -37,8 +37,7 @@ MIGRATION_TEST_DATABASE_URL = os.environ.get(
 
 EXPECTED_TABLES = frozenset(ALL_APPLICATION_TABLES)
 
-# Key tables explicitly called out by the schema evolution ADR-012 that must
-# exist post-Migration-007.
+# Key tables that must exist at Alembic head (Module 2 schema + Module 3 auth).
 KEY_TABLES = frozenset(
     {
         "organizations",
@@ -49,6 +48,7 @@ KEY_TABLES = frozenset(
         "recommendation_steps",
         "knowledge_documents",
         "knowledge_chunks",
+        "refresh_tokens",
     }
 )
 

@@ -30,9 +30,8 @@ TEST_DATABASE_URL = os.environ.get(
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 
-# All 27 application tables registered in app.infrastructure.database.models.
-# `analysis_history` is deliberately absent — it was deprecated by ADR-012 /
-# Migration 003 and must never be recreated for the MVP.
+# All application tables registered in app.infrastructure.database.models.
+# `analysis_history` is deliberately absent — deprecated by ADR-012.
 ALL_APPLICATION_TABLES: tuple[str, ...] = (
     "audit_logs",
     "feedback",
@@ -45,6 +44,7 @@ ALL_APPLICATION_TABLES: tuple[str, ...] = (
     "retrieved_documents",
     "recommendation_steps",
     "recommendations",
+    "refresh_tokens",
     "evidence_items",
     "predictions",
     "analysis_runs",

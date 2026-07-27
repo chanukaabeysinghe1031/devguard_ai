@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from app.infrastructure.database.models.notification import Notification
     from app.infrastructure.database.models.organization_member import OrganizationMember
     from app.infrastructure.database.models.project import Project
+    from app.infrastructure.database.models.refresh_token import RefreshToken
     from app.infrastructure.database.models.uploaded_file import UploadedFile
 
 
@@ -51,6 +52,10 @@ class User(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     organization_memberships: Mapped[list[OrganizationMember]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    refresh_tokens: Mapped[list[RefreshToken]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
