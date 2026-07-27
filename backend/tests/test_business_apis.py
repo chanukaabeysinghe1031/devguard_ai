@@ -213,7 +213,7 @@ async def test_incident_note_and_resolution(auth_client) -> None:
 
 
 @pytest.mark.asyncio
-async def test_analysis_run_initiation_stub(auth_client) -> None:
+async def test_analysis_run_initiation_executes_pipeline(auth_client) -> None:
     token, org_id = await _register_and_login(auth_client, f"ana-{uuid4().hex[:8]}@example.com")
     headers = {"Authorization": f"Bearer {token}", "X-Organization-Id": org_id}
 
@@ -234,17 +234,38 @@ async def test_analysis_run_initiation_stub(auth_client) -> None:
     )
     incident_id = incident.json()["id"]
 
+    upload = await auth_client.post(
+        f"/api/v1/incidents/{incident_id}/files",
+        headers=headers,
+        files=[
+            (
+                "files",
+                (
+                    "deploy.log",
+                    b"ERROR: User is not authorized to perform: s3:PutObject\nAccessDenied\n",
+                    "text/plain",
+                ),
+            )
+        ],
+    )
+    assert upload.status_code == 201, upload.text
+    file_id = upload.json()["files"][0]["id"]
+
     analysis = await auth_client.post(
         f"/api/v1/incidents/{incident_id}/analyses",
         headers=headers,
-        json={"analysis_type": "full", "file_ids": []},
+        json={"analysis_type": "full", "file_ids": [file_id]},
     )
     assert analysis.status_code == 202, analysis.text
     run_id = analysis.json()["analysis_run_id"]
-    assert analysis.json()["status"] == "queued"
+    # Sync execution mode completes within the request.
+    assert analysis.json()["status"] == "completed"
+    assert analysis.json()["progress_percentage"] == 100
 
     status = await auth_client.get(f"/api/v1/analyses/{run_id}/status", headers=headers)
     assert status.status_code == 200
+    assert status.json()["status"] == "completed"
+    assert status.json()["stages"]
 
 
 @pytest.mark.asyncio

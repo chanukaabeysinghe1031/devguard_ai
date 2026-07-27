@@ -25,6 +25,7 @@ from app.schemas.analysis import (
     AnalysisAcceptedResponse,
     AnalysisRunDetailResponse,
     AnalysisRunListItem,
+    AnalysisStageResponse,
     AnalysisStatusResponse,
     ReanalyseRequest,
     StartAnalysisRequest,
@@ -121,6 +122,16 @@ class AnalysisRunService:
         analysis_run_id: UUID,
     ) -> AnalysisStatusResponse:
         run = await self._load_run(organization_id, analysis_run_id)
+        stages_raw = (run.output_summary or {}).get("stages") or []
+        stages = [
+            AnalysisStageResponse(
+                name=str(item.get("name", "")),
+                status=str(item.get("status", "completed")),
+                duration_ms=item.get("duration_ms"),
+            )
+            for item in stages_raw
+            if isinstance(item, dict)
+        ]
         return AnalysisStatusResponse(
             id=run.id,
             incident_id=run.incident_id,
@@ -129,7 +140,7 @@ class AnalysisRunService:
             progress_percentage=run.progress_percentage,
             started_at=run.started_at,
             estimated_remaining_seconds=None,
-            stages=[],
+            stages=stages,
         )
 
     async def get_detail(

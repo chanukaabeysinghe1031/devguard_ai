@@ -1,4 +1,4 @@
-"""Analysis run initiation API schemas (no AI execution in Module 4)."""
+"""Analysis API schemas."""
 
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class AnalysisOptions(BaseModel):
-    enable_rag: bool = True
+    enable_rag: bool = False
+    enable_llm: bool = False
     generate_recommendations: bool = True
     top_k_predictions: int = Field(default=3, ge=1, le=10)
 
@@ -77,3 +78,8 @@ class AnalysisRunDetailResponse(BaseModel):
     error_message: str | None = None
     created_at: datetime | None = None
     completed_at: datetime | None = None
+    classification: dict[str, Any] | None = None
+    root_cause: dict[str, Any] | None = None
+    evidence_count: int = 0
+    recommendation_count: int = 0
+    model_versions: dict[str, Any] | None = None

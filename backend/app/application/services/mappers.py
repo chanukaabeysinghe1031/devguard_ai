@@ -264,6 +264,14 @@ def analysis_list_item(run: AnalysisRun) -> AnalysisRunListItem:
 
 
 def analysis_detail(run: AnalysisRun) -> AnalysisRunDetailResponse:
+    summary = run.output_summary or {}
+    classification = summary.get("classification")
+    root_cause = None
+    if summary.get("root_cause_summary"):
+        root_cause = {
+            "summary": summary.get("root_cause_summary"),
+            "confidence": (classification or {}).get("confidence"),
+        }
     return AnalysisRunDetailResponse(
         id=run.id,
         incident_id=run.incident_id,
@@ -278,6 +286,11 @@ def analysis_detail(run: AnalysisRun) -> AnalysisRunDetailResponse:
         error_message=run.error_message,
         created_at=run.created_at,
         completed_at=run.completed_at,
+        classification=classification if isinstance(classification, dict) else None,
+        root_cause=root_cause,
+        evidence_count=int(summary.get("evidence_count") or 0),
+        recommendation_count=int(summary.get("recommendation_count") or 0),
+        model_versions=summary.get("model_versions"),
     )
 
 

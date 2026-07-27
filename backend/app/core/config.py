@@ -73,6 +73,14 @@ class Settings(BaseSettings):
     max_upload_size_bytes: int = Field(default=10_485_760, alias="MAX_UPLOAD_SIZE_BYTES")
     max_files_per_upload: int = Field(default=10, alias="MAX_FILES_PER_UPLOAD")
 
+    # AI pipeline (Module 6). Deterministic rules path is always available.
+    enable_rag: bool = Field(default=False, alias="ENABLE_RAG")
+    enable_llm: bool = Field(default=False, alias="ENABLE_LLM")
+    analysis_execution_mode: Literal["background", "sync"] = Field(
+        default="background",
+        alias="ANALYSIS_EXECUTION_MODE",
+    )
+
     @field_validator("backend_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: Any) -> list[str]:

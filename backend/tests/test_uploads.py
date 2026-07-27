@@ -177,7 +177,7 @@ async def test_yaml_json_upload_and_analysis_file_association(auth_client) -> No
         json={"analysis_type": "full", "file_ids": file_ids},
     )
     assert analysis.status_code == 202, analysis.text
-    assert analysis.json()["status"] == "queued"
+    assert analysis.json()["status"] == "completed"
 
     # File referenced by analysis cannot be deleted.
     blocked = await auth_client.delete(f"/api/v1/files/{file_ids[0]}", headers=headers)

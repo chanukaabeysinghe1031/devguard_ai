@@ -31,6 +31,9 @@ os.environ.setdefault(
 )
 os.environ.setdefault("MAX_UPLOAD_SIZE_BYTES", "1048576")
 os.environ.setdefault("MAX_FILES_PER_UPLOAD", "5")
+os.environ.setdefault("ENABLE_RAG", "false")
+os.environ.setdefault("ENABLE_LLM", "false")
+os.environ.setdefault("ANALYSIS_EXECUTION_MODE", "sync")
 
 from app.core.config import get_settings  # noqa: E402
 from app.main import app  # noqa: E402
@@ -49,6 +52,11 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 async def auth_client(repository_db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """HTTP client bound to the isolated test database session."""
     from app.api.dependencies import get_session
+    from app.infrastructure.database.seed import seed_failure_categories
+
+    # Analysis persistence requires the 11 approved failure categories.
+    await seed_failure_categories(repository_db_session)
+    await repository_db_session.commit()
 
     async def _override_session() -> AsyncGenerator[AsyncSession, None]:
         try:
