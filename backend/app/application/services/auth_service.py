@@ -182,7 +182,18 @@ class AuthService:
         self._session.add(user)
         await self._session.flush()
         await self._session.refresh(user)
-        # Reload with memberships relationship empty but consistent shape.
+
+        from app.application.services.organization_service import (
+            create_default_organization_for_user,
+        )
+
+        await create_default_organization_for_user(
+            self._session,
+            user=user,
+            full_name=full_name.strip(),
+        )
+
+        # Reload with memberships relationship populated.
         loaded = await self._load_user_by_id(user.id)
         assert loaded is not None
         logger.info("user_registered", user_id=str(loaded.id))
