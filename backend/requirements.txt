@@ -8,6 +8,8 @@ alembic>=1.13.0
 structlog>=24.4.0
 PyJWT[crypto]>=2.9.0
 bcrypt>=4.2.0
+python-multipart>=0.0.9
+PyYAML>=6.0.2
 
 # Development / testing
 pytest>=8.3.0

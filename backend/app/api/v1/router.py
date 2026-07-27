@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     analyses,
     auth,
+    files,
     health,
     incidents,
     notes,
@@ -21,4 +22,5 @@ api_router.include_router(projects.router)
 api_router.include_router(pipeline_runs.router)
 api_router.include_router(incidents.router)
 api_router.include_router(notes.router)
+api_router.include_router(files.router)
 api_router.include_router(analyses.router)

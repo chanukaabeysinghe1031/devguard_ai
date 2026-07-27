@@ -24,6 +24,13 @@ os.environ.setdefault(
 )
 os.environ.setdefault("ACCESS_TOKEN_EXPIRE_MINUTES", "15")
 os.environ.setdefault("REFRESH_TOKEN_EXPIRE_DAYS", "7")
+os.environ.setdefault("FILE_STORAGE_BACKEND", "local")
+os.environ.setdefault(
+    "FILE_STORAGE_PATH",
+    str(__import__("pathlib").Path(__file__).resolve().parent / ".test_uploads"),
+)
+os.environ.setdefault("MAX_UPLOAD_SIZE_BYTES", "1048576")
+os.environ.setdefault("MAX_FILES_PER_UPLOAD", "5")
 
 from app.core.config import get_settings  # noqa: E402
 from app.main import app  # noqa: E402

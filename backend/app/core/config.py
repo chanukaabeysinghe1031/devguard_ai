@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=15, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     refresh_token_expire_days: int = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
 
+    # File upload / local storage (Module 5).
+    file_storage_backend: str = Field(default="local", alias="FILE_STORAGE_BACKEND")
+    file_storage_path: str = Field(default="./storage/uploads", alias="FILE_STORAGE_PATH")
+    max_upload_size_bytes: int = Field(default=10_485_760, alias="MAX_UPLOAD_SIZE_BYTES")
+    max_files_per_upload: int = Field(default=10, alias="MAX_FILES_PER_UPLOAD")
+
     @field_validator("backend_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: Any) -> list[str]:

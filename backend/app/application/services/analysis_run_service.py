@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.services.mappers import analysis_detail, analysis_list_item
-from app.domain.enums import AnalysisRunStatus, IncidentStatus
+from app.domain.enums import AnalysisRunStatus, FileValidationStatus, IncidentStatus
 from app.domain.exceptions.business import (
     ConflictError,
     ResourceNotFoundError,
@@ -20,6 +20,7 @@ from app.infrastructure.database.models.analysis_run import AnalysisRun
 from app.infrastructure.database.models.incident import Incident
 from app.infrastructure.database.models.incident_event import IncidentEvent
 from app.infrastructure.database.models.project import Project
+from app.infrastructure.database.models.uploaded_file import UploadedFile
 from app.schemas.analysis import (
     AnalysisAcceptedResponse,
     AnalysisRunDetailResponse,
@@ -56,6 +57,11 @@ class AnalysisRunService:
         incident = await self._load_incident(organization_id, incident_id)
         if incident.status in (IncidentStatus.CLOSED, IncidentStatus.IGNORED):
             raise ValidationBusinessError("Cannot analyse a closed or ignored incident.")
+
+        await self._validate_analysis_file_ids(
+            incident_id=incident.id,
+            file_ids=body.file_ids,
+        )
 
         run = AnalysisRun(
             incident_id=incident.id,
@@ -170,6 +176,32 @@ class AnalysisRunService:
         )
         runs = list((await self._session.scalars(stmt)).all())
         return [analysis_list_item(run) for run in runs]
+
+    async def _validate_analysis_file_ids(
+        self,
+        *,
+        incident_id: UUID,
+        file_ids: list[UUID],
+    ) -> None:
+        if not file_ids:
+            return
+        unique_ids = list(dict.fromkeys(file_ids))
+        stmt = select(UploadedFile).where(
+            UploadedFile.id.in_(unique_ids),
+            UploadedFile.incident_id == incident_id,
+        )
+        found = list((await self._session.scalars(stmt)).all())
+        if len(found) != len(unique_ids):
+            raise ValidationBusinessError(
+                "One or more file_ids are invalid or do not belong to this incident.",
+                error_code="INVALID_ANALYSIS_FILES",
+            )
+        for uploaded in found:
+            if uploaded.validation_status != FileValidationStatus.VALID:
+                raise ValidationBusinessError(
+                    f"File '{uploaded.original_filename}' is not valid for analysis.",
+                    error_code="INVALID_ANALYSIS_FILES",
+                )
 
     async def _load_incident(self, organization_id: UUID, incident_id: UUID) -> Incident:
         stmt = (
