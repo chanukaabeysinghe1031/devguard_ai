@@ -6,6 +6,20 @@ from dataclasses import dataclass, field
 from typing import Any
 from uuid import UUID
 
+from app.ai.orchestration.models import (
+    BudgetUsage,
+    ConfidenceAssessment,
+    EvidenceQualityAssessment,
+    ExecutionBudget,
+    ExecutionMode,
+    FinalConfidenceAssessment,
+    FusionResult,
+    ProviderUsage,
+    RetrievalQualityAssessment,
+    RoutingDecision,
+    UncertaintyAssessment,
+    parse_execution_mode,
+)
 from app.domain.enums import FileType
 
 
@@ -69,7 +83,7 @@ class RecommendationCandidate:
 @dataclass
 class StageResult:
     name: str
-    status: str  # completed | skipped | failed | running
+    status: str  # completed | skipped | failed | running | timed_out
     duration_ms: int | None = None
     detail: str | None = None
 
@@ -95,6 +109,36 @@ class AnalysisContext:
     model_name: str = "rules-hybrid"
     model_version: str = "1.0.0"
     partial: bool = False
+    retrieval_query: str = ""
+    retrieved_chunks: list[Any] = field(default_factory=list)
+    retrieval_backend: str | None = None
+    embedding_provider_name: str | None = None
+    llm_root_cause: dict[str, Any] | None = None
+    grounding_valid: bool = False
+    reasoning_provider_name: str | None = None
+
+    # Module 8 typed orchestration state
+    requested_execution_mode: ExecutionMode = ExecutionMode.RAG_LLM
+    execution_mode: str = ExecutionMode.RAG_LLM.value
+    effective_execution_mode: str = ExecutionMode.RAG_LLM.value
+    initial_routing_decision: RoutingDecision | None = None
+    post_retrieval_routing_decision: RoutingDecision | None = None
+    routing_decision: dict[str, Any] = field(default_factory=dict)
+    confidence_assessment: ConfidenceAssessment | None = None
+    evidence_quality_assessment: EvidenceQualityAssessment | None = None
+    uncertainty_assessment: UncertaintyAssessment | None = None
+    retrieval_quality_assessment: RetrievalQualityAssessment | None = None
+    final_confidence_assessment: FinalConfidenceAssessment | None = None
+    fusion_result: FusionResult | None = None
+    budget: ExecutionBudget | None = None
+    budget_usage: BudgetUsage | None = None
+    provider_usage: list[ProviderUsage] = field(default_factory=list)
+    confidence_metrics: dict[str, Any] = field(default_factory=dict)
+    cost_metrics: dict[str, Any] = field(default_factory=dict)
+    evaluation_metadata: dict[str, Any] = field(default_factory=dict)
+    fallback_used: bool = False
+    fallback_reason: str | None = None
+    risk_level: str = "medium"
 
     @property
     def enable_rag(self) -> bool:
@@ -114,3 +158,10 @@ class AnalysisContext:
     @property
     def generate_recommendations(self) -> bool:
         return bool(self.options.get("generate_recommendations", True))
+
+    @property
+    def requested_mode(self) -> str:
+        return parse_execution_mode(
+            self.options.get("execution_mode"),
+            default=self.requested_execution_mode,
+        ).value

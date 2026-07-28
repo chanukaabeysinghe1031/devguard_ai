@@ -82,7 +82,7 @@ class EvidenceExtractor:
         # Capture contiguous traceback blocks loosely via line scan.
         results: list[EvidenceCandidate] = []
         for i, line in enumerate(lines):
-            if "Traceback (most recent call last)" in line or line.strip().startswith("File \""):
+            if "Traceback (most recent call last)" in line or line.strip().startswith('File "'):
                 start = i
                 end = min(len(lines), i + 15)
                 window = "\n".join(lines[start:end])

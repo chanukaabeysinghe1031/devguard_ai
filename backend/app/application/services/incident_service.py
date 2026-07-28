@@ -142,9 +142,7 @@ class IncidentService:
             filters.append(Incident.source == source)
         if search:
             pattern = f"%{search.strip()}%"
-            filters.append(
-                or_(Incident.title.ilike(pattern), Incident.description.ilike(pattern))
-            )
+            filters.append(or_(Incident.title.ilike(pattern), Incident.description.ilike(pattern)))
         if date_from:
             filters.append(Incident.detected_at >= date_from)
         if date_to:

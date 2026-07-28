@@ -1,6 +1,7 @@
 """Application configuration via Pydantic Settings."""
 
 import json
+from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from typing import Any, Literal
 
@@ -73,13 +74,149 @@ class Settings(BaseSettings):
     max_upload_size_bytes: int = Field(default=10_485_760, alias="MAX_UPLOAD_SIZE_BYTES")
     max_files_per_upload: int = Field(default=10, alias="MAX_FILES_PER_UPLOAD")
 
-    # AI pipeline (Module 6). Deterministic rules path is always available.
+    # AI pipeline (Modules 6–8). Deterministic rules path is always available.
     enable_rag: bool = Field(default=False, alias="ENABLE_RAG")
     enable_llm: bool = Field(default=False, alias="ENABLE_LLM")
+    enable_local_reasoner: bool = Field(default=True, alias="ENABLE_LOCAL_REASONER")
+    enable_external_llm: bool = Field(default=False, alias="ENABLE_EXTERNAL_LLM")
+    enable_confidence_routing: bool = Field(default=True, alias="ENABLE_CONFIDENCE_ROUTING")
+    enable_cost_tracking: bool = Field(default=True, alias="ENABLE_COST_TRACKING")
+    enable_latency_budget: bool = Field(default=True, alias="ENABLE_LATENCY_BUDGET")
     analysis_execution_mode: Literal["background", "sync"] = Field(
         default="background",
         alias="ANALYSIS_EXECUTION_MODE",
     )
+    rag_backend: Literal["memory", "chroma"] = Field(default="memory", alias="RAG_BACKEND")
+    embedding_provider: Literal["hash", "sentence_transformers"] = Field(
+        default="hash",
+        alias="EMBEDDING_PROVIDER",
+    )
+    llm_provider: Literal["local", "openai"] = Field(default="local", alias="LLM_PROVIDER")
+    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    chroma_persist_path: str = Field(default="./storage/chroma", alias="CHROMA_PERSIST_PATH")
+    knowledge_base_path: str = Field(default="../knowledge_base", alias="KNOWLEDGE_BASE_PATH")
+    rag_top_k: int = Field(default=10, alias="RAG_TOP_K")
+    rag_context_k: int = Field(default=5, alias="RAG_CONTEXT_K")
+    default_execution_mode: Literal[
+        "rules_only",
+        "rules_rag",
+        "llm_only",
+        "rag_llm",
+        "confidence_routed",
+    ] = Field(default="confidence_routed", alias="DEFAULT_EXECUTION_MODE")
+    default_budget_usd: Decimal | None = Field(default=None, alias="DEFAULT_BUDGET_USD")
+    max_budget_usd_per_analysis: Decimal | None = Field(
+        default=None,
+        alias="MAX_BUDGET_USD_PER_ANALYSIS",
+    )
+    default_latency_limit_ms: int = Field(default=30_000, alias="DEFAULT_LATENCY_LIMIT_MS")
+    max_latency_limit_ms: int = Field(default=60_000, alias="MAX_LATENCY_LIMIT_MS")
+    confidence_high_threshold: float = Field(default=0.85, alias="CONFIDENCE_HIGH_THRESHOLD")
+    confidence_medium_threshold: float = Field(default=0.60, alias="CONFIDENCE_MEDIUM_THRESHOLD")
+    uncertainty_high_threshold: float = Field(default=0.70, alias="UNCERTAINTY_HIGH_THRESHOLD")
+    uncertainty_medium_threshold: float = Field(
+        default=0.40,
+        alias="UNCERTAINTY_MEDIUM_THRESHOLD",
+    )
+    min_evidence_quality_for_deterministic: float = Field(
+        default=0.75,
+        alias="MIN_EVIDENCE_QUALITY_FOR_DETERMINISTIC",
+    )
+    min_retrieval_quality_for_reasoning: float = Field(
+        default=0.55,
+        alias="MIN_RETRIEVAL_QUALITY_FOR_REASONING",
+    )
+    high_risk_requires_validation: bool = Field(
+        default=True,
+        alias="HIGH_RISK_REQUIRES_VALIDATION",
+    )
+    max_provider_calls_per_analysis: int = Field(
+        default=2,
+        alias="MAX_PROVIDER_CALLS_PER_ANALYSIS",
+    )
+    max_llm_input_tokens: int = Field(default=6000, alias="MAX_LLM_INPUT_TOKENS")
+    max_llm_output_tokens: int = Field(default=1500, alias="MAX_LLM_OUTPUT_TOKENS")
+    max_retrieval_calls_per_analysis: int = Field(
+        default=2,
+        alias="MAX_RETRIEVAL_CALLS_PER_ANALYSIS",
+    )
+    llm_input_cost_usd_per_million_tokens: Decimal | None = Field(
+        default=None,
+        alias="LLM_INPUT_COST_USD_PER_MILLION_TOKENS",
+    )
+    llm_output_cost_usd_per_million_tokens: Decimal | None = Field(
+        default=None,
+        alias="LLM_OUTPUT_COST_USD_PER_MILLION_TOKENS",
+    )
+    embedding_cost_usd_per_million_tokens: Decimal | None = Field(
+        default=None,
+        alias="EMBEDDING_COST_USD_PER_MILLION_TOKENS",
+    )
+    routing_policy_name: str = Field(
+        default="confidence_cost_policy",
+        alias="ROUTING_POLICY_NAME",
+    )
+    routing_policy_version: str = Field(default="v1", alias="ROUTING_POLICY_VERSION")
+
+    # Module 9 hybrid retrieval (heuristic weights — experimental).
+    default_retrieval_mode: Literal[
+        "embedding_only",
+        "hybrid_static",
+        "hybrid_with_history",
+        "keyword_only",
+    ] = Field(default="hybrid_static", alias="DEFAULT_RETRIEVAL_MODE")
+    enable_hybrid_retrieval: bool = Field(default=True, alias="ENABLE_HYBRID_RETRIEVAL")
+    enable_historical_retrieval: bool = Field(
+        default=False,
+        alias="ENABLE_HISTORICAL_RETRIEVAL",
+    )
+    enable_lexical_retrieval: bool = Field(default=True, alias="ENABLE_LEXICAL_RETRIEVAL")
+    enable_stack_trace_similarity: bool = Field(
+        default=True,
+        alias="ENABLE_STACK_TRACE_SIMILARITY",
+    )
+    enable_retrieval_diversity: bool = Field(default=True, alias="ENABLE_RETRIEVAL_DIVERSITY")
+    hybrid_weight_profile: str = Field(
+        default="hybrid_static_v1",
+        alias="HYBRID_WEIGHT_PROFILE",
+    )
+    min_candidate_score: float = Field(default=0.35, alias="MIN_CANDIDATE_SCORE")
+    min_semantic_score: float = Field(default=0.20, alias="MIN_SEMANTIC_SCORE")
+    min_history_quality_score: float = Field(
+        default=0.70,
+        alias="MIN_HISTORY_QUALITY_SCORE",
+    )
+    max_candidates_before_rerank: int = Field(
+        default=30,
+        alias="MAX_CANDIDATES_BEFORE_RERANK",
+    )
+    max_final_retrieval_results: int = Field(
+        default=6,
+        alias="MAX_FINAL_RETRIEVAL_RESULTS",
+    )
+    max_chunks_per_document: int = Field(default=2, alias="MAX_CHUNKS_PER_DOCUMENT")
+    max_historical_results: int = Field(default=2, alias="MAX_HISTORICAL_RESULTS")
+    diversity_lambda: float = Field(default=0.75, alias="DIVERSITY_LAMBDA")
+
+    @field_validator(
+        "default_budget_usd",
+        "max_budget_usd_per_analysis",
+        "llm_input_cost_usd_per_million_tokens",
+        "llm_output_cost_usd_per_million_tokens",
+        "embedding_cost_usd_per_million_tokens",
+        mode="before",
+    )
+    @classmethod
+    def empty_money_to_none(cls, value: Any) -> Any:
+        if value is None or value == "":
+            return None
+        if isinstance(value, Decimal):
+            return value
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, ValueError):
+            return None
 
     @field_validator("backend_cors_origins", mode="before")
     @classmethod

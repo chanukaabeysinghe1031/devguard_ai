@@ -152,7 +152,5 @@ class PipelineRunService:
     async def _get_active_project(self, organization_id: UUID, project_id: UUID) -> Project:
         project = await self._get_project(organization_id, project_id)
         if project.status == ProjectStatus.ARCHIVED:
-            raise ValidationBusinessError(
-                "Cannot create pipeline runs for an archived project."
-            )
+            raise ValidationBusinessError("Cannot create pipeline runs for an archived project.")
         return project

@@ -5,6 +5,7 @@ from __future__ import annotations
 from uuid import UUID
 
 import structlog
+from fastapi import BackgroundTasks
 
 from app.core.config import Settings, get_settings
 from app.infrastructure.database.session import ensure_session_factory, init_db
@@ -34,7 +35,7 @@ def schedule_analysis_execution(
     analysis_run_id: UUID,
     *,
     settings: Settings,
-    background_tasks: object | None = None,
+    background_tasks: BackgroundTasks | None = None,
 ) -> None:
     """Schedule sync or background execution based on settings."""
     if settings.analysis_execution_mode == "sync":

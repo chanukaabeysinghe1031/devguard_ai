@@ -30,6 +30,11 @@ dev = [
     "ruff>=0.6.0",
     "mypy>=1.11.0",
 ]
+ai = [
+    "chromadb>=0.5.0",
+    "sentence-transformers>=3.0.0",
+    "openai>=1.40.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -56,6 +61,8 @@ warn_unused_configs = true
 ignore_missing_imports = true
 disallow_untyped_defs = false
 check_untyped_defs = true
+# Avoid third-party stub syntax incompatibilities (e.g. numpy on newer Python).
+follow_imports = "skip"
 # Repositories intentionally narrow the generic ORM-model-typed base class to
 # domain-entity return types at each concrete boundary (Clean Architecture
 # repository pattern) — pragmatic, deliberate LSP-style narrowing rather than

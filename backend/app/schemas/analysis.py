@@ -3,10 +3,26 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from decimal import Decimal
+from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+ExecutionModeLiteral = Literal[
+    "rules_only",
+    "rules_rag",
+    "llm_only",
+    "rag_llm",
+    "confidence_routed",
+]
+
+RetrievalModeLiteral = Literal[
+    "embedding_only",
+    "hybrid_static",
+    "hybrid_with_history",
+    "keyword_only",
+]
 
 
 class AnalysisOptions(BaseModel):
@@ -14,6 +30,18 @@ class AnalysisOptions(BaseModel):
     enable_llm: bool = False
     generate_recommendations: bool = True
     top_k_predictions: int = Field(default=3, ge=1, le=10)
+    execution_mode: ExecutionModeLiteral = "rag_llm"
+    retrieval_mode: RetrievalModeLiteral | None = None
+    budget_usd: Decimal | None = Field(default=None, ge=0)
+    latency_limit_ms: int = Field(default=30000, ge=1000, le=300000)
+    risk_level: Literal["low", "medium", "high", "critical"] = "medium"
+
+    @field_validator("budget_usd", mode="before")
+    @classmethod
+    def empty_budget_to_none(cls, value: Any) -> Any:
+        if value is None or value == "":
+            return None
+        return value
 
 
 class StartAnalysisRequest(BaseModel):
@@ -64,6 +92,36 @@ class AnalysisRunListItem(BaseModel):
     completed_at: datetime | None = None
 
 
+class AnalysisOrchestrationSummary(BaseModel):
+    """Safe Module 8/9 orchestration summary for API consumers."""
+
+    requested_execution_mode: str | None = None
+    effective_execution_mode: str | None = None
+    selected_route: str | None = None
+    confidence: float | None = None
+    confidence_band: str | None = None
+    uncertainty_score: float | None = None
+    uncertainty_level: str | None = None
+    evidence_quality_score: float | None = None
+    retrieval_used: bool = False
+    reasoning_used: bool = False
+    fallback_used: bool = False
+    fallback_reason: str | None = None
+    routing_policy_version: str | None = None
+    provider_usage_summary: list[dict[str, Any]] = Field(default_factory=list)
+    cost_summary: dict[str, Any] | None = None
+    latency_summary: dict[str, Any] | None = None
+    retrieval_mode: str | None = None
+    candidates_considered: int | None = None
+    results_selected: int | None = None
+    duplicate_count: int | None = None
+    historical_results_used: int | None = None
+    retrieval_quality_score: float | None = None
+    retrieval_configuration_hash: str | None = None
+    retrieval_fallback_used: bool = False
+    retrieval_fallback_reason: str | None = None
+
+
 class AnalysisRunDetailResponse(BaseModel):
     id: UUID
     incident_id: UUID
@@ -83,3 +141,4 @@ class AnalysisRunDetailResponse(BaseModel):
     evidence_count: int = 0
     recommendation_count: int = 0
     model_versions: dict[str, Any] | None = None
+    orchestration: AnalysisOrchestrationSummary | None = None

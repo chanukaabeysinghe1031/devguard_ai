@@ -113,7 +113,8 @@ async def test_orchestrator_skips_rag_and_llm_when_disabled() -> None:
     assert stage_map["retrieving_knowledge"] == "skipped"
     assert stage_map["reasoning"] == "skipped"
     assert stage_map["classifying"] == "completed"
-    assert result.partial is True
+    # Intentional feature-flag skips are complete deterministic runs, not soft-fails.
+    assert result.partial is False
     assert result.classifications[0].category_code == "dependency_failure"
     assert result.recommendation is not None
     assert result.recommendation.steps
@@ -124,9 +125,7 @@ async def test_analysis_pipeline_persists_aws_classification(
     auth_client,
     repository_db_session: AsyncSession,
 ) -> None:
-    token, org_id = await _register_and_login(
-        auth_client, f"ai-aws-{uuid4().hex[:8]}@example.com"
-    )
+    token, org_id = await _register_and_login(auth_client, f"ai-aws-{uuid4().hex[:8]}@example.com")
     headers = {"Authorization": f"Bearer {token}", "X-Organization-Id": org_id}
     log = (
         b"2024-01-01T12:00:00Z ERROR deploy\n"

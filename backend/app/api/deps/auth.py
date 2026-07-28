@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -114,7 +114,7 @@ async def resolve_organization_membership(
 
 def require_organization_roles(
     *allowed_roles: OrganizationRole,
-) -> Callable[..., AuthenticatedUser]:
+) -> Callable[..., Awaitable[AuthenticatedUser]]:
     """Depend on X-Organization-Id header and enforce membership role."""
 
     async def _dependency(

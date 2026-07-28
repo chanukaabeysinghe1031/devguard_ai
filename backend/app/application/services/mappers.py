@@ -14,7 +14,11 @@ from app.infrastructure.database.models.organization_member import OrganizationM
 from app.infrastructure.database.models.pipeline_run import PipelineRun
 from app.infrastructure.database.models.project import Project
 from app.infrastructure.database.models.user import User
-from app.schemas.analysis import AnalysisRunDetailResponse, AnalysisRunListItem
+from app.schemas.analysis import (
+    AnalysisOrchestrationSummary,
+    AnalysisRunDetailResponse,
+    AnalysisRunListItem,
+)
 from app.schemas.incident import (
     AssigneeSummary,
     IncidentDetailResponse,
@@ -272,6 +276,57 @@ def analysis_detail(run: AnalysisRun) -> AnalysisRunDetailResponse:
             "summary": summary.get("root_cause_summary"),
             "confidence": (classification or {}).get("confidence"),
         }
+    confidence = summary.get("confidence_metrics") or {}
+    uncertainty = summary.get("uncertainty") or {}
+    evidence_quality = summary.get("evidence_quality") or {}
+    routing = summary.get("routing_decision") or {}
+    selected_route = None
+    if isinstance(routing, dict):
+        selected_route = (
+            routing.get("selected_route")
+            or ((routing.get("post_retrieval") or {}).get("selected_route"))
+            or ((routing.get("initial") or {}).get("selected_route"))
+        )
+    orchestration = AnalysisOrchestrationSummary(
+        requested_execution_mode=summary.get("execution_mode"),
+        effective_execution_mode=summary.get("effective_execution_mode"),
+        selected_route=selected_route,
+        confidence=(
+            (summary.get("final_confidence") or {}).get("final_confidence")
+            or confidence.get("calibrated_confidence")
+        ),
+        confidence_band=confidence.get("confidence_band"),
+        uncertainty_score=uncertainty.get("uncertainty_score"),
+        uncertainty_level=uncertainty.get("uncertainty_level"),
+        evidence_quality_score=evidence_quality.get("evidence_quality_score"),
+        retrieval_used=bool((summary.get("evaluation_metadata") or {}).get("rag_used")),
+        reasoning_used=bool(
+            (summary.get("evaluation_metadata") or {}).get("local_reasoner_used")
+            or (summary.get("evaluation_metadata") or {}).get("external_llm_used")
+        ),
+        fallback_used=bool(summary.get("fallback_used")),
+        fallback_reason=summary.get("fallback_reason"),
+        routing_policy_version=((summary.get("evaluation_metadata") or {}).get("policy_version")),
+        provider_usage_summary=list(summary.get("provider_usage") or []),
+        cost_summary=summary.get("budget_usage") or summary.get("cost_metrics"),
+        latency_summary={
+            "total_latency_ms": (summary.get("evaluation_metadata") or {}).get("total_latency_ms"),
+            "stage_latency_ms": (summary.get("evaluation_metadata") or {}).get("stage_latency_ms"),
+        },
+        retrieval_mode=summary.get("retrieval_mode"),
+        candidates_considered=(summary.get("retrieval_result") or {}).get("candidates_considered"),
+        results_selected=(summary.get("retrieval_result") or {}).get("results_selected"),
+        duplicate_count=(summary.get("retrieval_result") or {}).get("duplicate_count"),
+        historical_results_used=(summary.get("retrieval_result") or {}).get(
+            "historical_selected_count"
+        ),
+        retrieval_quality_score=(summary.get("retrieval_quality") or {}).get(
+            "retrieval_quality_score"
+        ),
+        retrieval_configuration_hash=summary.get("retrieval_configuration_hash"),
+        retrieval_fallback_used=bool((summary.get("retrieval_result") or {}).get("fallback_used")),
+        retrieval_fallback_reason=(summary.get("retrieval_result") or {}).get("fallback_reason"),
+    )
     return AnalysisRunDetailResponse(
         id=run.id,
         incident_id=run.incident_id,
@@ -291,6 +346,7 @@ def analysis_detail(run: AnalysisRun) -> AnalysisRunDetailResponse:
         evidence_count=int(summary.get("evidence_count") or 0),
         recommendation_count=int(summary.get("recommendation_count") or 0),
         model_versions=summary.get("model_versions"),
+        orchestration=orchestration,
     )
 
 

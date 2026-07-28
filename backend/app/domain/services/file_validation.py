@@ -104,6 +104,4 @@ def decode_text_content(data: bytes) -> str:
     try:
         return data.decode("utf-8")
     except UnicodeDecodeError as exc:
-        raise UnsupportedFileTypeError(
-            "File content must be valid UTF-8 text."
-        ) from exc
+        raise UnsupportedFileTypeError("File content must be valid UTF-8 text.") from exc

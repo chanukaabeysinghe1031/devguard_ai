@@ -77,9 +77,7 @@ def validate_status_transition(
 def assert_incident_mutable(status: IncidentStatus) -> None:
     """Closed or resolved incidents require reopen before field edits."""
     if status in _TERMINAL_FOR_EDIT:
-        raise InvalidTransitionError(
-            "Incident must be reopened before it can be modified."
-        )
+        raise InvalidTransitionError("Incident must be reopened before it can be modified.")
 
 
 def format_incident_number(incident_number: int) -> str:

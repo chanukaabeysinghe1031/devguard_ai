@@ -34,6 +34,25 @@ os.environ.setdefault("MAX_FILES_PER_UPLOAD", "5")
 os.environ.setdefault("ENABLE_RAG", "false")
 os.environ.setdefault("ENABLE_LLM", "false")
 os.environ.setdefault("ANALYSIS_EXECUTION_MODE", "sync")
+os.environ.setdefault("RAG_BACKEND", "memory")
+os.environ.setdefault("EMBEDDING_PROVIDER", "hash")
+os.environ.setdefault("LLM_PROVIDER", "local")
+os.environ.setdefault(
+    "KNOWLEDGE_BASE_PATH",
+    str(__import__("pathlib").Path(__file__).resolve().parents[2] / "knowledge_base"),
+)
+os.environ.setdefault("DEFAULT_EXECUTION_MODE", "rag_llm")
+os.environ.setdefault("DEFAULT_LATENCY_LIMIT_MS", "30000")
+os.environ.setdefault("ENABLE_CONFIDENCE_ROUTING", "true")
+os.environ.setdefault("ENABLE_LOCAL_REASONER", "true")
+os.environ.setdefault("ENABLE_EXTERNAL_LLM", "false")
+os.environ.setdefault("DEFAULT_RETRIEVAL_MODE", "hybrid_static")
+os.environ.setdefault("ENABLE_HYBRID_RETRIEVAL", "true")
+os.environ.setdefault("ENABLE_HISTORICAL_RETRIEVAL", "false")
+os.environ.setdefault("ENABLE_LEXICAL_RETRIEVAL", "true")
+os.environ.setdefault("ENABLE_STACK_TRACE_SIMILARITY", "true")
+os.environ.setdefault("ENABLE_RETRIEVAL_DIVERSITY", "true")
+os.environ.setdefault("HYBRID_WEIGHT_PROFILE", "hybrid_static_v1")
 
 from app.core.config import get_settings  # noqa: E402
 from app.main import app  # noqa: E402

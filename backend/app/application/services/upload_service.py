@@ -328,10 +328,14 @@ class UploadService:
             file_ids = input_summary.get("file_ids") or []
             if file_id_str in file_ids:
                 raise FileDeletionForbiddenError()
-            if run.status not in {
-                AnalysisRunStatus.FAILED,
-                AnalysisRunStatus.COMPLETED,
-            } and run.status != AnalysisRunStatus.QUEUED:
+            if (
+                run.status
+                not in {
+                    AnalysisRunStatus.FAILED,
+                    AnalysisRunStatus.COMPLETED,
+                }
+                and run.status != AnalysisRunStatus.QUEUED
+            ):
                 # In-progress analysis on the incident blocks deletion of any file.
                 raise FileDeletionForbiddenError(
                     "File cannot be deleted while analysis is in progress."

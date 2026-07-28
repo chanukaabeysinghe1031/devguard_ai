@@ -26,9 +26,7 @@ _TEMPLATES: dict[str, dict] = {
                 "action": "Add only the required IAM action to the deployment role policy.",
                 "risk": "medium",
                 "difficulty": "moderate",
-                "command": (
-                    "aws iam get-role-policy --role-name <role> --policy-name <policy>"
-                ),
+                "command": ("aws iam get-role-policy --role-name <role> --policy-name <policy>"),
             },
             {
                 "type": "verification",

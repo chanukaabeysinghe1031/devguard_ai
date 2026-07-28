@@ -133,7 +133,7 @@ async def test_reject_unsupported_and_empty_and_duplicate(auth_client) -> None:
     )
     assert zip_upload.status_code == 415
 
-    payload = b"resource \"aws_iam_role\" \"deploy\" {}\n"
+    payload = b'resource "aws_iam_role" "deploy" {}\n'
     first = await auth_client.post(
         f"/api/v1/incidents/{incident_id}/files",
         headers=headers,
@@ -198,9 +198,7 @@ async def test_cross_org_file_access_denied(auth_client) -> None:
     owner_token, org_id = await _register_and_login(
         auth_client, f"owner-{uuid4().hex[:8]}@example.com"
     )
-    outsider_token, _ = await _register_and_login(
-        auth_client, f"out-{uuid4().hex[:8]}@example.com"
-    )
+    outsider_token, _ = await _register_and_login(auth_client, f"out-{uuid4().hex[:8]}@example.com")
     owner_headers = {
         "Authorization": f"Bearer {owner_token}",
         "X-Organization-Id": org_id,
