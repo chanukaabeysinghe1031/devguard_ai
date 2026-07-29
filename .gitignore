@@ -133,3 +133,6 @@ secrets/
 # Local token scratch files
 githubtoken.txt
 *token*.txt
+
+# Local runtime backups (never commit — may contain secrets + DB dumps)
+backups/
