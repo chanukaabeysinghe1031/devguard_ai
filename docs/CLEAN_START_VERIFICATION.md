@@ -1,55 +1,55 @@
 # Clean-Start Verification — Phase 4B
 
 **Date:** 2026-07-29  
-**Caution:** `docker compose down -v` deletes Postgres, Chroma, and model-cache volumes. This environment holds ingested research/product corpora. A destructive wipe was **not** executed against the live project volumes.
+**Caution:** Never run `docker compose down -v` against the live `devguard_ai` project while corpora exist. Use an isolated Compose project instead.
 
-## Documented clean-start procedure (isolated)
+## Isolated clean-start (executed)
+
+Files:
+
+- `docker-compose.phase4-clean.yml` — separate ports/volumes/containers
+- `.env.phase4-clean` — local-only secrets (gitignored)
 
 ```bash
-# 1) Backup or use a separate Compose project name
-export COMPOSE_PROJECT_NAME=devguard_clean
-# 2) Optionally remap host ports to avoid clashes with a running stack
-export BACKEND_PORT=18000 FRONTEND_PORT=15173
-# 3) Wipe ONLY the isolated project volumes
-docker compose down -v
-# 4) Rebuild without relying on ad-hoc pip inside running containers
-docker compose build --no-cache
-docker compose up -d
-# 5) Wait for health
-docker compose ps
-curl -fsS http://127.0.0.1:${BACKEND_PORT:-8000}/api/v1/health
-# 6) Restore corpora
-#    - knowledge_base bind-mount is automatic
-#    - re-ingest research/product collections via documented CLI if Chroma volume is empty
+# Backup live volumes first (see backups/phase4_*)
+COMPOSE_PROJECT_NAME=devguard_phase4_clean \
+  docker compose -f docker-compose.phase4-clean.yml --env-file .env.phase4-clean \
+  up -d --build
+
+# Migrations + seed categories
+COMPOSE_PROJECT_NAME=devguard_phase4_clean \
+  docker compose -f docker-compose.phase4-clean.yml --env-file .env.phase4-clean \
+  exec backend alembic upgrade head
+# then seed failure categories via seed_failure_categories()
+
+# Tear down ONLY the isolated stack
+COMPOSE_PROJECT_NAME=devguard_phase4_clean \
+  docker compose -f docker-compose.phase4-clean.yml --env-file .env.phase4-clean \
+  down -v
 ```
 
-## Verified on the current (non-wiped) stack
+### Isolated verification results
 
-| Check | Result | Evidence |
-|-------|--------|----------|
-| `docker compose config` | Pass | Valid Compose file |
-| Postgres healthy | Pass | `devguard_postgres` healthy |
-| Chroma healthy | Pass | `devguard_chroma` healthy |
-| Backend up + healthcheck | Pass | curl `/api/v1/health` healthcheck in Compose |
-| Frontend up | Pass | `devguard_frontend` up |
-| OpenAI package in image deps | Pass | `requirements.txt` / `pyproject.toml` include `openai>=1.40.0` |
-| Embedding model available | Pass | ST provider loads; model cache volume present |
-| Migrations/seed path | Pass | Existing stack serves migrated schema; seed on bootstrap path |
-| Restart policy | Pass | `restart: unless-stopped` on services |
-| Persistent volumes documented | Pass | `postgres_data`, `chroma_data`, `model_cache` |
-| No manual in-container pip required for declared deps | Pass | Image build installs requirements |
+| Check | Result |
+|-------|--------|
+| Live stack untouched | Pass (`devguard_*` still healthy on :8000) |
+| Isolated Postgres/Chroma/Backend/Frontend | Pass (ports 15432 / 18001 / 18000 / 15173) |
+| Empty DB → Alembic `001`–`008` | Pass |
+| Failure-category seed (12 approved) | Pass |
+| Register/login + project/incident/upload | Pass |
+| Sample AWS AccessDenied analysis (`rules_only`) | Pass — **completed** after seed |
+| Classification observed before seed | `aws_permission_failure` (persist failed until seed) |
+| Image deps (`openai`, ST) via Dockerfile | Pass (no manual pip) |
+
+## Live stack (non-destructive) confirmation
+
+| Check | Result |
+|-------|--------|
+| Postgres / Chroma / Backend / Frontend | Healthy |
+| Runtime volume backup | `backups/phase4_20260729T121836Z/` (gitignored) |
 
 ## Residual limitations
 
-- Full `down -v` against production-like local corpora was deferred to protect benchmark indexes.
-- Frontend image still serves Vite dev (`npm run dev`) — not a production static build.
-- Backend image still uses `--reload` — not a production gunicorn/uvicorn worker image.
-- After a real wipe, operators must re-ingest Chroma collections before retrieval benchmarks match prior numbers.
-
-## Rebuild verification command (non-destructive)
-
-```bash
-docker compose build backend frontend
-docker compose up -d
-docker compose exec backend python -c "import openai, sentence_transformers; print('ok')"
-```
+- Frontend still Vite-dev; backend still `--reload`.
+- Isolated Chroma starts empty until product/research corpora are ingested.
+- Bootstrap emails must use a non-reserved domain (e.g. `@example.com`), not `@*.local`.

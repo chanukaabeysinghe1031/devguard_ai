@@ -136,3 +136,6 @@ githubtoken.txt
 
 # Local runtime backups (never commit — may contain secrets + DB dumps)
 backups/
+
+# Isolated clean-start secrets (local only)
+.env.phase4-clean

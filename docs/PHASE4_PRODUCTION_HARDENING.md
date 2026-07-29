@@ -76,8 +76,8 @@ Details: `datasets/benchmark/results/retrieval_architecture_comparison/compariso
 
 ### Clean-start residual
 
-Destructive `docker compose down -v` against the live corpus volumes was **not** executed (protects research/product Chroma indexes). Procedure is documented in `CLEAN_START_VERIFICATION.md`.
+Isolated clean-start was executed with `COMPOSE_PROJECT_NAME=devguard_phase4_clean` (separate ports/volumes). Live volumes were backed up under `backups/phase4_*` (gitignored) and left intact. See `CLEAN_START_VERIFICATION.md`.
 
 ## Final status gate
 
-Do **not** use `PHASE 4 COMPLETE — PRODUCTION HARDENING VERIFIED` until an examiner environment also completes an isolated volume wipe clean-start if that is required for their checklist. All other Phase 4B criteria in this workspace are green.
+Phase 4 hardening commit/tag/push and isolated clean-start are complete. Use the completion phrase when the examiner checklist is fully satisfied.

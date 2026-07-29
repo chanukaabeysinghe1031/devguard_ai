@@ -1,0 +1,110 @@
+# Fully isolated Phase 4 clean-start stack.
+# Does not reuse live project volume names when COMPOSE_PROJECT_NAME differs.
+#
+# Start:
+#   COMPOSE_PROJECT_NAME=devguard_phase4_clean \
+#   docker compose -f docker-compose.phase4-clean.yml --env-file .env.phase4-clean \
+#     up -d --build
+#
+# Destroy ONLY this isolated stack:
+#   COMPOSE_PROJECT_NAME=devguard_phase4_clean \
+#   docker compose -f docker-compose.phase4-clean.yml --env-file .env.phase4-clean down -v
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: devguard_phase4_clean_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-devguard}
+      POSTGRES_USER: ${POSTGRES_USER:-devguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-phase4_clean_change_me}
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - postgres_data_clean:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-devguard} -d ${POSTGRES_DB:-devguard}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chroma:
+    image: chromadb/chroma:1.5.9
+    container_name: devguard_phase4_clean_chroma
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18001:8000"
+    volumes:
+      - chroma_data_clean:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8000 && printf \"GET /api/v2/heartbeat HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -q \"nanosecond heartbeat\" <&3'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devguard_phase4_clean_backend
+    restart: unless-stopped
+    ports:
+      - "18000:8000"
+    env_file:
+      - .env.phase4-clean
+    environment:
+      POSTGRES_HOST: postgres
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-devguard}:${POSTGRES_PASSWORD:-phase4_clean_change_me}@postgres:5432/${POSTGRES_DB:-devguard}
+      CHROMA_HOST: chroma
+      CHROMA_PORT: "8000"
+      RAG_BACKEND: chroma
+    volumes:
+      - ./backend:/app
+      - ./knowledge_base:/knowledge_base:ro
+      - model_cache_clean:/root/.cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://127.0.0.1:8000/api/v1/health >/dev/null || exit 1",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devguard_phase4_clean_frontend
+    restart: unless-stopped
+    ports:
+      - "15173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:18000/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data_clean:
+  chroma_data_clean:
+  model_cache_clean:
