@@ -4,7 +4,7 @@
 
 DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefacts to classify failures, extract evidence, retrieve documentation, and produce explainable remediation recommendations — centred on an **incident investigation** lifecycle.
 
-> **Important:** The platform vision and architecture are frozen in `docs/`. The running codebase currently provides a **foundation shell** plus a **legacy database schema**. The full incident/AI product is **not** implemented yet.
+> **Important:** Architecture is frozen in `docs/`. The local release candidate provides Modules 1–9 plus Phase 3–5 diagnosis validation. Full commercial SaaS screens remain approval-gated.
 
 ---
 
@@ -24,8 +24,9 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
-| **Frontend product screens** | ❌ Not implemented (diagnosis shell only) |
-| **Phase 4 — Production hardening** | 🔶 Substantially complete — see `docs/PHASE4_PRODUCTION_HARDENING.md` |
+| **Frontend product screens** | 🔶 Diagnosis shell complete (full product screens gated) |
+| **Phase 4 — Production hardening** | ✅ Complete — `docs/PHASE4_PRODUCTION_HARDENING.md` / tag `v0.9.0-phase4` |
+| **Phase 5 — Release candidate validation** | ✅ See `docs/PHASE5_RELEASE_CANDIDATE_VALIDATION.md` |
 
 ### Phase 4 hardening (index)
 

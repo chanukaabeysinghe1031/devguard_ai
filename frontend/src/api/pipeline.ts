@@ -168,3 +168,32 @@ export async function getRecommendations(analysisRunId: string) {
     `/analyses/${analysisRunId}/recommendations`,
   );
 }
+
+export type HistoryItem = {
+  id: string;
+  title: string;
+  status: string;
+  incidentId: string;
+};
+
+/** Load recent analyses from persisted incidents (survives refresh/logout+login). */
+export async function listRecentAnalysisHistory(limit = 8): Promise<HistoryItem[]> {
+  const incidents = await apiFetch<{
+    items: Array<{ id: string; title: string }>;
+  }>("/incidents?page=1&page_size=20");
+  const items: HistoryItem[] = [];
+  for (const incident of incidents.items || []) {
+    const analyses = await apiFetch<
+      Array<{ id: string; status: string; created_at?: string }>
+    >(`/incidents/${incident.id}/analyses`);
+    for (const analysis of analyses || []) {
+      items.push({
+        id: analysis.id,
+        title: incident.title,
+        status: analysis.status,
+        incidentId: incident.id,
+      });
+    }
+  }
+  return items.slice(0, limit);
+}

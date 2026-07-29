@@ -1,0 +1,17 @@
+[PASS] aws_access_denied.log: aws_permission_failure (expected aws_permission_failure) status=completed ev=1 src=5 rec=4
+[PASS] terraform_undeclared.log: terraform_failure (expected terraform_failure) status=completed ev=1 src=5 rec=4
+[PASS] docker_copy.log: docker_failure (expected docker_failure) status=completed ev=1 src=5 rec=3
+[PASS] gha_runner_offline.log: ci_runner_failure (expected ci_runner_failure) status=completed ev=1 src=5 rec=5
+[PASS] k8s_imagepull.log: deployment_failure (expected deployment_failure) status=completed ev=1 src=5 rec=3
+[PASS] maven_dep.log: build_failure (expected build_failure) status=completed ev=1 src=5 rec=3
+[PASS] gradle_dep.log: build_failure (expected build_failure) status=completed ev=1 src=5 rec=3
+[PASS] python_module.log: dependency_failure (expected dependency_failure) status=completed ev=2 src=5 rec=3
+[PASS] npm_eresolve.log: dependency_failure (expected dependency_failure) status=completed ev=1 src=5 rec=3
+[FAIL] unknown.log: unknown_failure (expected unknown_failure) status=completed ev=0 src=5 rec=3
+[PASS] success_pipeline.log: unknown_failure (expected unknown_failure) status=completed ev=0 src=5 rec=3
+{
+  "journey_ok": true,
+  "ai_pass": 10,
+  "ai_total": 11,
+  "error_cases_ok": true
+}

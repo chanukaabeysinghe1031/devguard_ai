@@ -9,9 +9,11 @@ import {
   getEvidence,
   getRecommendations,
   getSources,
+  listRecentAnalysisHistory,
   runDiagnosisPipeline,
   type AnalysisDetail,
   type EvidenceItem,
+  type HistoryItem,
   type RecommendationItem,
   type SourceItem,
 } from "../api/pipeline";
@@ -30,8 +32,8 @@ const SAMPLE_HINTS = [
 export function DiagnosisPage() {
   const [session, setSession] = useState<AuthSession | null>(() => loadSession());
   const [phase, setPhase] = useState<Phase>(session ? "upload" : "auth");
-  const [email, setEmail] = useState("owner@example.com");
-  const [password, setPassword] = useState("SecurePassword123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("DevGuard Engineer");
   const [mode, setMode] = useState<"login" | "register">("login");
   const [file, setFile] = useState<File | null>(null);
@@ -45,10 +47,27 @@ export function DiagnosisPage() {
   const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastAnalysisId, setLastAnalysisId] = useState<string | null>(null);
-  const [history, setHistory] = useState<Array<{ id: string; title: string; status: string }>>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  async function refreshHistory() {
+    if (!loadSession()) return;
+    setHistoryLoading(true);
+    try {
+      const items = await listRecentAnalysisHistory(8);
+      setHistory(items);
+    } catch {
+      // Keep any local history if API listing fails.
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
 
   useEffect(() => {
-    if (session) setPhase((current) => (current === "auth" ? "upload" : current));
+    if (session) {
+      setPhase((current) => (current === "auth" ? "upload" : current));
+      void refreshHistory();
+    }
   }, [session]);
 
   const confidencePct = useMemo(() => {
@@ -140,10 +159,7 @@ export function DiagnosisPage() {
       setRecommendations(recommendationsRes.items || []);
       setProgress(100);
       setPhase("done");
-      setHistory((prev) => [
-        { id: started.analysisRunId, title: title || file.name, status: finalStatus },
-        ...prev,
-      ].slice(0, 8));
+      await refreshHistory();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Diagnosis failed");
       setPhase("error");
@@ -152,11 +168,43 @@ export function DiagnosisPage() {
     }
   }
 
+  async function openHistoryItem(item: HistoryItem) {
+    setMessage(null);
+    setPhase("running");
+    setProgress(50);
+    setStage("loading_history");
+    try {
+      const analysis = await getAnalysis(item.id);
+      setLastAnalysisId(item.id);
+      setDetail(analysis);
+      const [evidenceRes, sourcesRes, recommendationsRes] = await Promise.all([
+        getEvidence(item.id),
+        getSources(item.id),
+        getRecommendations(item.id),
+      ]);
+      setEvidence(evidenceRes.items || []);
+      setSources(sourcesRes.items || []);
+      setRecommendations(recommendationsRes.items || []);
+      setProgress(100);
+      setPhase(analysis.status === "completed" ? "done" : "error");
+      if (analysis.status !== "completed") {
+        setMessage(analysis.error_message || `Analysis status: ${analysis.status}`);
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Failed to load analysis");
+      setPhase("error");
+    }
+  }
+
   function logout() {
     clearSession();
     setSession(null);
     setPhase("auth");
     setDetail(null);
+    setHistory([]);
+    setEvidence([]);
+    setSources([]);
+    setRecommendations([]);
   }
 
   return (
@@ -330,17 +378,29 @@ export function DiagnosisPage() {
         </div>
       ) : null}
 
-      {history.length > 0 ? (
+      {history.length > 0 || historyLoading ? (
         <section className="mb-8 rounded-2xl border border-surface-border bg-surface-elevated p-6">
           <h2 className="text-lg font-semibold text-white">Recent analyses</h2>
-          <ul className="mt-3 space-y-2 text-sm text-slate-300">
-            {history.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-3 rounded-md bg-surface px-3 py-2">
-                <span className="truncate">{item.title}</span>
-                <span className="text-xs uppercase tracking-wide text-slate-400">{item.status}</span>
-              </li>
-            ))}
-          </ul>
+          {historyLoading ? (
+            <p className="mt-3 text-sm text-slate-400">Loading history…</p>
+          ) : (
+            <ul className="mt-3 space-y-2 text-sm text-slate-300">
+              {history.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => void openHistoryItem(item)}
+                    className="flex w-full items-center justify-between gap-3 rounded-md bg-surface px-3 py-2 text-left hover:bg-surface-border/40"
+                  >
+                    <span className="truncate">{item.title}</span>
+                    <span className="text-xs uppercase tracking-wide text-slate-400">
+                      {item.status}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       ) : null}
 

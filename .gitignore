@@ -118,11 +118,13 @@ datasets/benchmark/review/**
 !datasets/benchmark/review/APPROVAL_INSTRUCTIONS.md
 datasets/benchmark/gold_labels.candidates.csv
 
-# Performance evidence (Phase 4 machine-readable summaries — keep)
+# Performance + Phase 5 evidence (machine-readable summaries — keep)
 !reports/
 !reports/performance/
 !reports/performance/phase4/
 !reports/performance/phase4/**
+!reports/phase5/
+!reports/phase5/**
 
 # Secrets
 *.pem

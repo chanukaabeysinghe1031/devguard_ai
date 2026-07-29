@@ -1,0 +1,18 @@
+[
+  {
+    "viewport": "desktop",
+    "home": "DevGuard AI",
+    "diag": "End-to-end diagnosis",
+    "signIn": 1,
+    "emailEmpty": "",
+    "passEmpty": ""
+  },
+  {
+    "viewport": "mobile",
+    "home": "DevGuard AI",
+    "diag": "End-to-end diagnosis",
+    "signIn": 1,
+    "emailEmpty": "",
+    "passEmpty": ""
+  }
+]

@@ -1,0 +1,314 @@
+{
+  "email": "phase5_4f241308@example.com",
+  "journey": [
+    {
+      "step": "register",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "step": "login",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "step": "me",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "step": "logout",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "step": "login_again",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "step": "create_project",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "step": "edit_project",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "step": "archive_project",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "step": "restore_project",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "step": "create_incident",
+      "status": 201,
+      "ok": true
+    },
+    {
+      "step": "edit_incident",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "step": "list_incidents_persistence",
+      "status": 200,
+      "ok": true,
+      "count": 12
+    }
+  ],
+  "ai": [
+    {
+      "file": "aws_access_denied.log",
+      "expected_category": "aws_permission_failure",
+      "actual_category": "aws_permission_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 1,
+      "sources_count": 5,
+      "recommendations_count": 4,
+      "root_cause_summary": "The AWS principal lacks permission for the requested API action.",
+      "upload_ms": 50.38074997719377,
+      "start_ms": 51.508207980077714,
+      "poll_ms": 62653.16687495215,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "terraform_undeclared.log",
+      "expected_category": "terraform_failure",
+      "actual_category": "terraform_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 1,
+      "sources_count": 5,
+      "recommendations_count": 4,
+      "root_cause_summary": "Terraform planning or apply failed.",
+      "upload_ms": 34.82504200655967,
+      "start_ms": 15.576708014123142,
+      "poll_ms": 10611.505207954906,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "docker_copy.log",
+      "expected_category": "docker_failure",
+      "actual_category": "docker_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 1,
+      "sources_count": 5,
+      "recommendations_count": 3,
+      "root_cause_summary": "A Docker image build or registry operation failed.",
+      "upload_ms": 26.361625001300126,
+      "start_ms": 17.67712499713525,
+      "poll_ms": 9600.941334036179,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "gha_runner_offline.log",
+      "expected_category": "ci_runner_failure",
+      "actual_category": "ci_runner_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 1,
+      "sources_count": 5,
+      "recommendations_count": 5,
+      "root_cause_summary": "The CI runner is offline, unavailable, or unable to pick up the job.",
+      "upload_ms": 48.33229200448841,
+      "start_ms": 30.072249996010214,
+      "poll_ms": 14602.612833026797,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "k8s_imagepull.log",
+      "expected_category": "deployment_failure",
+      "actual_category": "deployment_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 1,
+      "sources_count": 5,
+      "recommendations_count": 3,
+      "root_cause_summary": "The deployment step failed while updating the target environment.",
+      "upload_ms": 26.15666697965935,
+      "start_ms": 12.139416008722037,
+      "poll_ms": 9560.42133300798,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "maven_dep.log",
+      "expected_category": "build_failure",
+      "actual_category": "build_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 1,
+      "sources_count": 5,
+      "recommendations_count": 3,
+      "root_cause_summary": "The project failed to compile or build.",
+      "upload_ms": 27.95812499243766,
+      "start_ms": 13.016415992751718,
+      "poll_ms": 19843.61245803302,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "gradle_dep.log",
+      "expected_category": "build_failure",
+      "actual_category": "build_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 1,
+      "sources_count": 5,
+      "recommendations_count": 3,
+      "root_cause_summary": "The project failed to compile or build.",
+      "upload_ms": 71.24912500148639,
+      "start_ms": 14.418000006116927,
+      "poll_ms": 9419.53154199291,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "python_module.log",
+      "expected_category": "dependency_failure",
+      "actual_category": "dependency_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 2,
+      "sources_count": 5,
+      "recommendations_count": 3,
+      "root_cause_summary": "A Python dependency could not be resolved or installed.",
+      "upload_ms": 48.6789169954136,
+      "start_ms": 21.73283405136317,
+      "poll_ms": 8301.588542002719,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "npm_eresolve.log",
+      "expected_category": "dependency_failure",
+      "actual_category": "dependency_failure",
+      "status": "completed",
+      "confidence": 1.0,
+      "evidence_count": 1,
+      "sources_count": 5,
+      "recommendations_count": 3,
+      "root_cause_summary": "A package dependency could not be resolved or installed.",
+      "upload_ms": 29.196124989539385,
+      "start_ms": 17.29583297856152,
+      "poll_ms": 11534.437916008756,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "unknown.log",
+      "expected_category": "unknown_failure",
+      "actual_category": "unknown_failure",
+      "status": "completed",
+      "confidence": 0.0345,
+      "evidence_count": 0,
+      "sources_count": 5,
+      "recommendations_count": 3,
+      "root_cause_summary": "Insufficient signals to classify the failure confidently.",
+      "upload_ms": 27.821291994769126,
+      "start_ms": 12.813624984119087,
+      "poll_ms": 5265.224292001221,
+      "error_message": null,
+      "ok": false,
+      "category_ok": true,
+      "completed": true
+    },
+    {
+      "file": "success_pipeline.log",
+      "expected_category": "unknown_failure",
+      "actual_category": "unknown_failure",
+      "status": "completed",
+      "confidence": 0.6245,
+      "evidence_count": 0,
+      "sources_count": 5,
+      "recommendations_count": 3,
+      "root_cause_summary": "Execution appears successful; explicit failure-state evidence was not found.",
+      "upload_ms": 26.21304098283872,
+      "start_ms": 15.083792037330568,
+      "poll_ms": 8508.94829200115,
+      "error_message": null,
+      "ok": true,
+      "category_ok": true,
+      "completed": true
+    }
+  ],
+  "errors": [
+    {
+      "case": "invalid_token",
+      "status": 401,
+      "ok": true,
+      "body_keys": [
+        "detail",
+        "error_code",
+        "timestamp",
+        "path",
+        "request_id"
+      ],
+      "has_stack": false
+    },
+    {
+      "case": "empty_file",
+      "status": 400,
+      "ok": true,
+      "detail": "{'detail': 'Uploaded file is empty.', 'error_code': 'EMPTY_FILE', 'timestamp': '2026-07-29T15:25:04.154591+00:00', 'path': '/api/v1/incidents/188b89bd-b1b9-4ea1-bada-a7d36878ebf0/files', 'request_id': 'b064001e-285e-4722-b167-63087838cad0'}",
+      "secrets_leaked": false
+    },
+    {
+      "case": "unsupported_file",
+      "status": 415,
+      "ok": true,
+      "detail": "{'detail': 'Executable file types are not allowed.', 'error_code': 'UNSUPPORTED_FILE_TYPE', 'timestamp': '2026-07-29T15:25:04.163223+00:00', 'path': '/api/v1/incidents/188b89bd-b1b9-4ea1-bada-a7d36878ebf0/files', 'request_id': '61e1bb0d-8e72-40e1-90dc-d233acd2a4f9'}"
+    }
+  ],
+  "performance": {
+    "register_ms": 1230.5306670023128,
+    "login_ms": 347.8562079835683
+  },
+  "bugs": [
+    {
+      "id": "BUG-UI-HISTORY-SESSION",
+      "severity": "medium",
+      "description": "DiagnosisPage analysis history is React state only; logout/refresh clears history even though backend incidents/analyses persist.",
+      "expected": "History reloadable from API after refresh/login",
+      "actual": "Local-only history array",
+      "status": "open_candidate"
+    }
+  ],
+  "summary": {
+    "journey_ok": true,
+    "ai_pass": 10,
+    "ai_total": 11,
+    "error_cases_ok": true
+  }
+}
