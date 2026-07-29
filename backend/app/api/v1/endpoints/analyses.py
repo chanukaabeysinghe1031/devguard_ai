@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_session, get_settings_dep
 from app.api.deps.access import require_org_reader, require_org_writer
+from app.application.services.analysis_artifacts_service import AnalysisArtifactsService
 from app.application.services.analysis_execution_service import AnalysisExecutionService
 from app.application.services.analysis_run_service import AnalysisRunService
 from app.application.services.analysis_task import schedule_analysis_execution
@@ -19,7 +20,10 @@ from app.schemas.analysis import (
     AnalysisRunDetailResponse,
     AnalysisRunListItem,
     AnalysisStatusResponse,
+    EvidenceListResponse,
     ReanalyseRequest,
+    RecommendationListResponse,
+    RetrievedSourceListResponse,
     StartAnalysisRequest,
 )
 
@@ -46,6 +50,10 @@ async def _schedule(
         )
         await executor.execute(analysis_run_id)
         return
+    # BackgroundTasks run after the response is prepared but may execute before
+    # the request-scoped session dependency commits. Persist the queued run first
+    # so the worker session can load it.
+    await session.commit()
     schedule_analysis_execution(
         analysis_run_id,
         settings=settings,
@@ -138,6 +146,10 @@ async def reanalyse_incident(
     return accepted
 
 
+def _artifacts(session: AsyncSession = Depends(get_session)) -> AnalysisArtifactsService:
+    return AnalysisArtifactsService(AnalysisRunService(session))
+
+
 @router.get("/analyses/{analysis_run_id}/status", response_model=AnalysisStatusResponse)
 async def get_analysis_status(
     analysis_run_id: UUID,
@@ -159,6 +171,58 @@ async def get_analysis(
 ) -> AnalysisRunDetailResponse:
     _, organization_id, _ = ctx
     return await service.get_detail(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/evidence",
+    response_model=EvidenceListResponse,
+)
+async def list_analysis_evidence(
+    analysis_run_id: UUID,
+    page: int = 1,
+    page_size: int = 50,
+    ctx: tuple = Depends(require_org_reader),
+    artifacts: AnalysisArtifactsService = Depends(_artifacts),
+) -> EvidenceListResponse:
+    _, organization_id, _ = ctx
+    return await artifacts.list_evidence(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/sources",
+    response_model=RetrievedSourceListResponse,
+)
+async def list_analysis_sources(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    artifacts: AnalysisArtifactsService = Depends(_artifacts),
+) -> RetrievedSourceListResponse:
+    _, organization_id, _ = ctx
+    return await artifacts.list_sources(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/recommendations",
+    response_model=RecommendationListResponse,
+)
+async def list_analysis_recommendations(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    artifacts: AnalysisArtifactsService = Depends(_artifacts),
+) -> RecommendationListResponse:
+    _, organization_id, _ = ctx
+    return await artifacts.list_recommendations(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
     )

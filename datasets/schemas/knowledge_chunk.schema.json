@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devguard.ai/schemas/knowledge_chunk.schema.json",
+  "title": "DevGuardKnowledgeChunk",
+  "description": "Chunk ready for embedding and Chroma upsert. Produced in a later phase from curated incidents and official docs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chunk_id",
+    "incident_id",
+    "text",
+    "technology",
+    "failure_category"
+  ],
+  "properties": {
+    "chunk_id": { "type": "string", "minLength": 3 },
+    "incident_id": { "type": "string", "minLength": 3 },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Sanitised chunk text (target ~600–900 characters)"
+    },
+    "section": {
+      "type": ["string", "null"],
+      "enum": [
+        "title",
+        "symptoms",
+        "root_cause",
+        "resolution",
+        "body",
+        "documentation",
+        null
+      ]
+    },
+    "repository": { "type": ["string", "null"] },
+    "issue_number": { "type": ["integer", "null"] },
+    "issue_url": { "type": ["string", "null"] },
+    "technology": { "type": "string" },
+    "failure_category": { "type": "string" },
+    "source_type": { "type": "string" },
+    "char_count": { "type": "integer", "minimum": 0 },
+    "secrets_masked": { "type": "boolean", "default": true }
+  }
+}

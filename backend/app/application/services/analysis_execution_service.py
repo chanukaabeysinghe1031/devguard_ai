@@ -497,6 +497,31 @@ class AnalysisExecutionService:
                 "confidence": primary.confidence if primary else None,
             },
         )
+        logger.info(
+            "analysis_observability_summary",
+            analysis_run_id=str(run.id),
+            incident_id=str(run.incident_id),
+            requested_by=str(run.requested_by),
+            project_id=str(context.options.get("project_id") or ""),
+            classification=(primary.category_code if primary else None),
+            confidence=(primary.confidence if primary else None),
+            retrieval_latency_ms=next(
+                (s.duration_ms for s in context.stages if s.name == "retrieving_knowledge"),
+                None,
+            ),
+            reasoning_latency_ms=next(
+                (s.duration_ms for s in context.stages if s.name == "reasoning"),
+                None,
+            ),
+            total_latency_ms=run.duration_ms,
+            provider=context.reasoning_provider_name,
+            model=context.reasoning_provider_name,
+            token_usage=(context.signals or {}).get("reasoning_usage"),
+            estimated_cost=context.cost_metrics,
+            retrieved_document_count=len(context.retrieved_chunks),
+            warnings=context.warnings,
+            errors=(run.error_message if run.status == AnalysisRunStatus.FAILED else None),
+        )
 
     async def _ensure_model_version(self) -> ModelVersion:
         stmt = select(ModelVersion).where(

@@ -140,5 +140,63 @@ class AnalysisRunDetailResponse(BaseModel):
     root_cause: dict[str, Any] | None = None
     evidence_count: int = 0
     recommendation_count: int = 0
+    retrieved_document_count: int = 0
     model_versions: dict[str, Any] | None = None
     orchestration: AnalysisOrchestrationSummary | None = None
+    limitations: list[str] = Field(default_factory=list)
+    token_usage: dict[str, Any] | list[Any] | None = None
+    cost: dict[str, Any] | list[Any] | None = None
+    processing_time_ms: int | None = None
+
+
+class EvidenceItemResponse(BaseModel):
+    id: UUID
+    evidence_type: str
+    source_file: dict[str, Any] | None = None
+    line_start: int | None = None
+    line_end: int | None = None
+    importance_score: float | None = None
+    excerpt: str | None = None
+    explanation: str | None = None
+
+
+class EvidenceListResponse(BaseModel):
+    items: list[EvidenceItemResponse]
+    page: int = 1
+    page_size: int = 50
+    total_items: int
+    total_pages: int = 1
+
+
+class RetrievedSourceResponse(BaseModel):
+    id: UUID
+    rank: int
+    similarity_score: float | None = None
+    used_in_reasoning: bool = True
+    document: dict[str, Any]
+    chunk: dict[str, Any]
+
+
+class RetrievedSourceListResponse(BaseModel):
+    items: list[RetrievedSourceResponse]
+
+
+class RecommendationItemResponse(BaseModel):
+    id: UUID
+    step_number: int
+    title: str
+    action: str
+    explanation: str | None = None
+    expected_result: str | None = None
+    risk_level: str | None = None
+    difficulty: str | None = None
+    prevention_type: str | None = None
+    accepted: bool | None = None
+    completed: bool = False
+
+
+class RecommendationListResponse(BaseModel):
+    items: list[RecommendationItemResponse]
+    summary: str | None = None
+    confidence_score: float | None = None
+    llm_model: str | None = None

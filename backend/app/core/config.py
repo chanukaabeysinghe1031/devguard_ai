@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -91,10 +91,54 @@ class Settings(BaseSettings):
         default="hash",
         alias="EMBEDDING_PROVIDER",
     )
+    embedding_model: str = Field(
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        alias="EMBEDDING_MODEL",
+    )
+    embedding_device: Literal["cpu", "mps", "cuda", "auto"] = Field(
+        default="cpu",
+        alias="EMBEDDING_DEVICE",
+    )
+    embedding_batch_size: int = Field(default=16, alias="EMBEDDING_BATCH_SIZE")
+    embedding_normalize: bool = Field(default=True, alias="EMBEDDING_NORMALIZE")
+    embedding_max_input_characters: int = Field(
+        default=12_000,
+        alias="EMBEDDING_MAX_INPUT_CHARACTERS",
+    )
+    embedding_strict_startup_validation: bool = Field(
+        default=False,
+        alias="EMBEDDING_STRICT_STARTUP_VALIDATION",
+    )
     llm_provider: Literal["local", "openai"] = Field(default="local", alias="LLM_PROVIDER")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    openai_timeout_seconds: float = Field(default=30.0, alias="OPENAI_TIMEOUT_SECONDS")
+    openai_max_retries: int = Field(default=3, alias="OPENAI_MAX_RETRIES")
+    openai_retry_base_delay_ms: int = Field(default=500, alias="OPENAI_RETRY_BASE_DELAY_MS")
+    openai_retry_max_delay_ms: int = Field(default=8000, alias="OPENAI_RETRY_MAX_DELAY_MS")
+    openai_circuit_breaker_failures: int = Field(
+        default=5,
+        alias="OPENAI_CIRCUIT_BREAKER_FAILURES",
+    )
+    openai_circuit_breaker_reset_seconds: int = Field(
+        default=60,
+        alias="OPENAI_CIRCUIT_BREAKER_RESET_SECONDS",
+    )
+    # Local embedded Chroma path (used when CHROMA_HOST is empty).
     chroma_persist_path: str = Field(default="./storage/chroma", alias="CHROMA_PERSIST_PATH")
+    # Remote Chroma HTTP client (Docker service name "chroma", host port 8001).
+    chroma_host: str = Field(default="", alias="CHROMA_HOST")
+    chroma_port: int = Field(default=8000, alias="CHROMA_PORT")
+    chroma_collection_name: str = Field(
+        default="devguard_knowledge",
+        alias="CHROMA_COLLECTION_NAME",
+    )
+    chroma_secondary_collection_name: str = Field(
+        default="",
+        alias="CHROMA_SECONDARY_COLLECTION_NAME",
+    )
+    chroma_tenant: str = Field(default="default_tenant", alias="CHROMA_TENANT")
+    chroma_database: str = Field(default="default_database", alias="CHROMA_DATABASE")
     knowledge_base_path: str = Field(default="../knowledge_base", alias="KNOWLEDGE_BASE_PATH")
     rag_top_k: int = Field(default=10, alias="RAG_TOP_K")
     rag_context_k: int = Field(default=5, alias="RAG_CONTEXT_K")
@@ -143,11 +187,17 @@ class Settings(BaseSettings):
     )
     llm_input_cost_usd_per_million_tokens: Decimal | None = Field(
         default=None,
-        alias="LLM_INPUT_COST_USD_PER_MILLION_TOKENS",
+        validation_alias=AliasChoices(
+            "LLM_INPUT_COST_USD_PER_MILLION_TOKENS",
+            "OPENAI_INPUT_COST_PER_1M_TOKENS",
+        ),
     )
     llm_output_cost_usd_per_million_tokens: Decimal | None = Field(
         default=None,
-        alias="LLM_OUTPUT_COST_USD_PER_MILLION_TOKENS",
+        validation_alias=AliasChoices(
+            "LLM_OUTPUT_COST_USD_PER_MILLION_TOKENS",
+            "OPENAI_OUTPUT_COST_PER_1M_TOKENS",
+        ),
     )
     embedding_cost_usd_per_million_tokens: Decimal | None = Field(
         default=None,
@@ -218,6 +268,24 @@ class Settings(BaseSettings):
         except (InvalidOperation, ValueError):
             return None
 
+    @field_validator("embedding_batch_size", "embedding_max_input_characters", mode="after")
+    @classmethod
+    def positive_embedding_limits(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("must be greater than zero")
+        return value
+
+    @field_validator("embedding_model", mode="after")
+    @classmethod
+    def embedding_model_when_sentence_transformers(cls, value: str, info) -> str:
+        model = (value or "").strip()
+        provider = info.data.get("embedding_provider")
+        if provider == "sentence_transformers" and not model:
+            raise ValueError(
+                "EMBEDDING_MODEL must not be empty when EMBEDDING_PROVIDER=sentence_transformers"
+            )
+        return model or "sentence-transformers/all-MiniLM-L6-v2"
+
     @field_validator("backend_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: Any) -> list[str]:
@@ -250,8 +318,56 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.environment == "production"
 
+    def validate_for_runtime(self) -> list[str]:
+        """Return configuration problems. Production raises on unsafe values."""
+        problems: list[str] = []
+        if len(self.jwt_secret_key or "") < 32:
+            problems.append("JWT_SECRET_KEY must be at least 32 characters")
+        if self.max_upload_size_bytes <= 0:
+            problems.append("MAX_UPLOAD_SIZE_BYTES must be > 0")
+        if self.max_files_per_upload <= 0:
+            problems.append("MAX_FILES_PER_UPLOAD must be > 0")
+        if self.openai_timeout_seconds <= 0:
+            problems.append("OPENAI_TIMEOUT_SECONDS must be > 0")
+        if self.openai_max_retries < 0:
+            problems.append("OPENAI_MAX_RETRIES must be >= 0")
+        if self.openai_retry_base_delay_ms <= 0 or self.openai_retry_max_delay_ms <= 0:
+            problems.append("OpenAI retry delay settings must be > 0")
+        if (
+            self.llm_input_cost_usd_per_million_tokens is not None
+            and self.llm_input_cost_usd_per_million_tokens < 0
+        ):
+            problems.append("OPENAI/LLM input cost must be >= 0")
+        if (
+            self.llm_output_cost_usd_per_million_tokens is not None
+            and self.llm_output_cost_usd_per_million_tokens < 0
+        ):
+            problems.append("OPENAI/LLM output cost must be >= 0")
+        if self.is_production:
+            if self.debug:
+                problems.append("DEBUG must be false in production")
+            if self.bootstrap_enabled:
+                problems.append("BOOTSTRAP_ENABLED must be false in production")
+            if not self.backend_cors_origins:
+                problems.append("BACKEND_CORS_ORIGINS must be set in production")
+            if self.postgres_password in {"", "change_me"}:
+                problems.append("POSTGRES_PASSWORD must not use development default")
+            if (
+                self.enable_external_llm
+                and self.llm_provider == "openai"
+                and not self.openai_api_key
+            ):
+                problems.append("OPENAI_API_KEY required when external OpenAI is enabled")
+            if self.rag_backend == "chroma" and not (self.chroma_host or self.chroma_persist_path):
+                problems.append("Chroma requires CHROMA_HOST or CHROMA_PERSIST_PATH")
+        return problems
+
 
 @lru_cache
 def get_settings() -> Settings:
     """Cached settings singleton."""
-    return Settings()
+    settings = Settings()
+    problems = settings.validate_for_runtime()
+    if settings.is_production and problems:
+        raise ValueError("Unsafe production configuration: " + "; ".join(problems))
+    return settings

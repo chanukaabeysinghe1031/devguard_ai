@@ -39,9 +39,9 @@ class StaticKnowledgeRetriever:
         profile: HybridWeightProfile,
     ) -> list[RetrievalCandidate]:
         masked_query, _ = mask_secrets(query.sanitised_text)
-        embedding = self._embeddings.embed([masked_query])[0]
+        embedding = self._embeddings.embed_query(masked_query)
 
-        where = {"document_status": "active"}
+        where = {"document_status": {"$eq": "active"}}
         # Soft provider preference only for knowledge docs (not tenant boundary).
         if query.technologies:
             # Do not hard-filter; soft boost via scoring.

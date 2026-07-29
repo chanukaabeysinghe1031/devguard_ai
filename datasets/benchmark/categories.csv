@@ -1,0 +1,12 @@
+category_group,description,min_queries
+docker,Container build and runtime failures,15
+terraform,IaC plan/apply failures,15
+aws,AWS IAM and service permission failures,15
+github_actions,CI workflow and runner failures,15
+kubernetes,K8s deploy/runtime failures,10
+node,Node.js / npm dependency failures,10
+python,Python packaging and test failures,10
+java,Maven/Gradle/Java build failures,10
+networking,DNS/TLS/proxy/connectivity failures,10
+security,AuthZ/authN and security misconfiguration,10
+configuration,Pipeline and environment misconfiguration,10

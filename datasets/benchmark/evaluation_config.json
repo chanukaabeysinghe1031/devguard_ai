@@ -1,0 +1,28 @@
+{
+  "collection_name": "devguard_research_knowledge",
+  "product_collection_forbidden": "devguard_knowledge",
+  "candidate_top_k": 20,
+  "eval_top_k_default": 5,
+  "metrics": [
+    "precision@1",
+    "precision@3",
+    "precision@5",
+    "recall@5",
+    "recall@10",
+    "mrr",
+    "map",
+    "ndcg@5",
+    "ndcg@10",
+    "hit_rate",
+    "latency_ms",
+    "category_accuracy",
+    "vendor_coverage"
+  ],
+  "binary_relevance_threshold": 2,
+  "labels_official": "gold_labels.csv",
+  "labels_candidates": "gold_labels.candidates.csv",
+  "embedding_provider": "sentence_transformers",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "retriever_version": "research-chroma-minilm-v1"
+}

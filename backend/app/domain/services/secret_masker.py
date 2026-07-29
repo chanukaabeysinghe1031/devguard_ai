@@ -43,6 +43,17 @@ _SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "[REDACTED_GITHUB_TOKEN]",
     ),
     (
+        re.compile(r"(?i)\bBearer\s+[A-Za-z0-9\-._~+/]+=*"),
+        "[REDACTED_BEARER_TOKEN]",
+    ),
+    (
+        re.compile(
+            r"(?i)\b((?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis|amqp)"
+            r"://)([^/\s:@]+):([^@/\s]+)@"
+        ),
+        r"\1[REDACTED_USER]:[REDACTED_PASSWORD]@",
+    ),
+    (
         re.compile(
             r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"
             r"[\s\S]*?"

@@ -1,7 +1,6 @@
-# Environment
+# Environment and secrets
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 !backend/.env.example
 !frontend/.env.example
@@ -21,6 +20,7 @@ build/
 .pytest_cache/
 .coverage
 htmlcov/
+coverage/
 .ruff_cache/
 .mypy_cache/
 .tox/
@@ -30,15 +30,25 @@ htmlcov/
 node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/tsconfig.tsbuildinfo
+*.tsbuildinfo
 
-# ML / Data / uploads (future modules)
+# ML / Data / uploads (runtime — not source)
 backend/data/uploads/*
 !backend/data/uploads/.gitkeep
+backend/storage/
+backend/tests/.test_uploads/
 backend/data/models/*
 !backend/data/models/.gitkeep
 backend/dataset/raw/*
 !backend/dataset/raw/.gitkeep
 backend/data/chroma/
+uploads/
+tmp/
+temp/
+
+# Phase 4 temporary local scratch (not dissertation evidence)
+backend/_phase4_out/
 
 # Logs
 *.log
@@ -54,12 +64,72 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Docker
+# Docker / runtime volumes (never commit)
 docker-compose.override.yml
 postgres_data/
+chroma_data/
+data/postgres/
+data/chroma/
+
+# Dataset downloads (Phase 1+) — keep schemas/manifests/docs tracked
+datasets/raw/github/**
+!datasets/raw/github/.gitkeep
+datasets/raw/github_open/**
+!datasets/raw/github_open/.gitkeep
+datasets/raw/docs/**
+!datasets/raw/docs/.gitkeep
+!datasets/raw/docs/**/README.md
+!datasets/raw/docs/**/manifest.json
+!datasets/raw/docs/**/source_list.json
+datasets/sanitized/**
+!datasets/sanitized/.gitkeep
+!datasets/sanitized/github/.gitkeep
+!datasets/sanitized/github_open/.gitkeep
+datasets/labelled/**
+!datasets/labelled/.gitkeep
+!datasets/labelled/github/.gitkeep
+!datasets/labelled/github_open/.gitkeep
+datasets/processed/**
+!datasets/processed/.gitkeep
+!datasets/processed/knowledge/.gitkeep
+!datasets/processed/chunks/.gitkeep
+!datasets/processed/docs/.gitkeep
+!datasets/processed/docs/parsed/.gitkeep
+!datasets/processed/docs/chunks/.gitkeep
+datasets/synthetic/**
+!datasets/synthetic/.gitkeep
+datasets/reports/**
+!datasets/reports/.gitkeep
+!datasets/reports/phase2_clean_report.json
+!datasets/reports/phase3_extract_report.json
+!datasets/reports/phases4_7_pipeline_report.json
+!datasets/reports/official_docs_report.json
+
+# Benchmark assets (track definitions + selected Phase 4 evidence;
+# ignore bulky timestamped run outputs and review worksheets)
+!datasets/benchmark/
+datasets/benchmark/results/**
+!datasets/benchmark/results/.gitkeep
+!datasets/benchmark/results/latest_metrics.json
+!datasets/benchmark/results/retrieval_architecture_comparison/
+!datasets/benchmark/results/retrieval_architecture_comparison/**
+datasets/benchmark/review/**
+!datasets/benchmark/review/.gitkeep
+!datasets/benchmark/review/APPROVAL_INSTRUCTIONS.md
+datasets/benchmark/gold_labels.candidates.csv
+
+# Performance evidence (Phase 4 machine-readable summaries — keep)
+!reports/
+!reports/performance/
+!reports/performance/phase4/
+!reports/performance/phase4/**
 
 # Secrets
 *.pem
 *.key
 credentials.json
 secrets/
+
+# Local token scratch files
+githubtoken.txt
+*token*.txt

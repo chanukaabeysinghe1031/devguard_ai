@@ -1,0 +1,52 @@
+{
+  "phase": 2,
+  "generated_at": "2026-07-28T11:26:31.337496+00:00",
+  "dataset_version": "0.2.0-phase2",
+  "inputs": {
+    "closed": "datasets/raw/github",
+    "open": "datasets/raw/github_open"
+  },
+  "outputs": {
+    "closed_sanitized": "datasets/sanitized/github",
+    "open_sanitized": "datasets/sanitized/github_open",
+    "rejected_jsonl": "datasets/reports/phase2_rejected.jsonl"
+  },
+  "counts": {
+    "closed_input": 500,
+    "closed_kept": 489,
+    "closed_rejected": 11,
+    "open_input": 127,
+    "open_kept": 127,
+    "open_rejected": 0,
+    "total_kept": 616,
+    "total_rejected": 11,
+    "unique_content_hashes": 616
+  },
+  "reject_reasons": {
+    "title_too_short": 7,
+    "near_duplicate": 1,
+    "spam_or_empty_title": 1,
+    "weak_failure_signal": 1,
+    "text_too_short": 1
+  },
+  "kept_by_technology": {
+    "docker": 140,
+    "github_actions": 138,
+    "aws": 100,
+    "terraform": 99,
+    "kubernetes": 60,
+    "node": 41,
+    "java": 38
+  },
+  "rejected_by_technology": {
+    "github_actions": 6,
+    "java": 2,
+    "node": 2,
+    "terraform": 1
+  },
+  "notes": [
+    "Sanitized incidents are candidates for Phase 3 knowledge extraction/curation.",
+    "Closed pool is preferred for RAG knowledge; open pool is for eval/symptoms.",
+    "failure_category values remain heuristic until human curation."
+  ]
+}

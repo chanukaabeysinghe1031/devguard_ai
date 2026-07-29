@@ -1,0 +1,308 @@
+[
+  {
+    "id": "e2e-aws-01",
+    "technology": "aws",
+    "expected": "aws_permission_failure",
+    "actual": "aws_permission_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-aws-02",
+    "technology": "aws",
+    "expected": "aws_permission_failure",
+    "actual": "aws_permission_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-aws-03",
+    "technology": "aws",
+    "expected": "aws_permission_failure",
+    "actual": "aws_permission_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-tf-01",
+    "technology": "terraform",
+    "expected": "terraform_failure",
+    "actual": "terraform_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-tf-02",
+    "technology": "terraform",
+    "expected": "terraform_failure",
+    "actual": "terraform_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-tf-03",
+    "technology": "terraform",
+    "expected": "terraform_failure",
+    "actual": "terraform_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-tf-04",
+    "technology": "terraform",
+    "expected": "unknown_failure",
+    "actual": "unknown_failure",
+    "pass": true,
+    "failure_state": false,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-docker-01",
+    "technology": "docker",
+    "expected": "docker_failure",
+    "actual": "docker_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-docker-02",
+    "technology": "docker",
+    "expected": "docker_failure",
+    "actual": "docker_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-docker-03",
+    "technology": "docker",
+    "expected": "docker_failure",
+    "actual": "docker_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-gha-01",
+    "technology": "github_actions",
+    "expected": "ci_runner_failure",
+    "actual": "ci_runner_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-gha-02",
+    "technology": "github_actions",
+    "expected": "ci_runner_failure",
+    "actual": "ci_runner_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-gha-03",
+    "technology": "github_actions",
+    "expected": "build_failure",
+    "actual": "build_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-gha-04",
+    "technology": "github_actions",
+    "expected": "unknown_failure",
+    "actual": "unknown_failure",
+    "pass": true,
+    "failure_state": false,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-k8s-01",
+    "technology": "kubernetes",
+    "expected": "deployment_failure",
+    "actual": "deployment_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-k8s-02",
+    "technology": "kubernetes",
+    "expected": "deployment_failure",
+    "actual": "deployment_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-k8s-03",
+    "technology": "kubernetes",
+    "expected": "deployment_failure",
+    "actual": "deployment_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-k8s-04",
+    "technology": "kubernetes",
+    "expected": "deployment_failure",
+    "actual": "deployment_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-npm-01",
+    "technology": "node",
+    "expected": "dependency_failure",
+    "actual": "dependency_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-npm-02",
+    "technology": "node",
+    "expected": "dependency_failure",
+    "actual": "dependency_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-npm-03",
+    "technology": "node",
+    "expected": "dependency_failure",
+    "actual": "dependency_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-java-01",
+    "technology": "java",
+    "expected": "build_failure",
+    "actual": "build_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-java-02",
+    "technology": "java",
+    "expected": "build_failure",
+    "actual": "build_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-java-03",
+    "technology": "java",
+    "expected": "build_failure",
+    "actual": "build_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-py-01",
+    "technology": "python",
+    "expected": "dependency_failure",
+    "actual": "dependency_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-py-02",
+    "technology": "python",
+    "expected": "dependency_failure",
+    "actual": "dependency_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-py-03",
+    "technology": "python",
+    "expected": "dependency_failure",
+    "actual": "dependency_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-net-01",
+    "technology": "network",
+    "expected": "network_failure",
+    "actual": "network_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-sec-01",
+    "technology": "tls",
+    "expected": "security_misconfiguration",
+    "actual": "security_misconfiguration",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-disk-01",
+    "technology": "platform",
+    "expected": "unknown_failure",
+    "actual": "unknown_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-mem-01",
+    "technology": "platform",
+    "expected": "unknown_failure",
+    "actual": "unknown_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-port-01",
+    "technology": "platform",
+    "expected": "unknown_failure",
+    "actual": "unknown_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-unk-01",
+    "technology": "unknown",
+    "expected": "unknown_failure",
+    "actual": "unknown_failure",
+    "pass": true,
+    "failure_state": true,
+    "fallback_ok": true
+  },
+  {
+    "id": "e2e-ok-01",
+    "technology": "generic",
+    "expected": "unknown_failure",
+    "actual": "unknown_failure",
+    "pass": true,
+    "failure_state": false,
+    "fallback_ok": true
+  }
+]

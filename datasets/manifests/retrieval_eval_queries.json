@@ -1,0 +1,53 @@
+{
+  "description": "Automatic retrieval evaluation queries for Phase 6. Relevance uses failure_category/technology heuristics unless human grades are added later.",
+  "queries": [
+    {
+      "query_id": "q-aws-iam",
+      "query_text": "AWS AccessDenied permission denied during deployment",
+      "expected_failure_category": "aws_permission_failure",
+      "expected_technology": "aws"
+    },
+    {
+      "query_id": "q-docker-copy",
+      "query_text": "Docker COPY failed because source file is missing",
+      "expected_failure_category": "docker_failure",
+      "expected_technology": "docker"
+    },
+    {
+      "query_id": "q-terraform-undeclared",
+      "query_text": "Terraform undeclared resource reference failure",
+      "expected_failure_category": "terraform_failure",
+      "expected_technology": "terraform"
+    },
+    {
+      "query_id": "q-actions-runner",
+      "query_text": "GitHub Actions runner workflow configuration failure",
+      "expected_failure_category": "configuration_failure",
+      "expected_technology": "github_actions"
+    },
+    {
+      "query_id": "q-k8s-deploy",
+      "query_text": "Kubernetes deployment CrashLoopBackOff or ImagePullBackOff",
+      "expected_failure_category": "deployment_failure",
+      "expected_technology": "kubernetes"
+    },
+    {
+      "query_id": "q-node-deps",
+      "query_text": "npm dependency conflict ModuleNotFoundError in CI",
+      "expected_failure_category": "dependency_failure",
+      "expected_technology": "node"
+    },
+    {
+      "query_id": "q-java-build",
+      "query_text": "Maven or Gradle build failed in GitHub Actions",
+      "expected_failure_category": "build_failure",
+      "expected_technology": "java"
+    },
+    {
+      "query_id": "q-network-timeout",
+      "query_text": "connection timeout DNS resolution failure in pipeline",
+      "expected_failure_category": "network_failure",
+      "expected_technology": null
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+metric,single_ms,federated_ms
+mean_latency_ms,33.153,28.1052
+p50_latency_ms,21.6239,27.8495
+p95_latency_ms,53.6169,31.3791

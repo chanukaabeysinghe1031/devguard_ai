@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devguard.ai/schemas/knowledge_record.schema.json",
+  "title": "DevGuardKnowledgeRecord",
+  "description": "Phase 3 extracted knowledge record derived from a sanitised incident. Used before chunking/embedding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "knowledge_id",
+    "incident_id",
+    "title",
+    "symptoms",
+    "technology",
+    "failure_category",
+    "extraction_confidence",
+    "extraction_method"
+  ],
+  "properties": {
+    "knowledge_id": { "type": "string" },
+    "incident_id": { "type": "string" },
+    "title": { "type": "string" },
+    "symptoms": { "type": "string" },
+    "root_cause": { "type": ["string", "null"] },
+    "resolution": { "type": ["string", "null"] },
+    "technology": { "type": "string" },
+    "failure_category": { "type": "string" },
+    "repository": { "type": ["string", "null"] },
+    "issue_url": { "type": ["string", "null"] },
+    "resolved": { "type": ["boolean", "null"] },
+    "extraction_confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "extraction_score": { "type": "integer" },
+    "extraction_method": { "type": "string" },
+    "sections_found": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source_pool": { "type": ["string", "null"] }
+  }
+}

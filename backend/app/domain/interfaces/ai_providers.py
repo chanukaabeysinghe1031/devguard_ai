@@ -52,6 +52,17 @@ class EmbeddingProvider(ABC):
     @abstractmethod
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
+    def embed_query(self, text: str) -> list[float]:
+        """Embed a single search query. Default: batch ``embed`` with one text."""
+        vectors = self.embed([text])
+        if not vectors:
+            return []
+        return vectors[0]
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        """Embed documents for indexing. Default: ``embed``."""
+        return self.embed(texts)
+
 
 class VectorStore(ABC):
     """Vector index boundary. Durable chunk text lives in PostgreSQL."""

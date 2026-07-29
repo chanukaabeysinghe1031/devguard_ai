@@ -90,6 +90,13 @@ APPROVED_FAILURE_CATEGORIES: tuple[ApprovedCategory, ...] = (
         "description": "Secrets exposure, insecure policy, or security control misconfiguration.",
     },
     {
+        "code": "ci_runner_failure",
+        "name": "CI Runner Failure",
+        "description": (
+            "CI/CD runner unavailable, offline, unregistered, or unable to pick up a job."
+        ),
+    },
+    {
         "code": "unknown_failure",
         "name": "Unknown Failure",
         "description": "Failure could not be classified into a known category.",

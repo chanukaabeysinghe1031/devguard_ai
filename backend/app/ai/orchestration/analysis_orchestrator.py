@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections.abc import Awaitable, Callable
 from decimal import Decimal, InvalidOperation
@@ -264,7 +265,7 @@ class AnalysisOrchestrator:
                 "retrieving_knowledge",
                 AnalysisRunStatus.RETRIEVING,
                 70,
-                lambda: self._run_retrieval(context, budget_manager),
+                lambda: asyncio.to_thread(self._run_retrieval, context, budget_manager),
                 soft_fail=True,
             )
             retrieval_quality = self._retrieval_quality.evaluate(context)
@@ -526,18 +527,20 @@ class AnalysisOrchestrator:
         if self._analyzer is None:
             raise RuntimeError("LLM enabled but no RootCauseAnalyzer configured.")
         started = time.perf_counter()
-        provider = context.reasoning_provider_name or "local-grounded"
         try:
             await self._analyzer.analyze(context)
+            provider = context.reasoning_provider_name or "unknown"
+            usage = dict((context.signals or {}).get("reasoning_usage") or {})
             budget_manager.record_reasoning(
                 provider=provider,
                 model=context.reasoning_provider_name,
                 latency_ms=int((time.perf_counter() - started) * 1000),
                 success=True,
-                input_tokens=None,
-                output_tokens=None,
+                input_tokens=_optional_int(usage.get("input_tokens")),
+                output_tokens=_optional_int(usage.get("output_tokens")),
             )
         except Exception as exc:
+            provider = context.reasoning_provider_name or "unknown"
             budget_manager.record_reasoning(
                 provider=provider,
                 model=context.reasoning_provider_name,

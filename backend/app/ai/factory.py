@@ -7,7 +7,7 @@ from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.orchestration.policy import RoutingPolicyConfig
-from app.ai.rag.embedding_provider import build_embedding_provider
+from app.ai.rag.embedding_provider import build_embedding_provider_from_settings
 from app.ai.rag.historical_retriever import HistoricalIncidentRetriever
 from app.ai.rag.hybrid_pipeline import HybridRetrievalPipeline
 from app.ai.rag.knowledge_ingestion import KnowledgeIngestionService
@@ -44,15 +44,60 @@ def build_hybrid_settings(settings: Settings) -> HybridRetrievalSettings:
     )
 
 
+def _build_configured_vector_store(
+    settings: Settings,
+    *,
+    embedding_identity: dict | None = None,
+    collection_name: str | None = None,
+):
+    return build_vector_store(
+        settings.rag_backend,
+        persist_path=settings.chroma_persist_path,
+        host=settings.chroma_host,
+        port=settings.chroma_port,
+        collection_name=collection_name or settings.chroma_collection_name,
+        tenant=settings.chroma_tenant,
+        database=settings.chroma_database,
+        embedding_identity=embedding_identity,
+    )
+
+
+def _provider_embedding_identity(embeddings) -> dict[str, str] | None:
+    config_identity = getattr(embeddings, "config_identity", None)
+    if callable(config_identity):
+        return dict(config_identity())
+    from app.ai.rag.embedding_provider import embedding_config_identity
+
+    provider_name = getattr(embeddings, "provider_name", None)
+    if provider_name is None:
+        return None
+    return embedding_config_identity(
+        provider=str(provider_name),
+        model=str(getattr(embeddings, "model_name", embeddings.name)),
+        dimension=int(getattr(embeddings, "embedding_dimension", 256)),
+        normalised=bool(getattr(embeddings, "normalisation_enabled", True)),
+    )
+
+
 async def build_retriever(
     session: AsyncSession,
     settings: Settings,
 ) -> KnowledgeRetriever:
-    embeddings = build_embedding_provider(settings.embedding_provider)
-    store = build_vector_store(
-        settings.rag_backend,
-        persist_path=settings.chroma_persist_path,
-    )
+    embeddings = build_embedding_provider_from_settings(settings)
+    identity = _provider_embedding_identity(embeddings)
+    store = _build_configured_vector_store(settings, embedding_identity=identity)
+    secondary_store = None
+    secondary_name = (settings.chroma_secondary_collection_name or "").strip()
+    if (
+        settings.rag_backend == "chroma"
+        and secondary_name
+        and secondary_name != settings.chroma_collection_name
+    ):
+        secondary_store = _build_configured_vector_store(
+            settings,
+            embedding_identity=identity,
+            collection_name=secondary_name,
+        )
     lexical = LexicalRetriever() if settings.enable_lexical_retrieval else None
     ingestion = KnowledgeIngestionService(
         session,
@@ -65,6 +110,7 @@ async def build_retriever(
     return KnowledgeRetriever(
         embedding_provider=embeddings,
         vector_store=store,
+        secondary_vector_store=secondary_store,
         retrieve_k=settings.rag_top_k,
         context_k=settings.rag_context_k,
     )
@@ -74,11 +120,21 @@ async def build_hybrid_pipeline(
     session: AsyncSession,
     settings: Settings,
 ) -> tuple[KnowledgeRetriever, HybridRetrievalPipeline]:
-    embeddings = build_embedding_provider(settings.embedding_provider)
-    store = build_vector_store(
-        settings.rag_backend,
-        persist_path=settings.chroma_persist_path,
-    )
+    embeddings = build_embedding_provider_from_settings(settings)
+    identity = _provider_embedding_identity(embeddings)
+    store = _build_configured_vector_store(settings, embedding_identity=identity)
+    secondary_store = None
+    secondary_name = (settings.chroma_secondary_collection_name or "").strip()
+    if (
+        settings.rag_backend == "chroma"
+        and secondary_name
+        and secondary_name != settings.chroma_collection_name
+    ):
+        secondary_store = _build_configured_vector_store(
+            settings,
+            embedding_identity=identity,
+            collection_name=secondary_name,
+        )
     lexical = LexicalRetriever() if settings.enable_lexical_retrieval else None
     ingestion = KnowledgeIngestionService(
         session,
@@ -91,6 +147,7 @@ async def build_hybrid_pipeline(
     baseline = KnowledgeRetriever(
         embedding_provider=embeddings,
         vector_store=store,
+        secondary_vector_store=secondary_store,
         retrieve_k=settings.rag_top_k,
         context_k=settings.rag_context_k,
     )
@@ -119,11 +176,21 @@ async def build_hybrid_pipeline(
 
 
 def build_analyzer(settings: Settings) -> RootCauseAnalyzer:
-    provider = build_reasoning_provider(
-        settings.llm_provider,
-        api_key=settings.openai_api_key,
-        model=settings.openai_model,
-    )
+    try:
+        provider = build_reasoning_provider(
+            settings.llm_provider,
+            api_key=settings.openai_api_key,
+            model=settings.openai_model,
+            timeout_seconds=settings.openai_timeout_seconds,
+            max_retries=settings.openai_max_retries,
+            retry_base_delay_ms=settings.openai_retry_base_delay_ms,
+            retry_max_delay_ms=settings.openai_retry_max_delay_ms,
+            circuit_breaker_failures=settings.openai_circuit_breaker_failures,
+            circuit_breaker_reset_seconds=settings.openai_circuit_breaker_reset_seconds,
+        )
+    except Exception:
+        # Soft-fail to local grounded reasoner when external provider cannot start.
+        provider = build_reasoning_provider("local")
     return RootCauseAnalyzer(provider)
 
 

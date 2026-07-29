@@ -18,6 +18,7 @@ from app.ai.reasoning.output_validator import (
     validate_root_cause_output,
 )
 from app.ai.reasoning.prompt_builder import SAFETY_RULES
+from app.ai.reasoning.reasoning_provider import LocalGroundedReasoningProvider
 from app.domain.interfaces.ai_providers import (
     ReasoningProvider,
     RecommendationRequest,
@@ -55,13 +56,33 @@ class RootCauseAnalyzer:
         try:
             raw = await self._provider.generate_root_cause(request)
             validated = validate_root_cause_output(raw, context)
-        except (GroundingValidationError, ValueError, RuntimeError) as exc:
-            context.warnings.append(f"LLM reasoning fallback: {exc}")
-            context.partial = True
-            context.llm_root_cause = None
-            context.grounding_valid = False
-            logger.warning("llm_reasoning_fallback", error=str(exc))
-            return None
+        except (GroundingValidationError, ValueError, RuntimeError, ImportError) as exc:
+            # Soft-fail: if the configured provider is external, retry with local grounded.
+            if not str(getattr(self._provider, "name", "")).startswith("local"):
+                try:
+                    local = LocalGroundedReasoningProvider()
+                    raw = await local.generate_root_cause(request)
+                    validated = validate_root_cause_output(raw, context)
+                    context.warnings.append(f"LLM provider fallback to local: {exc}")
+                    context.reasoning_provider_name = local.name
+                    context.fallback_used = True
+                    context.fallback_reason = str(exc)[:300]
+                except (GroundingValidationError, ValueError, RuntimeError) as local_exc:
+                    context.warnings.append(
+                        f"LLM reasoning fallback: {exc}; local also failed: {local_exc}"
+                    )
+                    context.partial = True
+                    context.llm_root_cause = None
+                    context.grounding_valid = False
+                    logger.warning("llm_reasoning_fallback", error=str(exc))
+                    return None
+            else:
+                context.warnings.append(f"LLM reasoning fallback: {exc}")
+                context.partial = True
+                context.llm_root_cause = None
+                context.grounding_valid = False
+                logger.warning("llm_reasoning_fallback", error=str(exc))
+                return None
 
         # Re-mask any accidental secrets in model text.
         summary, _ = mask_secrets(str(validated["summary"]))
@@ -80,6 +101,19 @@ class RootCauseAnalyzer:
         context.grounding_valid = True
         context.reasoning_provider_name = self._provider.name
         context.model_name = self._provider.name
+        usage = getattr(self._provider, "last_usage", None)
+        if isinstance(usage, dict) and usage:
+            context.signals = {
+                **(context.signals or {}),
+                "reasoning_usage": {
+                    "provider": usage.get("provider"),
+                    "model": usage.get("model"),
+                    "input_tokens": usage.get("input_tokens"),
+                    "output_tokens": usage.get("output_tokens"),
+                    "total_tokens": usage.get("total_tokens"),
+                    "latency_ms": usage.get("latency_ms"),
+                },
+            }
 
         if context.generate_recommendations:
             await self._adapt_recommendations(context, validated, evidence_payload, docs_payload)

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import { BackendStatusBadge } from "../components/BackendStatusBadge";
 
 export function HomePage() {
@@ -15,9 +17,16 @@ export function HomePage() {
         <p className="mt-3 text-lg text-slate-400">AI-Powered DevOps Intelligence Platform</p>
 
         <div className="mt-8 rounded-lg border border-surface-border bg-surface p-4 text-sm text-slate-400">
-          Module 1 foundation is active. Upload, analysis, and AI features will be added in later
-          modules.
+          Upload a CI/CD failure log, retrieve grounded knowledge, and view diagnosis plus
+          recommendations.
         </div>
+
+        <Link
+          to="/diagnose"
+          className="mt-6 inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-muted"
+        >
+          Open diagnosis pipeline
+        </Link>
       </div>
     </main>
   );

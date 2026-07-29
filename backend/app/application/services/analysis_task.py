@@ -28,7 +28,12 @@ async def execute_analysis_run_job(analysis_run_id: UUID) -> None:
             settings=settings,
             storage=storage,
         )
-        await service.execute(analysis_run_id)
+        try:
+            await service.execute(analysis_run_id)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
 
 
 def schedule_analysis_execution(

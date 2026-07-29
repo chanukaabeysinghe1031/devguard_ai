@@ -69,11 +69,15 @@ class AdaptiveExecutionRouter:
                 external=False,
             )
         if mode == ExecutionMode.LLM_ONLY:
+            if self._policy.enable_external_llm:
+                route = ExecutionRoute.EXTERNAL_LLM_WITHOUT_RAG
+            elif self._policy.enable_local_reasoner:
+                route = ExecutionRoute.LOCAL_REASONING
+            else:
+                route = ExecutionRoute.DETERMINISTIC_ONLY
             return self._decision(
                 stage=stage,
-                route=ExecutionRoute.LOCAL_REASONING
-                if self._policy.enable_local_reasoner
-                else ExecutionRoute.EXTERNAL_LLM_WITHOUT_RAG,
+                route=route,
                 reasons=["Manual/experimental mode llm_only."],
                 confidence=confidence,
                 evidence_quality=evidence_quality,
@@ -84,12 +88,16 @@ class AdaptiveExecutionRouter:
                 local=self._policy.enable_local_reasoner,
                 external=self._policy.enable_external_llm,
             )
-        # rag_llm
+        # rag_llm — prefer external LLM when enabled; local remains soft-fail fallback.
+        if self._policy.enable_external_llm:
+            route = ExecutionRoute.RAG_WITH_EXTERNAL_LLM
+        elif self._policy.enable_local_reasoner:
+            route = ExecutionRoute.RAG_WITH_LOCAL_REASONING
+        else:
+            route = ExecutionRoute.DETERMINISTIC_WITH_RAG
         return self._decision(
             stage=stage,
-            route=ExecutionRoute.RAG_WITH_LOCAL_REASONING
-            if self._policy.enable_local_reasoner
-            else ExecutionRoute.RAG_WITH_EXTERNAL_LLM,
+            route=route,
             reasons=["Manual/experimental mode rag_llm."],
             confidence=confidence,
             evidence_quality=evidence_quality,
@@ -284,14 +292,17 @@ class AdaptiveExecutionRouter:
         elif rag and not llm:
             route = ExecutionRoute.DETERMINISTIC_WITH_RAG
         elif llm and not rag:
+            # Prefer external LLM when enabled; local is the offline fallback.
             route = (
-                ExecutionRoute.LOCAL_REASONING if local else ExecutionRoute.EXTERNAL_LLM_WITHOUT_RAG
+                ExecutionRoute.EXTERNAL_LLM_WITHOUT_RAG
+                if external
+                else ExecutionRoute.LOCAL_REASONING
             )
         elif llm and rag:
             route = (
-                ExecutionRoute.RAG_WITH_LOCAL_REASONING
-                if local
-                else ExecutionRoute.RAG_WITH_EXTERNAL_LLM
+                ExecutionRoute.RAG_WITH_EXTERNAL_LLM
+                if external
+                else ExecutionRoute.RAG_WITH_LOCAL_REASONING
             )
 
         return RoutingDecision(

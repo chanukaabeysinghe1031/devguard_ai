@@ -1,0 +1,55 @@
+{
+  "phase": 3,
+  "generated_at": "2026-07-28T11:47:59.606721+00:00",
+  "dataset_version": "0.3.0-phase3",
+  "method": "heuristic_v1",
+  "counts": {
+    "processed": 616,
+    "rejected": 0,
+    "curated": 240,
+    "curated_capped_to_candidate": 0,
+    "knowledge_curated": 240,
+    "knowledge_candidates": 376,
+    "confidence": {
+      "medium": 340,
+      "high": 240,
+      "low": 36
+    },
+    "status_seen": {
+      "curation_candidate": 376,
+      "curated": 240
+    },
+    "failure_category": {
+      "docker_failure": 187,
+      "terraform_failure": 182,
+      "configuration_failure": 134,
+      "aws_permission_failure": 29,
+      "dependency_failure": 27,
+      "network_failure": 21,
+      "build_failure": 19,
+      "deployment_failure": 8,
+      "security_misconfiguration": 6,
+      "test_failure": 3
+    },
+    "technology": {
+      "docker": 140,
+      "github_actions": 138,
+      "aws": 100,
+      "terraform": 99,
+      "kubernetes": 60,
+      "node": 41,
+      "java": 38
+    }
+  },
+  "outputs": {
+    "labelled_closed": "datasets/labelled/github",
+    "labelled_open": "datasets/labelled/github_open",
+    "knowledge_curated": "datasets/processed/knowledge/curated",
+    "knowledge_candidates": "datasets/processed/knowledge/candidates"
+  },
+  "notes": [
+    "Auto-curated means heuristic extraction found symptoms plus root cause and/or resolution.",
+    "Human review can promote candidates or correct categories before chunking.",
+    "Open issues are never auto-marked curated for the RAG knowledge corpus."
+  ]
+}

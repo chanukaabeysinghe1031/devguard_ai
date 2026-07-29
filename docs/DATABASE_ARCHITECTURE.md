@@ -100,6 +100,7 @@ organizations
             │               │       ├── predictions
             │               │       ├── evidence_items
             │               │       ├── recommendations
+            │               │       │       └── recommendation_steps
             │               │       └── retrieved_documents
             │               │
             │               ├── incident_events
@@ -142,7 +143,7 @@ audit_logs
    - evidence
    - retrieved documentation
    - root-cause explanation
-   - recommendations
+   - recommendations (summary + recommendation_steps)
 7. The engineer investigates and resolves the incident.
 8. Resolution notes and time spent are recorded.
 9. A report is generated.
@@ -189,20 +190,18 @@ Represents authenticated platform users.
 | password_hash | VARCHAR(255) | NOT NULL | Secure password hash |
 | full_name | VARCHAR(150) | NOT NULL | User's name |
 | avatar_url | TEXT | NULL | Profile image |
-| role | VARCHAR(40) | NOT NULL | Legacy/global role if required |
+| is_platform_admin | BOOLEAN | NOT NULL, DEFAULT false | Platform-level admin (not an org membership role) |
 | is_active | BOOLEAN | NOT NULL, DEFAULT true | Account status |
 | last_login_at | TIMESTAMPTZ | NULL | Most recent login |
 | created_at | TIMESTAMPTZ | NOT NULL | Creation time |
 | updated_at | TIMESTAMPTZ | NOT NULL | Update time |
 
-### Recommended roles
+### Platform vs organization roles
 
-- admin
-- engineer
-- viewer
-
-For SaaS expansion, organization-specific roles should be stored in `organization_members`.
-
+- **`platform_admin`** is a **platform-level** capability on the user (`is_platform_admin` or equivalent). It is **not** stored as an `organization_members.role`.
+- Organization-scoped roles live only on `organization_members` (see §5.3).
+- There is **no `analyst` role** in the frozen v1.0 model. Legacy `analyst` values map to `engineer` on membership where needed.
+- A legacy global `role` column (if retained temporarily during migration) must not be treated as the source of truth for org access.
 ---
 
 ## 5.3 organization_members
@@ -216,9 +215,21 @@ Links users to organizations.
 | id | UUID | PK | Membership identifier |
 | organization_id | UUID | FK, NOT NULL | Related organization |
 | user_id | UUID | FK, NOT NULL | Related user |
-| role | VARCHAR(40) | NOT NULL | owner, admin, engineer, viewer |
+| role | VARCHAR(40) | NOT NULL | Frozen org roles (see below) |
 | joined_at | TIMESTAMPTZ | NOT NULL | Membership creation time |
 | is_active | BOOLEAN | NOT NULL, DEFAULT true | Membership status |
+
+### Frozen organization roles (v1.0)
+
+| Role | Meaning |
+|------|---------|
+| `organization_owner` | Owns the organization; highest org privilege |
+| `organization_admin` | Administers org settings and members |
+| `engineer` | Day-to-day incident / pipeline work |
+| `viewer` | Read-only access |
+
+**Not used:** `analyst` (no analyst role in v1.0).  
+**Not an org role:** `platform_admin` (platform-level on `users`, see §5.2).
 
 ### Constraints
 
@@ -564,7 +575,9 @@ Only masked and sanitized excerpts should be stored.
 
 ## 5.13 recommendations
 
-Stores ordered remediation guidance.
+Parent/summary record for AI remediation guidance produced by an analysis run.
+
+Ordered steps are **not** stored as columns on this table. Steps belong in **`recommendation_steps`** (§5.13a). Legacy JSON remediation blobs (`remediation_steps`, `preventive_actions`, `future_improvements`, and similar) are **not** the source of truth.
 
 ### Columns
 
@@ -573,15 +586,41 @@ Stores ordered remediation guidance.
 | id | UUID | PK | Recommendation identifier |
 | analysis_run_id | UUID | FK, NOT NULL | Related analysis |
 | prediction_id | UUID | FK, NULL | Related prediction |
-| step_number | INTEGER | NOT NULL | Ordered step |
+| root_cause | TEXT | NULL | Optional summary root cause |
+| explanation | TEXT | NULL | Optional summary explanation |
+| llm_model | VARCHAR(100) | NULL | Model used to generate guidance |
+| confidence | NUMERIC(5,4) | NULL | Overall confidence (0–1) |
+| created_at | TIMESTAMPTZ | NOT NULL | Creation time |
+| updated_at | TIMESTAMPTZ | NULL | Last update time |
+
+### Notes
+
+- One recommendation summary may own many `recommendation_steps`.
+- Do not use `step_number` on this table as the primary step model.
+- Query patterns that need steps should join `recommendation_steps` (and may also filter by denormalized `analysis_run_id` on steps).
+
+---
+
+## 5.13a recommendation_steps
+
+Normalized ordered remediation, verification, and prevention steps for a recommendation.
+
+### Columns
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| id | UUID | PK | Step identifier |
+| recommendation_id | UUID | FK, NOT NULL | Parent recommendation summary |
+| analysis_run_id | UUID | FK, NOT NULL | Denormalized analysis run for query convenience |
+| step_number | INTEGER | NOT NULL | Order within the recommendation |
+| step_type | VARCHAR(30) | NOT NULL | `remediation` \| `verification` \| `prevention` |
 | title | VARCHAR(255) | NOT NULL | Action title |
 | action | TEXT | NOT NULL | Recommended action |
 | explanation | TEXT | NULL | Why the action is required |
 | expected_result | TEXT | NULL | Expected outcome |
-| risk_level | VARCHAR(20) | NOT NULL | low, medium, high |
+| risk_level | VARCHAR(20) | NULL | low, medium, high |
 | difficulty | VARCHAR(20) | NULL | easy, moderate, advanced |
 | command_template | TEXT | NULL | Safe command template if appropriate |
-| prevention_type | VARCHAR(50) | NULL | immediate_fix, prevention, security, cost |
 | accepted | BOOLEAN | NULL | User acceptance |
 | completed | BOOLEAN | NOT NULL, DEFAULT false | Completion state |
 | created_at | TIMESTAMPTZ | NOT NULL | Creation time |
@@ -589,8 +628,14 @@ Stores ordered remediation guidance.
 ### Constraints
 
 ```text
-UNIQUE (analysis_run_id, step_number)
+UNIQUE (recommendation_id, step_number)
 ```
+
+### Notes
+
+- `step_type` is restricted to `remediation`, `verification`, or `prevention`.
+- Both `recommendation_id` and `analysis_run_id` are stored to support parent-scoped and analysis-scoped query patterns.
+- This table is the durable source of truth for step content; do not rely on legacy JSON blobs on `recommendations`.
 
 ---
 
@@ -1068,7 +1113,7 @@ These should not be discarded. They should be evolved.
 | failure_category | failure_categories | Rename consistently |
 | prediction | predictions | Link to analysis_run |
 | evidence_item | evidence_items | Link to analysis_run and source file |
-| recommendation | recommendations | Link to analysis_run and add ordered steps |
+| recommendation | recommendations + recommendation_steps | Link summary to analysis_run; store ordered steps in recommendation_steps |
 | model_version | model_versions | Extend metadata |
 | evaluation | evaluations | Extend experiment details |
 | feedback | feedback | Link to incident and analysis |
@@ -1091,6 +1136,7 @@ These should not be discarded. They should be evolved.
 - knowledge_documents
 - knowledge_chunks
 - retrieved_documents
+- recommendation_steps
 - audit_logs
 
 ---
@@ -1110,10 +1156,11 @@ Update:
 
 - users
 
-Seed:
+Seed (idempotent script + env vars, not Alembic):
 
 - one default organization
-- one default administrator membership
+- one default `organization_owner` membership
+- platform admin flag when required
 
 ---
 
@@ -1140,13 +1187,18 @@ Create:
 
 - analysis_runs
 - retrieved_documents
+- recommendation_steps
 
 Update:
 
 - predictions
 - evidence_items
-- recommendations
+- recommendations (parent/summary; steps moved to recommendation_steps)
 - feedback
+
+Deprecate:
+
+- analysis_history (drop in Migration 007)
 
 ---
 
@@ -1179,6 +1231,11 @@ Add:
 - check constraints
 - cascade rules
 
+Cleanup:
+
+- drop `analysis_history`
+- drop obsolete recommendation JSON blob columns
+
 ---
 
 # 11. MVP Database Scope
@@ -1197,6 +1254,7 @@ The MSc MVP should prioritize the following tables:
 - predictions
 - evidence_items
 - recommendations
+- recommendation_steps
 - incident_events
 - incident_resolutions
 - incident_reports

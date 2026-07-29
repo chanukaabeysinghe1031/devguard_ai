@@ -21,6 +21,29 @@ services:
       timeout: 5s
       retries: 5
 
+  chroma:
+    image: chromadb/chroma:1.5.9
+    container_name: devguard_chroma
+    restart: unless-stopped
+    # Bound to localhost only — not exposed on all interfaces.
+    ports:
+      - "127.0.0.1:8001:8000"
+    volumes:
+      # Official Chroma Docker image persists under /data.
+      - chroma_data:/data
+    healthcheck:
+      # chromadb/chroma:1.5.9 has no python/curl in PATH; use bash /dev/tcp.
+      # Heartbeat path for server 1.5.9: /api/v2/heartbeat
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8000 && printf \"GET /api/v2/heartbeat HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -q \"nanosecond heartbeat\" <&3'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
   backend:
     build:
       context: ./backend
@@ -34,11 +57,41 @@ services:
     environment:
       POSTGRES_HOST: postgres
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-devguard}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-devguard}
+      # Inside Compose the backend reaches Chroma by service name (not localhost:8001).
+      RAG_BACKEND: ${RAG_BACKEND:-chroma}
+      CHROMA_HOST: chroma
+      CHROMA_PORT: "8000"
+      CHROMA_COLLECTION_NAME: ${CHROMA_COLLECTION_NAME:-devguard_knowledge}
+      CHROMA_SECONDARY_COLLECTION_NAME: ${CHROMA_SECONDARY_COLLECTION_NAME:-}
+      CHROMA_TENANT: ${CHROMA_TENANT:-default_tenant}
+      CHROMA_DATABASE: ${CHROMA_DATABASE:-default_database}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-hash}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+      EMBEDDING_DEVICE: ${EMBEDDING_DEVICE:-cpu}
+      KNOWLEDGE_BASE_PATH: ${KNOWLEDGE_BASE_PATH:-/knowledge_base}
+      # Hugging Face / sentence-transformers cache (survives backend recreation).
+      HF_HOME: /root/.cache/huggingface
+      TRANSFORMERS_CACHE: /root/.cache/huggingface
+      SENTENCE_TRANSFORMERS_HOME: /root/.cache/torch/sentence_transformers
     volumes:
       - ./backend:/app
+      - ./knowledge_base:/knowledge_base:ro
+      - model_cache:/root/.cache
     depends_on:
       postgres:
         condition: service_healthy
+      chroma:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://127.0.0.1:8000/api/v1/health >/dev/null || exit 1",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
   frontend:
     build:
@@ -60,3 +113,5 @@ services:
 
 volumes:
   postgres_data:
+  chroma_data:
+  model_cache:

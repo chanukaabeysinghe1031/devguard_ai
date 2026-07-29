@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
@@ -167,7 +168,10 @@ class KnowledgeIngestionService:
             )
             for chunk in chunks
         ]
-        vectors = self._embeddings.embed([c.text for c in embedded])
+        vectors = await asyncio.to_thread(
+            self._embeddings.embed_documents,
+            [c.text for c in embedded],
+        )
         self._store.upsert(embedded, vectors)
         if self._lexical is not None:
             self._lexical.index(embedded)

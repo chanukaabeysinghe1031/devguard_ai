@@ -35,7 +35,24 @@ _STAGE = re.compile(
     re.I,
 )
 _TECHNOLOGIES: tuple[tuple[str, re.Pattern[str]], ...] = (
-    ("GitHub Actions", re.compile(r"github[_ ]?actions|::set-output|actions/", re.I)),
+    (
+        "GitHub Actions",
+        re.compile(
+            r"github[_ ]?actions"
+            r"|::set-output"
+            r"|actions/"
+            r"|\.github/workflows"
+            r"|workflow_dispatch"
+            r"|GITHUB_ACTIONS\s*=\s*true"
+            r"|GITHUB_RUN_ID"
+            r"|github-hosted runner"
+            r"|self-hosted runner"
+            r"|runs-on:"
+            r"|actions-runner"
+            r"|actions\.runner",
+            re.I,
+        ),
+    ),
     ("Jenkins", re.compile(r"\bjenkins\b", re.I)),
     ("Docker", re.compile(r"\bdocker\b|dockerfile", re.I)),
     ("Terraform", re.compile(r"\bterraform\b|\.tf\b", re.I)),

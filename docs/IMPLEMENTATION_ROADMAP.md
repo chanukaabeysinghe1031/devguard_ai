@@ -4787,6 +4787,36 @@ Definition of Done:
 
 ---
 
+# Delivery Module Tracker (backend AI phases)
+
+These delivery modules are tracked in project Cursor rules and are distinct from the
+frontend “MODULE 8.x” screen work later in this roadmap.
+
+| Delivery module | Status | Notes |
+|---|---|---|
+| Module 6 — Deterministic AI pipeline | ✅ Complete | Rules/hybrid classify → evidence → recommendations |
+| Module 7 — Grounded RAG + LLM | ✅ Complete | Soft-fail retrieval/reasoning; deterministic fallback |
+| Module 8 — Confidence/cost orchestration | ✅ Complete | Two-stage routing, budgets, fusion, evaluation metadata |
+| Module 9 — Hybrid retrieval optimisation | ✅ Complete | embedding_only + hybrid_static + org-safe historical |
+| Step 3 — Persistent Chroma (Docker) | ✅ Complete | chromadb/chroma:1.5.9 + HTTP client |
+| Step 4 — Sentence-transformer embeddings | ✅ Complete | all-MiniLM-L6-v2 CPU + hash baseline preserved |
+| Phase 1 — Dataset corpus kit | ✅ Complete | schemas, GitHub Issues API collector, dataset card (no full ingest / no GPT) |
+| Phase 2 — Clean & normalise | ✅ Complete | spam/dedupe/mask filters → datasets/sanitized + phase2 report |
+| Phase 3 — Extract knowledge | ✅ Complete | heuristic symptoms/cause/resolution → labelled + knowledge records |
+| Phase 4–7 — Chunk/embed/eval/GPT | ✅ Complete | research Chroma collection + retrieval metrics + local/OpenAI diagnosis |
+| Module 10 — Adaptive prompts / multi-agent | ⬜ Not started | Requires separate approval after Module 9 |
+
+Module 9 research note: hybrid weights are heuristic and require experimental tuning.
+Source authority is a boost, not a correctness guarantee. Historical incidents are used
+only when resolved/trusted and organisation-scoped. Recency is not quality.
+`embedding_only` remains the Module 7 baseline. Historical retrieval is disabled by default.
+
+Step 4 note: `EMBEDDING_PROVIDER=hash` remains the deterministic default. Real local
+embeddings use `sentence_transformers` + `all-MiniLM-L6-v2` on CPU. See
+`docs/EMBEDDING_SETUP.md`. OpenAI reasoning is not part of Step 4.
+
+---
+
 # Production Checklist
 
 - [ ] End-to-end integration complete

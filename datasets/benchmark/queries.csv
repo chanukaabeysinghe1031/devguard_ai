@@ -1,0 +1,131 @@
+query_id,query_text,technology,failure_category,pipeline_stage,expected_technologies,expected_vendors,difficulty,category_group
+bm-docker-01,Docker COPY failed because source file is missing,docker,docker_failure,build,docker,Docker,easy,docker
+bm-docker-02,Dockerfile RUN apt-get fails with package not found,docker,docker_failure,build,docker,Docker,easy,docker
+bm-docker-03,Docker build context too large slows CI,docker,docker_failure,build,docker,Docker,medium,docker
+bm-docker-04,Docker image pull rate limit exceeded in pipeline,docker,docker_failure,deploy,docker,Docker,medium,docker
+bm-docker-05,Docker multi-stage build cannot find artifact from previous stage,docker,docker_failure,build,docker,Docker,hard,docker
+bm-docker-06,docker compose up fails with port already allocated,docker,docker_failure,deploy,docker,Docker,easy,docker
+bm-docker-07,Docker ENTRYPOINT script permission denied,docker,docker_failure,runtime,docker,Docker,medium,docker
+bm-docker-08,Docker layer cache not restoring in GitHub Actions,docker,docker_failure,build,docker,Docker,medium,docker
+bm-docker-09,Cannot connect to Docker daemon in CI runner,docker,docker_failure,build,docker,Docker,medium,docker
+bm-docker-10,Docker HEALTHCHECK failing after container start,docker,docker_failure,runtime,docker,Docker,hard,docker
+bm-docker-11,Dockerfile ARG not available during RUN step,docker,docker_failure,build,docker,Docker,medium,docker
+bm-docker-12,Docker push unauthorized authentication required,docker,docker_failure,deploy,docker,Docker,easy,docker
+bm-docker-13,Docker volume mount path does not exist in container,docker,docker_failure,runtime,docker,Docker,medium,docker
+bm-docker-14,Docker Compose depends_on service not healthy,docker,docker_failure,deploy,docker,Docker,hard,docker
+bm-docker-15,Docker build fails with no space left on device,docker,docker_failure,build,docker,Docker,easy,docker
+bm-tf-01,Terraform undeclared resource reference failure,terraform,terraform_failure,plan,terraform,Terraform,easy,terraform
+bm-tf-02,Terraform state locked by another process,terraform,terraform_failure,apply,terraform,Terraform,easy,terraform
+bm-tf-03,Terraform provider authentication failed for AWS,terraform,terraform_failure,plan,terraform,Terraform,medium,terraform
+bm-tf-04,Terraform cycle error between resources,terraform,terraform_failure,plan,terraform,Terraform,hard,terraform
+bm-tf-05,Terraform plan shows unexpected destroy for critical resource,terraform,terraform_failure,plan,terraform,Terraform,hard,terraform
+bm-tf-06,Terraform variable not set required input missing,terraform,terraform_failure,plan,terraform,Terraform,easy,terraform
+bm-tf-07,Terraform remote backend S3 access denied,terraform,terraform_failure,init,terraform,Terraform,medium,terraform
+bm-tf-08,Terraform module source not found in registry,terraform,terraform_failure,init,terraform,Terraform,medium,terraform
+bm-tf-09,Terraform for_each on set of strings invalid,terraform,terraform_failure,plan,terraform,Terraform,medium,terraform
+bm-tf-10,Terraform apply fails with resource already exists,terraform,terraform_failure,apply,terraform,Terraform,medium,terraform
+bm-tf-11,Terraform data source returns empty result,terraform,terraform_failure,plan,terraform,Terraform,hard,terraform
+bm-tf-12,Terraform workspace select failed in CI,terraform,terraform_failure,init,terraform,Terraform,medium,terraform
+bm-tf-13,Terraform count index out of range,terraform,terraform_failure,plan,terraform,Terraform,hard,terraform
+bm-tf-14,Terraform import fails for existing cloud resource,terraform,terraform_failure,apply,terraform,Terraform,hard,terraform
+bm-tf-15,Terraform null_resource provisioner local-exec failed,terraform,terraform_failure,apply,terraform,Terraform,medium,terraform
+bm-aws-01,AWS AccessDenied during deployment,aws,aws_permission_failure,deploy,aws,AWS,easy,aws
+bm-aws-02,AWS IAM role cannot be assumed by service,aws,aws_permission_failure,deploy,aws,AWS,medium,aws
+bm-aws-03,AWS ECS task failed to start AccessDeniedException,aws,aws_permission_failure,deploy,aws,AWS,medium,aws
+bm-aws-04,AWS S3 PutObject Access Denied in pipeline,aws,aws_permission_failure,deploy,aws,AWS,easy,aws
+bm-aws-05,AWS STS AssumeRole with web identity failed,aws,aws_permission_failure,auth,aws,AWS,hard,aws
+bm-aws-06,AWS Lambda permission denied to write CloudWatch logs,aws,aws_permission_failure,runtime,aws,AWS,medium,aws
+bm-aws-07,AWS EKS node cannot pull image from ECR,aws,aws_permission_failure,deploy,aws,AWS,hard,aws
+bm-aws-08,AWS API Gateway authorizer unauthorized,aws,aws_permission_failure,runtime,aws,AWS,hard,aws
+bm-aws-09,AWS credentials not found in environment,aws,aws_permission_failure,auth,aws,AWS,easy,aws
+bm-aws-10,AWS KMS decrypt access denied for secrets,aws,aws_permission_failure,runtime,aws,AWS,medium,aws
+bm-aws-11,AWS CloudFormation stack rollback AccessDenied,aws,aws_permission_failure,deploy,aws,AWS,medium,aws
+bm-aws-12,AWS IAM policy missing s3:GetObject permission,aws,aws_permission_failure,auth,aws,AWS,easy,aws
+bm-aws-13,AWS CodeBuild role insufficient permissions,aws,aws_permission_failure,build,aws,AWS,medium,aws
+bm-aws-14,AWS Secrets Manager GetSecretValue denied,aws,aws_permission_failure,runtime,aws,AWS,medium,aws
+bm-aws-15,AWS VPC endpoint policy blocks service access,aws,aws_permission_failure,network,aws,AWS,hard,aws
+bm-gha-01,GitHub Actions runner offline or not picking jobs,github_actions,configuration_failure,ci,github_actions,GitHub Actions,easy,github_actions
+bm-gha-02,GitHub Actions workflow_dispatch input not available,github_actions,configuration_failure,ci,github_actions,GitHub Actions,medium,github_actions
+bm-gha-03,GitHub Actions secrets not injected into job,github_actions,configuration_failure,ci,github_actions,GitHub Actions,easy,github_actions
+bm-gha-04,GitHub Actions cache restore failed key not found,github_actions,configuration_failure,ci,github_actions,GitHub Actions,medium,github_actions
+bm-gha-05,GitHub Actions checkout fails authentication,github_actions,configuration_failure,ci,github_actions,GitHub Actions,easy,github_actions
+bm-gha-06,GitHub Actions matrix job skipped unexpectedly,github_actions,configuration_failure,ci,github_actions,GitHub Actions,hard,github_actions
+bm-gha-07,GitHub Actions OIDC token request failed,github_actions,configuration_failure,auth,github_actions,GitHub Actions,hard,github_actions
+bm-gha-08,GitHub Actions self-hosted runner cannot connect,github_actions,configuration_failure,ci,github_actions,GitHub Actions,medium,github_actions
+bm-gha-09,GitHub Actions workflow syntax error invalid YAML,github_actions,configuration_failure,ci,github_actions,GitHub Actions,easy,github_actions
+bm-gha-10,GitHub Actions job hangs waiting for environment approval,github_actions,configuration_failure,ci,github_actions,GitHub Actions,medium,github_actions
+bm-gha-11,GitHub Actions actions/setup-node npm ci hangs,github_actions,configuration_failure,build,github_actions,GitHub Actions,medium,github_actions
+bm-gha-12,GitHub Actions permissions contents read insufficient,github_actions,configuration_failure,ci,github_actions,GitHub Actions,medium,github_actions
+bm-gha-13,GitHub Actions reusable workflow call failed,github_actions,configuration_failure,ci,github_actions,GitHub Actions,hard,github_actions
+bm-gha-14,GitHub Actions artifact upload failed path does not exist,github_actions,configuration_failure,ci,github_actions,GitHub Actions,easy,github_actions
+bm-gha-15,GitHub Actions concurrency group cancelled in-progress run,github_actions,configuration_failure,ci,github_actions,GitHub Actions,hard,github_actions
+bm-k8s-01,Kubernetes ImagePullBackOff cannot pull container image,kubernetes,deployment_failure,deploy,kubernetes,Kubernetes,easy,kubernetes
+bm-k8s-02,Kubernetes CrashLoopBackOff pod keeps restarting,kubernetes,deployment_failure,runtime,kubernetes,Kubernetes,easy,kubernetes
+bm-k8s-03,Kubernetes CreateContainerConfigError missing secret,kubernetes,deployment_failure,deploy,kubernetes,Kubernetes,medium,kubernetes
+bm-k8s-04,Kubernetes service endpoints empty no ready pods,kubernetes,deployment_failure,runtime,kubernetes,Kubernetes,medium,kubernetes
+bm-k8s-05,Kubernetes PVC pending no persistent volume available,kubernetes,deployment_failure,deploy,kubernetes,Kubernetes,medium,kubernetes
+bm-k8s-06,Kubernetes liveness probe failed killing container,kubernetes,deployment_failure,runtime,kubernetes,Kubernetes,hard,kubernetes
+bm-k8s-07,Kubernetes RBAC forbidden cannot list pods,kubernetes,deployment_failure,auth,kubernetes,Kubernetes,medium,kubernetes
+bm-k8s-08,Kubernetes ingress returns 502 bad gateway,kubernetes,deployment_failure,network,kubernetes,Kubernetes,hard,kubernetes
+bm-k8s-09,Kubernetes deployment rollout stuck progressing,kubernetes,deployment_failure,deploy,kubernetes,Kubernetes,hard,kubernetes
+bm-k8s-10,Kubernetes ConfigMap key not found in volume mount,kubernetes,deployment_failure,deploy,kubernetes,Kubernetes,easy,kubernetes
+bm-node-01,npm dependency conflict ModuleNotFoundError in CI,node,dependency_failure,build,node,npm|Node.js,easy,node
+bm-node-02,npm ci fails package-lock out of sync,node,dependency_failure,build,node,npm|Node.js,easy,node
+bm-node-03,npm ERESOLVE unable to resolve dependency tree,node,dependency_failure,build,node,npm|Node.js,medium,node
+bm-node-04,Node.js ENGINE unsupported engine version,node,dependency_failure,build,node,npm|Node.js,easy,node
+bm-node-05,npm ERR! code E401 unauthorized registry,node,dependency_failure,build,node,npm|Node.js,medium,node
+bm-node-06,Jest test suite fails module not found path alias,node,dependency_failure,test,node,npm|Node.js,medium,node
+bm-node-07,npm peer dependency warning treated as error,node,dependency_failure,build,node,npm|Node.js,hard,node
+bm-node-08,Node heap out of memory during webpack build,node,dependency_failure,build,node,npm|Node.js,medium,node
+bm-node-09,npm publish fails 403 forbidden,node,dependency_failure,deploy,node,npm|Node.js,medium,node
+bm-node-10,yarn/npm lockfile conflict in monorepo CI,node,dependency_failure,build,node,npm|Node.js,hard,node
+bm-py-01,pip install fails dependency resolution conflict,python,dependency_failure,build,python,Python,easy,python
+bm-py-02,Python ModuleNotFoundError in CI virtualenv,python,dependency_failure,test,python,Python,easy,python
+bm-py-03,pytest collection failed import error,python,dependency_failure,test,python,Python,medium,python
+bm-py-04,Poetry lock file out of date in pipeline,python,dependency_failure,build,python,Python,medium,python
+bm-py-05,Python version mismatch pyproject requires-python,python,dependency_failure,build,python,Python,easy,python
+bm-py-06,pip cannot find package version matching specifier,python,dependency_failure,build,python,Python,medium,python
+bm-py-07,Django/Flask migrate fails during deploy,python,dependency_failure,deploy,python,Python,hard,python
+bm-py-08,Python wheel build fails missing system library,python,dependency_failure,build,python,Python,hard,python
+bm-py-09,tox environment failed to recreate,python,dependency_failure,test,python,Python,medium,python
+bm-py-10,uvicorn/gunicorn worker failed to boot,python,dependency_failure,runtime,python,Python,hard,python
+bm-java-01,Maven build failure dependency not found,java,build_failure,build,java,Apache Maven|Gradle|OpenJDK,easy,java
+bm-java-02,Gradle dependency resolution failure,java,build_failure,build,java,Apache Maven|Gradle|OpenJDK,easy,java
+bm-java-03,Maven surefire tests failed in CI,java,build_failure,test,java,Apache Maven|Gradle|OpenJDK,medium,java
+bm-java-04,Gradle JVM toolchain version not found,java,build_failure,build,java,Apache Maven|Gradle|OpenJDK,medium,java
+bm-java-05,Java compilation error package does not exist,java,build_failure,build,java,Apache Maven|Gradle|OpenJDK,easy,java
+bm-java-06,Maven enforcer plugin ban duplicate classes,java,build_failure,build,java,Apache Maven|Gradle|OpenJDK,hard,java
+bm-java-07,Gradle OutOfMemoryError during build,java,build_failure,build,java,Apache Maven|Gradle|OpenJDK,medium,java
+bm-java-08,Spring Boot application failed to start datasource,java,build_failure,runtime,java,Apache Maven|Gradle|OpenJDK,hard,java
+bm-java-09,Maven settings.xml mirror credentials rejected,java,build_failure,build,java,Apache Maven|Gradle|OpenJDK,medium,java
+bm-java-10,Java class file major version unsupported,java,build_failure,build,java,Apache Maven|Gradle|OpenJDK,hard,java
+bm-net-01,connection timeout DNS resolution failure in pipeline,network,network_failure,network,network|github_actions|kubernetes,,easy,networking
+bm-net-02,ECONNREFUSED connecting to internal service,network,network_failure,network,network|github_actions|kubernetes,,easy,networking
+bm-net-03,TLS handshake failure certificate verify failed,network,network_failure,network,network|github_actions|kubernetes,,medium,networking
+bm-net-04,proxy authentication required for package registry,network,network_failure,network,network|github_actions|kubernetes,,medium,networking
+bm-net-05,Git clone fails could not resolve host,network,network_failure,network,network|github_actions|kubernetes,,easy,networking
+bm-net-06,WebSocket connection dropped behind load balancer,network,network_failure,network,network|github_actions|kubernetes,,hard,networking
+bm-net-07,HTTP 504 gateway timeout calling upstream API,network,network_failure,network,network|github_actions|kubernetes,,medium,networking
+bm-net-08,firewall blocks outbound HTTPS from runner,network,network_failure,network,network|github_actions|kubernetes,,hard,networking
+bm-net-09,IPv6 vs IPv4 connection refused in container,network,network_failure,network,network|github_actions|kubernetes,,hard,networking
+bm-net-10,self-hosted runner unable to connect after timeout,network,network_failure,network,network|github_actions|kubernetes,,medium,networking
+bm-sec-01,Permission denied while deploying due to IAM policy,security,security_misconfiguration,auth,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,easy,security
+bm-sec-02,secret scanned and redacted from workflow log,security,security_misconfiguration,ci,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,medium,security
+bm-sec-03,SSH key permission denied publickey authentication,security,security_misconfiguration,auth,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,easy,security
+bm-sec-04,container runs as root security policy violated,security,security_misconfiguration,runtime,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,medium,security
+bm-sec-05,OIDC federation trust policy mismatch,security,security_misconfiguration,auth,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,hard,security
+bm-sec-06,vulnerable dependency blocked by security gate,security,security_misconfiguration,build,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,medium,security
+bm-sec-07,TLS certificate expired for ingress endpoint,security,security_misconfiguration,network,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,easy,security
+bm-sec-08,Kubernetes PodSecurity admission denied,security,security_misconfiguration,deploy,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,hard,security
+bm-sec-09,AWS security group blocks required port,security,security_misconfiguration,network,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,medium,security
+bm-sec-10,hardcoded credentials detected in terraform plan,security,security_misconfiguration,plan,aws|kubernetes|terraform|github_actions,AWS|Kubernetes,medium,security
+bm-cfg-01,Pipeline cache restore failed wrong key configuration,configuration,configuration_failure,ci,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,easy,configuration
+bm-cfg-02,environment variable missing in deployment config,configuration,configuration_failure,deploy,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,easy,configuration
+bm-cfg-03,YAML indentation error breaks workflow configuration,configuration,configuration_failure,ci,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,easy,configuration
+bm-cfg-04,wrong NODE_ENV causes production config in tests,configuration,configuration_failure,test,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,medium,configuration
+bm-cfg-05,Helm values override missing required key,configuration,configuration_failure,deploy,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,medium,configuration
+bm-cfg-06,feature flag misconfigured disables critical path,configuration,configuration_failure,runtime,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,hard,configuration
+bm-cfg-07,CI matrix exclude list removes all jobs,configuration,configuration_failure,ci,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,hard,configuration
+bm-cfg-08,dockerfile path incorrect in build config,configuration,configuration_failure,build,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,easy,configuration
+bm-cfg-09,service account annotation missing for workload identity,configuration,configuration_failure,auth,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,hard,configuration
+bm-cfg-10,logging level misconfigured hides root cause,configuration,configuration_failure,runtime,github_actions|kubernetes|docker,GitHub Actions|Kubernetes|Docker,medium,configuration

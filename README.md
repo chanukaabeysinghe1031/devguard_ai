@@ -1,34 +1,132 @@
 # DevGuard AI
 
-**AI-Powered DevOps Intelligence Platform**
+**AI-Powered DevOps Incident Intelligence Platform**
 
-DevGuard AI analyses CI/CD pipeline failures, Infrastructure-as-Code files, and deployment configurations to identify root causes, extract evidence, and generate intelligent remediation recommendations.
+DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefacts to classify failures, extract evidence, retrieve documentation, and produce explainable remediation recommendations — centred on an **incident investigation** lifecycle.
 
-## Current Module Status
+> **Important:** The platform vision and architecture are frozen in `docs/`. The running codebase currently provides a **foundation shell** plus a **legacy database schema**. The full incident/AI product is **not** implemented yet.
 
-| Module | Scope | Status |
-|--------|-------|--------|
-| **Module 1** | Project foundation (backend, frontend, Docker, health API, DB connection) | ✅ Complete |
-| **Module 2** | Database schema and migrations | 🚧 In progress (repository layer) |
-| Module 3+ | Auth, uploads, ML, RAG, LLM, dashboard | Planned |
+---
+
+## Current Project Status
+
+| Area | Status |
+|------|--------|
+| **Module 1 — Foundation** | ✅ Complete |
+| **Module 2 — Schema evolution** | ✅ Complete (Alembic `001`–`007`, ADR-012 Accepted) |
+| **Module 3 — Authentication** | ✅ JWT auth, refresh rotation/revocation, RBAC deps (`008_refresh_tokens`) |
+| **Module 4 — Core Business APIs** | ✅ Organizations, projects, pipeline runs, incidents, notes, resolutions, analysis initiation |
+| **Module 5 — File Upload Pipeline** | ✅ Secure uploads, local storage, validation, secret masking, analysis file association |
+| **Module 6 — AI Execution Pipeline** | ✅ Deterministic staged analysis (rules/hybrid); RAG/LLM optional and off by default |
+| **Module 7 — Grounded RAG + LLM** | ✅ Retrieval + structured reasoning with grounding checks and deterministic fallback |
+| **Module 8 — Confidence/Cost Routing** | ✅ Confidence-aware execution routing and baseline mode control |
+| **Module 9 — Hybrid Retrieval** | ✅ Embedding baseline + hybrid static + org-safe historical retrieval |
+| **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
+| **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
+| **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
+| **Frontend product screens** | ❌ Not implemented (diagnosis shell only) |
+| **Phase 4 — Production hardening** | 🔶 Substantially complete — see `docs/PHASE4_PRODUCTION_HARDENING.md` |
+
+### Phase 4 hardening (index)
+
+- Full-system audit, API/OpenAPI validation, security matrix, E2E regression (34 scenarios)
+- Single vs federated retrieval comparison (default: **primary-only**)
+- Performance p50/p95 stage report, configuration audit, clean-start procedure
+- Entry point: [`docs/PHASE4_PRODUCTION_HARDENING.md`](docs/PHASE4_PRODUCTION_HARDENING.md)
+
+### What Modules 1–8 delivered
+
+- FastAPI application shell with structured logging and request IDs
+- React + TypeScript + Vite + Tailwind application shell
+- PostgreSQL 16 via Docker Compose + Alembic migrations through `008`
+- Auth: register/login/refresh/logout/me/change-password, bcrypt passwords, short-lived access JWTs, rotating refresh tokens
+- Business APIs: org/membership, projects, pipeline runs, full incident workflow, notes, resolutions, analysis-run queue
+- Secure incident file uploads with local storage abstraction, validation, checksums, secret masking
+- Analysis orchestration: classify → evidence → optional RAG → template/LLM recommendations → persist
+- Grounded RAG from curated `knowledge_base/` docs; citation rows in `retrieved_documents`
+- Local grounded reasoner by default; optional OpenAI / ChromaDB / sentence-transformers via interfaces
+- Confidence-aware and cost-aware routing (`rules_only`, `rules_rag`, `llm_only`, `rag_llm`, `confidence_routed`)
+- Two-stage routing (initial before retrieval; post-retrieval after RAG) with typed routes and versioned policy
+- Heuristic confidence calibration, evidence-quality / uncertainty / retrieval-quality evaluators
+- Decimal budget enforcement, null-safe external cost, latency stage tracking, controlled diagnosis fusion
+- Safe orchestration summaries on analysis detail responses; Module 8 metadata in `output_summary` JSON (no schema migration)
+- Hybrid retrieval modes: `embedding_only` (Module 7 baseline), `hybrid_static`, `hybrid_with_history` (org-scoped; off by default)
+- Deterministic diagnostic signals, lexical exact-match, versioned hybrid weight profiles, dedupe/diversity reranking
+- Organization membership resolution and role-based authorization dependencies
+- Default organization + owner membership created on user registration
+- Frozen roles: `platform_admin`, `organization_owner`, `organization_admin`, `engineer`, `viewer`
+
+### What is deliberately not claimed
+
+- Full SaaS multi-tenant product surface
+- Mandatory live OpenAI or ChromaDB in default local mode (flags/providers optional)
+- ZIP archive uploads (deferred ADR-011)
+- Frontend product screens or complete API surface from `API_SPECIFICATION.md`
+
+---
+
+## Frozen Target Architecture (summary)
+
+Authority documents live under `docs/`. Primary source of truth:
+
+**`docs/MASTER_ARCHITECTURE.md`**
+
+Target domain flow:
+
+```text
+Organization → Membership / User → Project → Pipeline Run → Incident
+  → Uploaded Files → Analysis Run → Prediction → Evidence
+  → Retrieved Documents → Recommendations → Resolution → Report
+```
+
+The **current 11-table database is a legacy flat ML schema**. New product features must **not** be built on it. Schema evolution is planned in:
+
+- `docs/ARCHITECTURE_DECISION_LOG.md` (ADR-012 — Proposed)
+- `docs/SCHEMA_EVOLUTION_PLAN.md`
+
+---
+
+## Current Refactoring Stage
+
+**AI orchestration phase (approved):** Module 9 complete — hybrid retrieval over Module 7/8 baselines.
+
+**Still blocked (separate approval required):**
+
+- Frontend product screens
+- ZIP archive uploads
+- Production database changes
+- Billing / webhooks / analytics dashboards
+
+Audit / plan artefacts:
+
+- `docs/IMPLEMENTATION_ALIGNMENT_AUDIT.md`
+- `docs/IMPLEMENTATION_REFACTORING_PLAN.md`
+- `docs/SCHEMA_EVOLUTION_PLAN.md`
+- `docs/ARCHITECTURE_DECISION_LOG.md`
+
+---
 
 ## Technology Stack
 
 | Layer | Technology |
 |-------|------------|
-| Backend | Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy 2 (async) |
+| Backend | Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy 2 (async), Alembic |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, React Router |
 | Database | PostgreSQL 16 |
 | DevOps | Docker, Docker Compose |
+
+---
 
 ## Prerequisites
 
 - Python 3.11+
 - Node.js 20+
-- Docker Desktop (with Compose v2)
+- Docker Desktop (Compose v2)
 - Git
 
-## Environment Setup
+---
+
+## Safe Setup Instructions
 
 ```bash
 cp .env.example .env
@@ -39,24 +137,156 @@ Edit `.env` and set at minimum:
 
 - `POSTGRES_PASSWORD` — change from `change_me`
 - `DATABASE_URL` — must match postgres credentials
+- `JWT_SECRET_KEY` — at least 32 random characters (required for auth)
 
-## Local Development (Without Docker)
+### Docker Compose (recommended)
 
-### 1. PostgreSQL
+```bash
+docker compose up --build
+```
 
-Run PostgreSQL locally and ensure it matches your `.env` credentials.
+| Service | URL |
+|---------|-----|
+| Backend API | http://localhost:8000 |
+| Frontend | http://localhost:5173 |
+| Chroma (host) | http://localhost:8001 |
+| Swagger UI | http://localhost:8000/docs |
+| Health (liveness) | http://localhost:8000/api/v1/health |
+| Health (readiness) | http://localhost:8000/api/v1/health/ready |
 
-### 2. Backend
+### Chroma vector database (Docker)
+
+Chroma runs as a Compose service with a named volume so indexed knowledge survives restarts.
+
+| Context | Host | Port |
+|---------|------|------|
+| Inside backend container | `chroma` | `8000` |
+| From your Mac / host tools | `localhost` | `8001` |
+
+Start infrastructure (Postgres + Chroma):
+
+```bash
+docker compose up -d postgres chroma
+docker compose ps
+curl http://localhost:8001/api/v2/heartbeat
+```
+
+Backend Compose overrides set `CHROMA_HOST=chroma` and `CHROMA_PORT=8000`. For scripts on the host, use:
+
+```bash
+export CHROMA_HOST=localhost
+export CHROMA_PORT=8001
+```
+
+Optional federated retrieval (product + research collections) can be enabled by setting:
+
+```bash
+CHROMA_COLLECTION_NAME=devguard_product_minilm
+CHROMA_SECONDARY_COLLECTION_NAME=devguard_research_knowledge
+```
+
+Safe connectivity check from the backend container (no collection create/delete):
+
+```bash
+docker compose up -d backend
+docker compose exec backend python -c "
+import chromadb
+c = chromadb.HttpClient(host='chroma', port=8000)
+print(c.heartbeat())
+"
+```
+
+View logs / restart Chroma without wiping data:
+
+```bash
+docker compose logs --tail=100 chroma
+docker compose restart chroma
+```
+
+Ordinary shutdown (keeps volumes):
+
+```bash
+docker compose down
+```
+
+**Do not** use `docker compose down -v` for ordinary shutdown — `-v` deletes volumes including Chroma knowledge.
+
+Explicit Chroma data removal (destructive):
+
+```bash
+docker compose down
+docker volume rm devguard_ai_chroma_data
+```
+
+Confirm with `docker volume ls | grep chroma`. This permanently removes indexed knowledge.
+
+### Local sentence-transformer embeddings
+
+See [docs/EMBEDDING_SETUP.md](docs/EMBEDDING_SETUP.md) for full setup.
+
+```bash
+# In .env (do not commit secrets)
+EMBEDDING_PROVIDER=sentence_transformers
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+EMBEDDING_DEVICE=cpu
+```
+
+OpenAI production-hardening options:
+
+```bash
+OPENAI_TIMEOUT_SECONDS=30
+OPENAI_MAX_RETRIES=3
+OPENAI_RETRY_BASE_DELAY_MS=500
+OPENAI_RETRY_MAX_DELAY_MS=8000
+OPENAI_CIRCUIT_BREAKER_FAILURES=5
+OPENAI_CIRCUIT_BREAKER_RESET_SECONDS=60
+```
+
+Token-pricing configuration (aliases supported):
+
+```bash
+OPENAI_INPUT_COST_PER_1M_TOKENS=
+OPENAI_OUTPUT_COST_PER_1M_TOKENS=
+# or:
+LLM_INPUT_COST_USD_PER_MILLION_TOKENS=
+LLM_OUTPUT_COST_USD_PER_MILLION_TOKENS=
+```
+
+```bash
+docker compose build backend
+docker compose up -d postgres chroma backend
+docker compose exec backend python -m app.cli.warmup_embeddings
+docker compose exec backend python -m app.cli.test_embeddings \
+  --text "AWS AccessDenied during deployment" \
+  --compare-text "IAM permission denied while deploying" \
+  --with-chroma
+```
+
+Default remains `EMBEDDING_PROVIDER=hash` for deterministic tests. Compose mounts `model_cache` so Hugging Face downloads survive backend recreation. First model load can take several minutes.
+
+### Research dataset corpus (Phase 1)
+
+Real public DevOps incidents are collected via the GitHub Issues API into `datasets/` (separate from runtime DB and from the small `knowledge_base/` enrichment docs). See `datasets/README.md` and `datasets/DATASET_CARD.md`.
+
+```bash
+export GITHUB_TOKEN=...   # optional; never commit
+python scripts/dataset/collect_github_issues.py --repo actions/runner --labels bug --max-issues 5
+python scripts/dataset/validate_incidents.py
+```
+
+### Local backend (without full Compose)
 
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+# Ensure PostgreSQL is reachable with DATABASE_URL
+alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 3. Frontend
+### Local frontend
 
 ```bash
 cd frontend
@@ -64,159 +294,168 @@ npm install
 npm run dev
 ```
 
-## Docker Compose Setup
+---
 
-From the project root:
+## Database Migrations (target schema)
+
+Revision chain: `001` → `002` → `003` → `004` → `005` → `006` → `007` → `008` (head).
+
+### Option B — recreate local development database
+
+After pulling schema work, reset **local** Postgres only (destroys local data):
 
 ```bash
-cp .env.example .env
-docker compose up --build
+docker compose down
+docker volume rm devguard_ai_postgres_data   # name may vary; check: docker volume ls | grep postgres
+docker compose up -d postgres
+# wait until healthy, then:
+docker compose run --rm backend alembic upgrade head
+docker compose run --rm backend alembic current
+docker compose run --rm backend alembic heads
 ```
 
-Services:
+### Seed (idempotent)
 
-| Service | URL |
-|---------|-----|
-| Backend API | http://localhost:8000 |
-| Frontend | http://localhost:5173 |
-| Swagger UI | http://localhost:8000/docs |
-| Health (liveness) | http://localhost:8000/api/v1/health |
-| Health (readiness) | http://localhost:8000/api/v1/health/ready |
-
-## Database Migrations (Alembic)
-
-Migrations run from the `backend/` directory. With Docker Compose, use `docker compose exec backend`.
+Failure categories always. Bootstrap org/owner only when enabled:
 
 ```bash
-# Apply all pending migrations
+# .env — development only
+BOOTSTRAP_ENABLED=true
+BOOTSTRAP_OWNER_PASSWORD=choose_a_local_password
+
+docker compose run --rm backend python -m app.infrastructure.database.seed
+```
+
+Do not log or commit bootstrap passwords. Do not enable bootstrap in production.
+
+```bash
 docker compose exec backend alembic upgrade head
-
-# Show current revision
 docker compose exec backend alembic current
-
-# Show migration history
 docker compose exec backend alembic history
-
-# Roll back all migrations (removes all application tables and enum types)
 docker compose exec backend alembic downgrade base
 ```
 
-**Warning:** `alembic downgrade base` deletes all local development data in the application tables. Use only when you intentionally want to reset the schema.
+**Warning:** `alembic downgrade base` deletes application table data.
 
-For future schema changes after ORM model updates:
+---
 
-```bash
-docker compose exec backend alembic revision --autogenerate -m "describe change"
-docker compose exec backend alembic upgrade head
-```
+## Repository Layer (legacy schema)
 
-Without Docker, from `backend/` with your virtualenv active:
+| Layer | Location |
+|-------|----------|
+| Domain interfaces | `app/domain/interfaces/repositories.py` |
+| Domain entities | `app/domain/entities/` |
+| Infrastructure | `app/infrastructure/repositories/` |
 
-```bash
-alembic upgrade head
-alembic current
-alembic history
-alembic downgrade base
-```
+Implemented against the **legacy** tables: User, FailureCategory, PipelineRun.
 
-## Failure Category Seed Data
+Repositories flush; they do not own commits (future services will).
 
-Run database migrations before seeding. Seeding is idempotent — running it multiple times will not create duplicate categories.
+---
 
-```bash
-# Seed approved failure categories (Docker)
-docker compose exec backend python -m app.infrastructure.database.seed
-
-# Inspect seeded categories in PostgreSQL
-docker compose exec postgres psql -U devguard -d devguard -c \
-  "SELECT slug, name, is_active FROM failure_categories ORDER BY slug;"
-```
-
-Without Docker, from `backend/` with your virtualenv active:
-
-```bash
-alembic upgrade head
-python -m app.infrastructure.database.seed
-```
-
-**Note:** Migrations must be applied (`alembic upgrade head`) before running the seed command.
-
-## Repository Layer
-
-DevGuard AI follows Clean Architecture for database access:
-
-| Layer | Location | Responsibility |
-|-------|----------|----------------|
-| Domain interfaces | `app/domain/interfaces/repositories.py` | Async repository contracts (no SQLAlchemy) |
-| Domain entities | `app/domain/entities/` | Domain-safe types returned by repositories |
-| Infrastructure | `app/infrastructure/repositories/` | SQLAlchemy implementations |
-
-Implemented repositories:
-
-- `UserRepository` — user lookup, listing, soft deactivation (no physical delete)
-- `FailureCategoryRepository` — taxonomy lookup and active listing (no delete)
-- `PipelineRunRepository` — pipeline run CRUD with user/status queries and pagination
-
-**Transaction ownership:** Repository methods use the injected `AsyncSession`, flush when needed, and do not commit. The service layer will own transaction boundaries in later modules. Tests may commit explicitly when verifying persistence.
-
-## Test Commands
-
-```bash
-cd backend
-source .venv/bin/activate
-pytest tests/ -v
-```
-
-## Lint Commands
+## Test Status
 
 ```bash
 cd backend
 source .venv/bin/activate
 ruff check .
+pytest tests/ -v
 ```
 
+| Suite | Expectation |
+|-------|-------------|
+| Health tests | Should pass without Docker DB |
+| Auth tests | Require PostgreSQL (`devguard_test`); cover login/refresh/logout/me/RBAC |
+| Business API tests | Require PostgreSQL; cover projects, incidents, org isolation, analysis stub |
+| Upload tests | Require PostgreSQL; cover validation, duplicates, masking, analysis file_ids |
+| Repository + seed tests | Require PostgreSQL (`devguard_test`); skip if DB unavailable |
+| Frontend tests | Not implemented yet |
+
+Known limitation: DB integration tests skip when Docker/Postgres is not running.
+
+---
+
+## Known Limitations
+
+1. Legacy 11-table schema ≠ frozen target schema  
+2. No authentication or authorization  
+3. No business APIs beyond health  
+4. No AI pipeline  
+5. Frontend is a Module 1 placeholder (single home page)  
+6. Cursor / agents must not treat legacy schema as final  
+7. `analysis_history` exists in legacy schema but is **not** recommended for MVP in DATABASE_ARCHITECTURE  
+
+---
+
+## Next Approved Work
+
+After project-owner approval of:
+
+1. ADR-012 (`docs/ARCHITECTURE_DECISION_LOG.md`)  
+2. `docs/SCHEMA_EVOLUTION_PLAN.md`  
+
+…implementation may proceed with **schema evolution only** (models + migrations), still without product feature expansion unless separately approved.
+
+---
+
+## Documentation Map
+
+| Document | Role |
+|----------|------|
+| `docs/MASTER_ARCHITECTURE.md` | Single source of truth |
+| `docs/PROJECT_CONSTITUTION.md` | Non-negotiable rules |
+| `docs/DATABASE_ARCHITECTURE.md` | Target database design |
+| `docs/ARCHITECTURE_DECISION_LOG.md` | Binding ADRs |
+| `docs/SCHEMA_EVOLUTION_PLAN.md` | Legacy → target migration plan |
+| `docs/IMPLEMENTATION_ALIGNMENT_AUDIT.md` | Latest audit |
+| `docs/IMPLEMENTATION_REFACTORING_PLAN.md` | Refactor issue register |
+
+---
+
+## Lint Commands
+
 ```bash
-cd frontend
-npm run lint
+cd backend && source .venv/bin/activate && ruff check .
+cd frontend && npm run lint
 ```
+
+---
 
 ## Troubleshooting — Apple Silicon Macs
 
 **Docker builds are slow or fail**
 
-- Ensure Docker Desktop is updated and uses the VirtioFS file sharing implementation.
-- Do not set `platform: linux/amd64` — all images use multi-arch defaults (arm64 native on M-series Macs).
+- Ensure Docker Desktop uses VirtioFS; do not force `platform: linux/amd64`.
 
 **PostgreSQL not ready when backend starts**
 
-- Backend waits for `postgres` healthcheck via `depends_on: condition: service_healthy`.
-- If readiness still fails, run `docker compose logs postgres` and verify credentials in `.env`.
+- Backend waits for postgres healthcheck. Check `docker compose logs postgres` and `.env` credentials.
 
 **Frontend shows "Backend Offline"**
 
-- Confirm backend is running: `curl http://localhost:8000/api/v1/health`
-- Ensure `VITE_API_BASE_URL` in `.env` is `http://localhost:8000/api/v1` (browser accesses host machine, not Docker internal network).
-- Check CORS: `BACKEND_CORS_ORIGINS` must include `http://localhost:5173`.
+- `curl http://localhost:8000/api/v1/health`
+- Ensure `VITE_API_BASE_URL=http://localhost:8000/api/v1`
+- Ensure CORS includes `http://localhost:5173`
 
 **Port already in use**
 
 - Change `BACKEND_PORT` or `FRONTEND_PORT` in `.env`.
 
-**Module import errors in backend tests**
-
-- Run pytest from the `backend/` directory so `pythonpath = ["."]` resolves correctly.
+---
 
 ## Project Structure
 
-```
+```text
 devguard_ai/
 ├── backend/           # FastAPI application
-├── frontend/          # React + Vite application
-├── docs/              # Architecture documentation
+├── frontend/          # React + Vite application shell
+├── docs/              # Frozen architecture + audit/planning docs
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
 ```
+
+---
 
 ## License
 

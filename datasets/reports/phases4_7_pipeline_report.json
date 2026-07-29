@@ -1,0 +1,580 @@
+{
+  "generated_at": "2026-07-28T13:30:21.769592+00:00",
+  "dataset_version": "0.4.0-phases4-7",
+  "phase4": {
+    "phase": 4,
+    "source": "curated+candidates",
+    "knowledge_records": 616,
+    "chunks": 1709,
+    "output_dir": "datasets/processed/chunks"
+  },
+  "phase5": {
+    "phase": 5,
+    "collection": "devguard_research_knowledge",
+    "host": "localhost",
+    "port": 8001,
+    "chunks_indexed": 1709,
+    "embedding_provider": "sentence_transformers",
+    "embedding_dimension": 384,
+    "chroma_status": "healthy_ready",
+    "collection_count": 1709,
+    "recreate": true
+  },
+  "phase6": {
+    "phase": 6,
+    "collection": "devguard_research_knowledge",
+    "k": 5,
+    "queries": 8,
+    "metrics": {
+      "precision_at_k": 0.6,
+      "recall_at_k_approx": 0.6,
+      "mrr": 0.8229,
+      "ndcg": 0.5432
+    },
+    "per_query": [
+      {
+        "query_id": "q-aws-iam",
+        "query_text": "AWS AccessDenied permission denied during deployment",
+        "precision_at_k": 0.4,
+        "recall_at_k_approx": 0.4,
+        "mrr": 1.0,
+        "ndcg": 0.4023,
+        "top_hits": [
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38638-c002",
+            "score": 0.7177,
+            "failure_category": "aws_permission_failure",
+            "technology": "terraform",
+            "grade": 2,
+            "title_hint": "## Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-48360-c002",
+            "score": 0.692,
+            "failure_category": "aws_permission_failure",
+            "technology": "aws",
+            "grade": 3,
+            "title_hint": "## Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-26164-c001",
+            "score": 0.6892,
+            "failure_category": "terraform_failure",
+            "technology": "aws",
+            "grade": 1,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-33803-c002",
+            "score": 0.6865,
+            "failure_category": "terraform_failure",
+            "technology": "terraform",
+            "grade": 0,
+            "title_hint": "## Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-27027-c002",
+            "score": 0.6856,
+            "failure_category": "terraform_failure",
+            "technology": "aws",
+            "grade": 1,
+            "title_hint": "## Root cause"
+          }
+        ]
+      },
+      {
+        "query_id": "q-docker-copy",
+        "query_text": "Docker COPY failed because source file is missing",
+        "precision_at_k": 1.0,
+        "recall_at_k_approx": 1.0,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "top_hits": [
+          {
+            "chunk_id": "kn-gh-moby-moby-52653-c002",
+            "score": 0.7789,
+            "failure_category": "docker_failure",
+            "technology": "docker",
+            "grade": 3,
+            "title_hint": "## Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-52653-c001",
+            "score": 0.7584,
+            "failure_category": "docker_failure",
+            "technology": "docker",
+            "grade": 3,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-48907-c001",
+            "score": 0.7465,
+            "failure_category": "docker_failure",
+            "technology": "docker",
+            "grade": 3,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-48907-c002",
+            "score": 0.7279,
+            "failure_category": "docker_failure",
+            "technology": "docker",
+            "grade": 3,
+            "title_hint": "## Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-docker-compose-12799-c001",
+            "score": 0.7232,
+            "failure_category": "docker_failure",
+            "technology": "docker",
+            "grade": 3,
+            "title_hint": "## Symptoms"
+          }
+        ]
+      },
+      {
+        "query_id": "q-terraform-undeclared",
+        "query_text": "Terraform undeclared resource reference failure",
+        "precision_at_k": 0.8,
+        "recall_at_k_approx": 0.8,
+        "mrr": 1.0,
+        "ndcg": 0.4394,
+        "top_hits": [
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-38557-c001",
+            "score": 0.8209,
+            "failure_category": "terraform_failure",
+            "technology": "aws",
+            "grade": 2,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-46256-c002",
+            "score": 0.7931,
+            "failure_category": "terraform_failure",
+            "technology": "aws",
+            "grade": 2,
+            "title_hint": "## Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-35158-c001",
+            "score": 0.7928,
+            "failure_category": "aws_permission_failure",
+            "technology": "aws",
+            "grade": 0,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38586-c001",
+            "score": 0.7925,
+            "failure_category": "terraform_failure",
+            "technology": "terraform",
+            "grade": 3,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-46256-c001",
+            "score": 0.7914,
+            "failure_category": "terraform_failure",
+            "technology": "aws",
+            "grade": 2,
+            "title_hint": "## Symptoms"
+          }
+        ]
+      },
+      {
+        "query_id": "q-actions-runner",
+        "query_text": "GitHub Actions runner workflow configuration failure",
+        "precision_at_k": 1.0,
+        "recall_at_k_approx": 1.0,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "top_hits": [
+          {
+            "chunk_id": "kn-gh-actions-runner-3644-c000",
+            "score": 0.8133,
+            "failure_category": "configuration_failure",
+            "technology": "github_actions",
+            "grade": 3,
+            "title_hint": "# GitHub Actions runner fails to trigger workflows on multiple tags push"
+          },
+          {
+            "chunk_id": "kn-gh-actions-runner-2417-c000",
+            "score": 0.8026,
+            "failure_category": "configuration_failure",
+            "technology": "github_actions",
+            "grade": 3,
+            "title_hint": "# Property job_workflow_sha in context github is not available"
+          },
+          {
+            "chunk_id": "kn-gh-actions-runner-2788-c000",
+            "score": 0.7999,
+            "failure_category": "configuration_failure",
+            "technology": "github_actions",
+            "grade": 3,
+            "title_hint": "# github.ref is empty for workflows triggered by release"
+          },
+          {
+            "chunk_id": "kn-gh-actions-runner-3535-c000",
+            "score": 0.7947,
+            "failure_category": "configuration_failure",
+            "technology": "github_actions",
+            "grade": 3,
+            "title_hint": "# Github Action workflows Hang"
+          },
+          {
+            "chunk_id": "kn-gh-actions-runner-4292-c000",
+            "score": 0.7917,
+            "failure_category": "configuration_failure",
+            "technology": "github_actions",
+            "grade": 3,
+            "title_hint": "# workflow_dispatch with type: environment intermittently resolves vars from wrong environment"
+          }
+        ]
+      },
+      {
+        "query_id": "q-k8s-deploy",
+        "query_text": "Kubernetes deployment CrashLoopBackOff or ImagePullBackOff",
+        "precision_at_k": 0.4,
+        "recall_at_k_approx": 0.4,
+        "mrr": 0.3333,
+        "ndcg": 0.4134,
+        "top_hits": [
+          {
+            "chunk_id": "kn-gh-kubernetes-kubernetes-137895-c001",
+            "score": 0.713,
+            "failure_category": "docker_failure",
+            "technology": "kubernetes",
+            "grade": 1,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-kubernetes-kubernetes-140561-c001",
+            "score": 0.7075,
+            "failure_category": "docker_failure",
+            "technology": "kubernetes",
+            "grade": 1,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-kubernetes-kubernetes-67250-c001",
+            "score": 0.6975,
+            "failure_category": "deployment_failure",
+            "technology": "kubernetes",
+            "grade": 3,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-kubernetes-kubernetes-67250-c000",
+            "score": 0.693,
+            "failure_category": "deployment_failure",
+            "technology": "kubernetes",
+            "grade": 3,
+            "title_hint": "# StatefulSet - can't rollback from a broken state"
+          },
+          {
+            "chunk_id": "kn-gh-kubernetes-kubernetes-140881-c000",
+            "score": 0.6919,
+            "failure_category": "docker_failure",
+            "technology": "kubernetes",
+            "grade": 1,
+            "title_hint": "# Exec readiness probes silently broken during graceful pod termination since v1.35 (probe context canceled at teardown)"
+          }
+        ]
+      },
+      {
+        "query_id": "q-node-deps",
+        "query_text": "npm dependency conflict ModuleNotFoundError in CI",
+        "precision_at_k": 0.2,
+        "recall_at_k_approx": 0.2,
+        "mrr": 0.25,
+        "ndcg": 0.2375,
+        "top_hits": [
+          {
+            "chunk_id": "kn-gh-actions-setup-node-1297-c002",
+            "score": 0.7154,
+            "failure_category": "configuration_failure",
+            "technology": "node",
+            "grade": 1,
+            "title_hint": "## Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-actions-cache-120-c001",
+            "score": 0.684,
+            "failure_category": "configuration_failure",
+            "technology": "github_actions",
+            "grade": 0,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-actions-setup-node-1297-c000",
+            "score": 0.6624,
+            "failure_category": "configuration_failure",
+            "technology": "node",
+            "grade": 1,
+            "title_hint": "# npm ci hangs forever"
+          },
+          {
+            "chunk_id": "kn-gh-actions-setup-node-1410-c001",
+            "score": 0.659,
+            "failure_category": "dependency_failure",
+            "technology": "node",
+            "grade": 3,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-actions-setup-node-1364-c001",
+            "score": 0.6547,
+            "failure_category": "configuration_failure",
+            "technology": "node",
+            "grade": 1,
+            "title_hint": "## Symptoms"
+          }
+        ]
+      },
+      {
+        "query_id": "q-java-build",
+        "query_text": "Maven or Gradle build failed in GitHub Actions",
+        "precision_at_k": 0.4,
+        "recall_at_k_approx": 0.4,
+        "mrr": 1.0,
+        "ndcg": 0.5531,
+        "top_hits": [
+          {
+            "chunk_id": "kn-gh-actions-setup-java-457-c001",
+            "score": 0.7131,
+            "failure_category": "build_failure",
+            "technology": "java",
+            "grade": 3,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-actions-setup-java-457-c000",
+            "score": 0.6993,
+            "failure_category": "build_failure",
+            "technology": "java",
+            "grade": 3,
+            "title_hint": "# No way to configure maven version in actions/setup-java"
+          },
+          {
+            "chunk_id": "kn-gh-actions-runner-3765-c000",
+            "score": 0.6972,
+            "failure_category": "test_failure",
+            "technology": "github_actions",
+            "grade": 0,
+            "title_hint": "# hashFiles() cannot be correctly used with github.action_path in composite actions"
+          },
+          {
+            "chunk_id": "kn-gh-actions-cache-684-c000",
+            "score": 0.6799,
+            "failure_category": "configuration_failure",
+            "technology": "github_actions",
+            "grade": 0,
+            "title_hint": "# Relative paths? - Or some root path that's not in my GITHUB_WORKSPACE?"
+          },
+          {
+            "chunk_id": "kn-gh-actions-runner-3644-c000",
+            "score": 0.6789,
+            "failure_category": "configuration_failure",
+            "technology": "github_actions",
+            "grade": 0,
+            "title_hint": "# GitHub Actions runner fails to trigger workflows on multiple tags push"
+          }
+        ]
+      },
+      {
+        "query_id": "q-network-timeout",
+        "query_text": "connection timeout DNS resolution failure in pipeline",
+        "precision_at_k": 0.6,
+        "recall_at_k_approx": 0.6,
+        "mrr": 1.0,
+        "ndcg": 0.2997,
+        "top_hits": [
+          {
+            "chunk_id": "kn-gh-actions-runner-3897-c001",
+            "score": 0.7815,
+            "failure_category": "network_failure",
+            "technology": "github_actions",
+            "grade": 2,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-actions-runner-3897-c000",
+            "score": 0.6809,
+            "failure_category": "network_failure",
+            "technology": "github_actions",
+            "grade": 2,
+            "title_hint": "# Connection timeouts against pipelines.actions.githubusercontent.com"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38610-c001",
+            "score": 0.6588,
+            "failure_category": "terraform_failure",
+            "technology": "terraform",
+            "grade": 0,
+            "title_hint": "## Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-actions-runner-3690-c000",
+            "score": 0.6572,
+            "failure_category": "network_failure",
+            "technology": "github_actions",
+            "grade": 2,
+            "title_hint": "# Self hosted runner unable to connect after timeout"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-46329-c003",
+            "score": 0.6506,
+            "failure_category": "docker_failure",
+            "technology": "docker",
+            "grade": 0,
+            "title_hint": "## Root cause"
+          }
+        ]
+      }
+    ],
+    "notes": [
+      "Relevance is heuristic (category/technology match) unless human graded labels are added.",
+      "Recall uses an approximate gold size from indexed chunk category counts."
+    ]
+  },
+  "phase7": {
+    "phase": 7,
+    "llm_provider": "local-grounded-v1",
+    "query_masked": "AWS AccessDenied during deployment IAM permission failure",
+    "retrieved": [
+      {
+        "chunk_id": "kn-gh-hashicorp-terraform-38638-c002",
+        "content": "## Root cause\nEnvAccessKeyNotFound: AWS_ACCESS_KEY_ID or AWS_ACCESS_KEY not found in environment",
+        "score": 0.7154525970299673,
+        "metadata": {
+          "incident_id": "gh-hashicorp-terraform-38638",
+          "knowledge_id": "kn-gh-hashicorp-terraform-38638",
+          "document_status": "active",
+          "section": "Root cause",
+          "issue_url": "https://github.com/hashicorp/terraform/issues/38638",
+          "failure_category": "aws_permission_failure",
+          "technology": "terraform",
+          "repository": "hashicorp/terraform",
+          "source_type": "research_knowledge"
+        }
+      },
+      {
+        "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-48360-c002",
+        "content": "## Root cause\nExpected behaviour differed from observed failure. Expected: Granting SELECT via a data_cells_filter to a cross-account IAM role ARN should succeed and the read-back should complete within the timeout.. Observed: The GrantPermissions API call succeeds (verified via CLI), but the subsequent ListPermissions read-back times out after 1m. The grant exists in AWS (confirmed via aws lakeformation list-permissions without principal f....",
+        "score": 0.7121307557523251,
+        "metadata": {
+          "technology": "aws",
+          "knowledge_id": "kn-gh-hashicorp-terraform-provider-aws-48360",
+          "incident_id": "gh-hashicorp-terraform-provider-aws-48360",
+          "issue_url": "https://github.com/hashicorp/terraform-provider-aws/issues/48360",
+          "section": "Root cause",
+          "source_type": "research_knowledge",
+          "document_status": "active",
+          "repository": "hashicorp/terraform-provider-aws",
+          "failure_category": "aws_permission_failure"
+        }
+      },
+      {
+        "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-27027-c002",
+        "content": "## Root cause\nExpected behaviour differed from observed failure. Expected: AWS API Gateway authorizer is created successfully.. Observed: Validate Response apigateway/CreateAuthorizer failed, attempt 6/25, error ConflictException: Unable to complete operation due to concurrent modification. Please try again later..",
+        "score": 0.7101722949004657,
+        "metadata": {
+          "technology": "aws",
+          "knowledge_id": "kn-gh-hashicorp-terraform-provider-aws-27027",
+          "incident_id": "gh-hashicorp-terraform-provider-aws-27027",
+          "section": "Root cause",
+          "failure_category": "terraform_failure",
+          "repository": "hashicorp/terraform-provider-aws",
+          "document_status": "active",
+          "issue_url": "https://github.com/hashicorp/terraform-provider-aws/issues/27027",
+          "source_type": "research_knowledge"
+        }
+      },
+      {
+        "chunk_id": "kn-gh-hashicorp-terraform-33803-c002",
+        "content": "## Root cause\nExpected behaviour differed from observed failure. Expected: The assume_role_with_web_identity block should respect the corresponding AWS environment variables.. Observed: Role assumption flow fails..",
+        "score": 0.7069266582679067,
+        "metadata": {
+          "incident_id": "gh-hashicorp-terraform-33803",
+          "knowledge_id": "kn-gh-hashicorp-terraform-33803",
+          "document_status": "active",
+          "issue_url": "https://github.com/hashicorp/terraform/issues/33803",
+          "failure_category": "terraform_failure",
+          "repository": "hashicorp/terraform",
+          "source_type": "research_knowledge",
+          "technology": "terraform",
+          "section": "Root cause"
+        }
+      },
+      {
+        "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-38538-c000",
+        "content": "# [Bug]: ECS was unable to assume the configured ECS Infrastructure Role\n\n- technology: aws\n- failure_category: aws_permission_failure\n- repository: hashicorp/terraform-provider-aws\n- issue_url: https://github.com/hashicorp/terraform-provider-aws/issues/38538\n- knowledge_id: kn-gh-hashicorp-terraform-provider-aws-38538\n- incident_id: gh-hashicorp-terraform-provider-aws-38538",
+        "score": 0.6875117573104397,
+        "metadata": {
+          "section": "[Bug]: ECS was unable to assume the configured ECS Infrastructure Role",
+          "issue_url": "https://github.com/hashicorp/terraform-provider-aws/issues/38538",
+          "repository": "hashicorp/terraform-provider-aws",
+          "knowledge_id": "kn-gh-hashicorp-terraform-provider-aws-38538",
+          "source_type": "research_knowledge",
+          "document_status": "active",
+          "technology": "aws",
+          "incident_id": "gh-hashicorp-terraform-provider-aws-38538",
+          "failure_category": "aws_permission_failure"
+        }
+      }
+    ],
+    "root_cause": {
+      "summary": "Likely aws permission failure based on retrieved incidents.",
+      "root_cause": {
+        "category": "aws_permission_failure",
+        "explanation": "AWS AccessDenied during deployment IAM permission failure Supporting documentation notes: ## Root cause\nEnvAccessKeyNotFound: AWS_ACCESS_KEY_ID or AWS_ACCESS_KEY not found in environment ## Root cause\nExpected behaviour differed from observed failure. Expected: Granting SELECT via a data_cells_filter to a cross-account IAM role ARN should succeed and the read-back ",
+        "confidence": 0.73
+      },
+      "supporting_evidence_ids": [
+        "q1"
+      ],
+      "documentation_chunk_ids": [
+        "kn-gh-hashicorp-terraform-38638-c002",
+        "kn-gh-hashicorp-terraform-provider-aws-48360-c002",
+        "kn-gh-hashicorp-terraform-provider-aws-27027-c002"
+      ],
+      "alternative_causes": [],
+      "impact": "The affected pipeline or infrastructure step did not complete successfully.",
+      "prompt_version": "v1",
+      "provider": "local-grounded-v1"
+    },
+    "recommendations": {
+      "steps": [
+        {
+          "order": 1,
+          "action": "Review retrieved incident evidence",
+          "explanation": "Compare symptoms with top retrieved knowledge chunks. Docs: ## Root cause\nEnvAccessKeyNotFound: AWS_ACCESS_KEY_ID or AWS_ACCESS_KEY not found in environment"
+        },
+        {
+          "order": 2,
+          "action": "Validate fix in a non-production environment",
+          "explanation": "Apply the closest matching resolution carefully."
+        }
+      ],
+      "provider": "local-grounded-v1"
+    },
+    "external_api_used": false
+  },
+  "phase7_openai": {
+    "status": "healthy",
+    "llm_provider": "openai:gpt-4o-mini",
+    "external_api_used": true,
+    "retrieved_count": 5,
+    "root_cause_summary": "Likely aws permission failure based on retrieved incidents.",
+    "root_cause_category": "aws_permission_failure",
+    "has_recommendations": true,
+    "recommendation_steps": 2,
+    "top_chunk_ids": [
+      "kn-gh-hashicorp-terraform-38638-c002",
+      "kn-gh-hashicorp-terraform-provider-aws-48360-c002",
+      "kn-gh-hashicorp-terraform-provider-aws-27027-c002"
+    ],
+    "safe_error": null
+  }
+}

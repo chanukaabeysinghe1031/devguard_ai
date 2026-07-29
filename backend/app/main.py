@@ -29,6 +29,9 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     setup_logging(settings)
+    config_problems = settings.validate_for_runtime()
+    if config_problems:
+        logger.warning("configuration_warnings", problems=config_problems)
     init_db(settings)
     logger.info(
         "application_starting",

@@ -1,54 +1,122 @@
 ---
-description: DevGuard AI project architecture and development rules
+description: DevGuard AI architecture authority, approval gates, and current module lock
 alwaysApply: true
 ---
 
-Before making changes, read:
+# DevGuard AI — Cursor Project Rules
 
-- docs/MASTER_ARCHITECTURE.md
-- docs/PROJECT_CONSTITUTION.md
-- docs/IMPLEMENTATION_ROADMAP.md
-- docs/SYSTEM_ARCHITECTURE.md
+## Authority order (frozen)
 
-Follow these rules:
+When documents conflict, obey this order:
+
+1. `docs/MASTER_ARCHITECTURE.md` — **single source of truth**
+2. `docs/PROJECT_CONSTITUTION.md`
+3. `docs/PROJECT_STRUCTURE.md`
+4. `docs/DATABASE_ARCHITECTURE.md`
+5. `docs/API_SPECIFICATION.md`
+6. `docs/AI_ARCHITECTURE.md`
+7. `docs/DATASET_SPECIFICATION.md`
+8. Screen and workflow specifications (`docs/SCREEN_SPECIFICATION.md`, `docs/CUSTOMER_EXPERIENCE_AND_INCIDENT_WORKFLOW_SPECIFICATION.md`)
+9. `docs/IMPLEMENTATION_ROADMAP.md`
+10. `docs/DevGuardAI_UI_Prompt_Collection.md`
+
+Also read `docs/ARCHITECTURE_DECISION_LOG.md` for approved ADRs.
+
+## Documents that must NOT be referenced
+
+- `docs/SYSTEM_ARCHITECTURE.md` — **does not exist**; do not cite or recreate it
+- `docs/DATABASE.md` — superseded by `DATABASE_ARCHITECTURE.md`
+
+## Before any work, Cursor must read
+
+1. `docs/MASTER_ARCHITECTURE.md`
+2. `docs/PROJECT_CONSTITUTION.md`
+3. `docs/ARCHITECTURE_DECISION_LOG.md`
+4. The relevant specialist architecture document for the task
+5. The relevant section of `docs/IMPLEMENTATION_ROADMAP.md`
+
+## Current project phase
+
+**Module 9 — Hybrid Retrieval Optimisation** (complete).
+
+| Status | Detail |
+|--------|--------|
+| Module 1 foundation | Complete |
+| Module 2 schema | Complete (migrations `001`–`008`) |
+| Module 3 auth | Complete (JWT + RBAC) |
+| Module 4 business APIs | Complete |
+| Module 5 file uploads | Complete |
+| Module 6 AI pipeline | Complete (deterministic rules/hybrid) |
+| Module 7 RAG + LLM | Complete (grounded retrieval + structured reasoning; deterministic fallback) |
+| Module 8 confidence/cost orchestration | Complete (execution routing + uncertainty/cost metadata) |
+| Module 9 hybrid retrieval | Complete (embedding baseline + hybrid static + org-safe history) |
+| Frozen roles | `platform_admin`, `organization_owner`, `organization_admin`, `engineer`, `viewer` |
+| Org authorization | From `organization_members` only — never invent `analyst` |
+
+## Module 9 delivered (do not regress)
+
+- Retrieval modes: `embedding_only`, `hybrid_static`, `hybrid_with_history`
+- Embedding-only baseline remains independently executable
+- Deterministic diagnostic signal extraction and hybrid query builder (masked/bounded)
+- Enriched knowledge chunk metadata; lexical exact-match index
+- Versioned weight profiles (`embedding_baseline_v1`, `hybrid_static_v1`, `hybrid_history_v1`)
+- Hybrid scorer with active-weight normalisation; deterministic rerank/dedupe/diversity
+- Organisation-scoped historical incident index (no migration; citations via JSON metadata)
+- `ENABLE_HISTORICAL_RETRIEVAL=false` by default; clients cannot bypass server flags
+- Module 8 retrieval-quality and post-retrieval routing consume hybrid results
+- Soft-fail retrieval; weak retrieval still blocks unsupported external reasoning
+
+## Module 8 delivered (do not regress)
+
+- Two-stage adaptive routing (`AdaptiveExecutionRouter`): initial (pre-retrieval) and post-retrieval
+- Typed Module 8 models: modes, routes, confidence/evidence/uncertainty/retrieval assessments, budget, fusion
+- Heuristic `RuleBasedConfidenceCalibrator` (not statistical probability)
+- Evidence-quality, uncertainty, and retrieval-quality evaluators (deterministic, no LLM)
+- `AIExecutionBudgetManager` with Decimal costs; unknown pricing stays null; local = not_applicable
+- Latency stage tracking with budget checks before expensive stages
+- Controlled `DiagnosisFusionService` and `FinalConfidenceRecalibrator`
+- Provider interfaces for embeddings, vector store, and reasoning (Module 7)
+- Soft-fail RAG/LLM stages with deterministic classifier/template fallback
+- Persist routing, confidence, cost, latency and evaluation metadata in existing JSON fields
+- `ENABLE_RAG` / `ENABLE_LLM` remain off by default; request options cannot bypass server flags
+- Baseline modes preserved: `rules_only`, `rules_rag`, `llm_only`, `rag_llm`, `confidence_routed`
+- Versioned policy `confidence_cost_policy` / `v1` with stable configuration hash
+
+## Step 3–4 infrastructure (do not regress)
+
+- Persistent Chroma Docker service (`chromadb/chroma:1.5.9`, volume `chroma_data`)
+- Real local embeddings: `EMBEDDING_PROVIDER=sentence_transformers` + `all-MiniLM-L6-v2` (CPU default)
+- Hash embeddings remain the deterministic default; never silently fall back ST → hash
+- Model cache volume `model_cache`; CLI `app.cli.warmup_embeddings` / `app.cli.test_embeddings`
+- See `docs/EMBEDDING_SETUP.md`
+
+## Allowed next (requires separate approval)
+
+- Module 10 — Adaptive Prompts and Specialised Multi-Agent Diagnosis (not started)
+- Frontend product screens
+- Billing, analytics, integrations webhooks
+- Report generation
+- ZIP archive support (ADR-011)
+- Trained ML classifier / evaluation dashboards
+
+## Hard approval gates
+
+No changes may be made without **separate** explicit user approval for:
+
+- Frontend features
+- Production database drops / recreations
+- ZIP upload enablement
+- Changing frozen failure taxonomy or org roles
+
+## Development rules
 
 1. Do not change the approved architecture without permission.
-2. Work on only the requested module.
+2. Work only on the requested and approved task.
 3. Do not implement future modules early.
 4. Use Clean Architecture and clear dependency boundaries.
 5. Use Python type hints and TypeScript strict typing.
 6. Do not hardcode secrets or environment-specific values.
-7. Add error handling, logging, and tests.
+7. Never log passwords or tokens.
 8. Explain planned file changes before modifying code.
-9. Make sure the current module runs successfully before continuing.
-10. Keep MSc implementation features separate from future SaaS features.
-
-Current module:
-
-Module 1 — Project Foundation
-
-Allowed work:
-
-- Project structure
-- FastAPI application shell
-- React application shell
-- Configuration management
-- Structured logging
-- PostgreSQL connection
-- Docker and Docker Compose
-- Health and readiness endpoints
-- Foundation tests
-- Setup documentation
-
-Not allowed yet:
-
-- Authentication
-- File uploads
-- Dataset collection
-- Machine learning
-- Evidence extraction
-- ChromaDB integration
-- RAG
-- LLM integration
-- Analysis orchestration
-- Full dashboard implementation
+9. Keep MSc implementation features separate from deferred commercial SaaS features.
+10. Prefer evolving existing assets over rewrites and deletions.

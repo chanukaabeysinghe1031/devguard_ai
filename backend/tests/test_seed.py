@@ -48,17 +48,18 @@ def _bootstrap_settings(**overrides: object) -> Settings:
 
 
 @pytest.mark.asyncio
-async def test_first_seed_inserts_11_categories(db_session) -> None:
+async def test_first_seed_inserts_approved_categories(db_session) -> None:
+    expected = len(APPROVED_FAILURE_CATEGORIES)
     result = await seed_failure_categories(db_session)
     await db_session.commit()
 
-    assert result.inserted_count == 11
+    assert result.inserted_count == expected
     assert result.updated_count == 0
     assert result.unchanged_count == 0
-    assert result.total_approved_categories == 11
+    assert result.total_approved_categories == expected
 
     count = await db_session.scalar(select(func.count()).select_from(FailureCategory))
-    assert count == 11
+    assert count == expected
 
 
 @pytest.mark.asyncio
@@ -68,13 +69,14 @@ async def test_second_seed_is_idempotent(db_session) -> None:
     second = await seed_failure_categories(db_session)
     await db_session.commit()
 
-    assert first.inserted_count == 11
+    expected = len(APPROVED_FAILURE_CATEGORIES)
+    assert first.inserted_count == expected
     assert second.inserted_count == 0
     assert second.updated_count == 0
-    assert second.unchanged_count == 11
+    assert second.unchanged_count == expected
 
     count = await db_session.scalar(select(func.count()).select_from(FailureCategory))
-    assert count == 11
+    assert count == expected
 
 
 @pytest.mark.asyncio
@@ -92,7 +94,7 @@ async def test_seed_updates_outdated_description(db_session) -> None:
     result = await seed_failure_categories(db_session)
     await db_session.commit()
 
-    assert result.inserted_count == 10
+    assert result.inserted_count == len(APPROVED_FAILURE_CATEGORIES) - 1
     assert result.updated_count == 1
     assert result.unchanged_count == 0
 
@@ -120,14 +122,15 @@ async def test_seed_preserves_custom_category(db_session) -> None:
     result = await seed_failure_categories(db_session)
     await db_session.commit()
 
-    assert result.inserted_count == 11
+    expected = len(APPROVED_FAILURE_CATEGORIES)
+    assert result.inserted_count == expected
 
     custom = await db_session.scalar(select(FailureCategory).where(FailureCategory.id == custom_id))
     assert custom is not None
     assert custom.code == "custom_runtime_issue"
 
     total = await db_session.scalar(select(func.count()).select_from(FailureCategory))
-    assert total == 12
+    assert total == expected + 1
 
 
 @pytest.mark.asyncio
@@ -153,7 +156,7 @@ async def test_all_approved_categories_are_active(db_session) -> None:
         )
     ).all()
 
-    assert len(categories) == 11
+    assert len(categories) == len(APPROVED_FAILURE_CATEGORIES)
     assert all(category.is_active for category in categories)
 
 

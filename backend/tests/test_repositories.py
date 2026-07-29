@@ -159,7 +159,7 @@ async def test_failure_category_repository_get_by_code(repository_db_session) ->
 
 
 @pytest.mark.asyncio
-async def test_failure_category_repository_list_active_returns_11_approved(
+async def test_failure_category_repository_list_active_returns_approved(
     repository_db_session,
 ) -> None:
     await seed_failure_categories(repository_db_session)
@@ -168,7 +168,7 @@ async def test_failure_category_repository_list_active_returns_11_approved(
     repo = SQLAlchemyFailureCategoryRepository(repository_db_session)
     active = await repo.list_active(limit=100)
 
-    assert len(active) == 11
+    assert len(active) == len(APPROVED_FAILURE_CATEGORIES)
     assert {category.code for category in active} == {
         category["code"] for category in APPROVED_FAILURE_CATEGORIES
     }
@@ -219,7 +219,7 @@ async def test_failure_category_repository_preserves_custom_category(
     seeded = await repo.get_by_code("build_failure")
     assert seeded is not None
     assert custom.code == "custom_runtime_issue"
-    assert len(await repo.list(limit=100)) == 12
+    assert len(await repo.list(limit=100)) == len(APPROVED_FAILURE_CATEGORIES) + 1
 
 
 # ---------------------------------------------------------------------------

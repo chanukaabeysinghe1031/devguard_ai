@@ -38,13 +38,15 @@ class HistoricalIncidentRetriever:
             return []
 
         masked_query, _ = mask_secrets(query.sanitised_text)
-        embedding = self._embeddings.embed([masked_query])[0]
+        embedding = self._embeddings.embed_query(masked_query)
         # Organisation filter is applied in the store query itself — never retrieve
         # globally then filter in memory as the sole isolation mechanism.
         where = {
-            "document_status": "active",
-            "source_type": "historical_incident",
-            "organisation_id": str(query.organisation_id),
+            "$and": [
+                {"document_status": {"$eq": "active"}},
+                {"source_type": {"$eq": "historical_incident"}},
+                {"organisation_id": {"$eq": str(query.organisation_id)}},
+            ]
         }
         hits = self._store.query(
             embedding=embedding,

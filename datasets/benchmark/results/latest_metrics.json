@@ -1,0 +1,26 @@
+{
+  "run_dir": "datasets/benchmark/results/run_20260729T041103Z_gold",
+  "labels_mode": "gold",
+  "aggregate_metrics": {
+    "precision@1": 0.7462,
+    "precision@3": 0.7333,
+    "precision@5": 0.7231,
+    "recall@5": 0.3096,
+    "recall@10": 0.5354,
+    "mrr": 0.8276,
+    "map": 0.4444,
+    "ndcg@5": 0.7096,
+    "ndcg@10": 0.7306,
+    "hit_rate": 0.9308,
+    "latency_ms": 16.4498,
+    "category_accuracy": 0.8615,
+    "vendor_coverage": 0.9154
+  },
+  "validation": {
+    "duplicate_query_ids": [],
+    "queries_missing_relevant_ge_2": [],
+    "orphan_document_ids": [],
+    "ok": true
+  },
+  "benchmark_version": "1.0.0-human-gold"
+}

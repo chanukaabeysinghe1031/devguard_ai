@@ -1,0 +1,26 @@
+{
+  "benchmark_version": "1.0.0-human-gold",
+  "corpus_version_target": "0.5.0-official-docs",
+  "query_count": 130,
+  "category_counts": {
+    "docker": 15,
+    "terraform": 15,
+    "aws": 15,
+    "github_actions": 15,
+    "kubernetes": 10,
+    "node": 10,
+    "python": 10,
+    "java": 10,
+    "networking": 10,
+    "security": 10,
+    "configuration": 10
+  },
+  "relevance_scale": {
+    "3": "Highly relevant",
+    "2": "Relevant",
+    "1": "Partially relevant",
+    "0": "Not relevant"
+  },
+  "label_policy": "Official gold_labels.csv must contain human-approved grades only. AI/retrieval-assisted proposals live in gold_labels.candidates.csv and review/ until promoted.",
+  "collection": "devguard_research_knowledge"
+}

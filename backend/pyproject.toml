@@ -31,9 +31,10 @@ dev = [
     "mypy>=1.11.0",
 ]
 ai = [
-    "chromadb>=0.5.0",
+    "chromadb>=1.5.0,<2",
     "sentence-transformers>=3.0.0",
     "openai>=1.40.0",
+    "matplotlib>=3.8.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -52,6 +53,10 @@ ignore = ["B008"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "-m 'not embedding_integration'"
+markers = [
+    "embedding_integration: real sentence-transformer + Chroma integration tests (slow)",
+]
 
 [tool.mypy]
 python_version = "3.11"

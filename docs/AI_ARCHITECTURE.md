@@ -1061,17 +1061,24 @@ Values should be evaluated experimentally.
 
 ## 17.5 Embedding Provider
 
-Initial recommendation:
+Supported providers:
 
-- Sentence Transformers
+| `EMBEDDING_PROVIDER` | Behaviour |
+|---|---|
+| `hash` (default) | Deterministic hashing embedding for tests / offline MVP |
+| `sentence_transformers` | Local Sentence Transformers model (default: `all-MiniLM-L6-v2`, device `cpu`) |
 
-Possible model:
+Factory wiring never silently falls back from `sentence_transformers` to `hash`. Failed real-provider loads are recorded as unavailable; deterministic analysis fallback may still apply at the orchestrator layer without claiming real embeddings were used.
 
-```text
-all-MiniLM-L6-v2
-```
+Configuration (see `.env.example` and `docs/EMBEDDING_SETUP.md`):
 
-A stronger embedding model may be evaluated later.
+- `EMBEDDING_MODEL`
+- `EMBEDDING_DEVICE` (`cpu` | `mps` | `cuda` | `auto`)
+- `EMBEDDING_BATCH_SIZE`
+- `EMBEDDING_NORMALIZE`
+- `EMBEDDING_MAX_INPUT_CHARACTERS`
+
+Text is secret-masked before encoding. Local execution reports `external_cost=not_applicable` (no API charge; compute still costs CPU/memory/time). Chroma collections store a safe embedding configuration identity; incompatible non-empty collections raise an error and are never auto-deleted. A stronger embedding model may be evaluated later.
 
 ## 17.6 Vector Store
 
@@ -2017,6 +2024,155 @@ The feedback and evaluation layers support both MSc research and future product 
 
 ---
 
+# 39A. Module 8 — Confidence-Aware, Risk-Aware and Cost-Aware Orchestration
+
+Module 8 adds an experimental orchestration layer over Modules 6 and 7. It does **not** replace deterministic classification, RAG, or reasoning. Those baselines remain independently executable.
+
+## Research question
+
+Can confidence-aware and cost-aware orchestration reduce LLM usage, latency and external API cost while maintaining diagnostic accuracy and safe behaviour?
+
+## Execution modes
+
+| Mode | Retrieval | Reasoning | Notes |
+|------|-----------|-----------|-------|
+| `rules_only` | No | No | Deterministic diagnosis only |
+| `rules_rag` | Yes (when enabled) | No | Docs support explanation; category stays deterministic |
+| `llm_only` | No | Yes (when enabled) | Still requires masking, schema and grounding checks |
+| `rag_llm` | Yes | Yes | Full grounded path when flags allow |
+| `confidence_routed` | Dynamic | Dynamic | Two-stage adaptive policy |
+
+Invalid modes are rejected safely (fallback to a configured default).
+
+## Execution routes
+
+Typed routes (`ExecutionRoute`):
+
+- `DETERMINISTIC_ONLY`
+- `DETERMINISTIC_WITH_RAG`
+- `LOCAL_REASONING`
+- `RAG_WITH_LOCAL_REASONING`
+- `EXTERNAL_LLM_WITHOUT_RAG`
+- `RAG_WITH_EXTERNAL_LLM`
+- `SAFE_FALLBACK`
+
+The router never calls providers; it only decides what may execute.
+
+## Two-stage routing (mandatory)
+
+**Initial routing** runs after classification, evidence extraction, heuristic confidence calibration, evidence-quality assessment and baseline uncertainty. It must **not** use retrieval quality (retrieval has not run). Signals include classifier confidence, evidence quality, input completeness, risk, feature flags, provider availability, budget and latency.
+
+**Post-retrieval routing** runs only when retrieval executed. It uses retrieval relevance, coverage, diversity, category support, remaining budget/latency and may downgrade weak retrieval away from unsupported external reasoning.
+
+Skipped retrieval is represented as `retrieval_executed=false` with **null** quality scores — never fake zeros.
+
+## Confidence design (heuristic)
+
+- `RuleBasedConfidenceCalibrator` produces raw + calibrated confidence and a confidence band.
+- Calibration method is explicitly `rule_based_heuristic_v1`.
+- This is **not** statistically calibrated probability (no Platt / isotonic / ML calibration without labelled data).
+- Thresholds require experimental tuning.
+- `EvidenceQualityEvaluator` and `UncertaintyEstimator` are deterministic and LLM-free.
+- Confidence and uncertainty are **not** exact inverses.
+- `FinalConfidenceRecalibrator` combines baseline confidence with fusion, grounding, unsupported claims and fallback usage. LLM-supplied confidence is never trusted as the final score.
+
+## Risk-aware behaviour
+
+Risk is resolved from trusted server-side incident severity when available, taking the maximum of client and server risk. High/critical risk and selected high-risk categories (AWS permissions, Terraform, Docker, deployment, security, network) can require RAG validation even when classifier confidence is high. Cost optimisation never removes mandatory guardrails. Recommendations remain advisory; no infrastructure changes are executed automatically.
+
+## Budget and cost
+
+`AIExecutionBudgetManager` enforces:
+
+- max provider calls
+- max retrieval calls
+- max input/output tokens (when known)
+- max estimated external cost (Decimal)
+- max latency
+
+Effective limits use `min(request_limit, server_limit)`. Clients cannot raise server ceilings.
+
+Cost uses `Decimal`. Pricing is configuration-driven (`LLM_*_COST_USD_PER_MILLION_TOKENS`, embedding cost). Missing pricing → `estimated_external_cost_usd=null`, `cost_estimation_status=unavailable` (never store zero). Local providers → `0` with `not_applicable`; local compute cost is **not** measured.
+
+## Latency
+
+Stage timings use monotonic clocks. Stages may be `completed`, `failed`, `skipped` or `timed_out`. Latency budget is checked before expensive stages; timeout triggers safe fallback preserving deterministic output.
+
+## Fusion and fallback
+
+`DiagnosisFusionService` keeps the deterministic category unless an explicit override policy is satisfied (strong grounding, strong retrieval, weak baseline confidence, non-high risk). Disagreements retain the reasoner category as an alternative and may lower final confidence. RAG/LLM failures remain soft-fails.
+
+## Persistence and API safety
+
+Module 8 metadata is persisted in existing JSON fields (`analysis_runs.output_summary` / prediction reasoning metadata). **No new migration** was required. Evaluation metadata distinguishes all five experimental modes.
+
+APIs expose only safe orchestration summaries (modes, routes, scores, usage summaries). They must not expose chain-of-thought, raw prompts, provider keys, unmasked logs or confidential pricing config.
+
+## Configuration
+
+See `.env.example` for Module 8 flags and thresholds (`ENABLE_CONFIDENCE_ROUTING`, `DEFAULT_EXECUTION_MODE`, confidence/uncertainty thresholds, budgets, latency, pricing). Empty money values are null, not zero. Policy: `confidence_cost_policy` / `v1` with a stable configuration hash (no secrets in the hash source).
+
+## Limitations
+
+- Heuristic confidence is not a calibrated probability.
+- External cost is unavailable until pricing is configured.
+- Local API cost of zero does not mean local compute is free.
+- Confidence routing is an experimental research feature; the deterministic baseline remains available.
+
+---
+
+# 39B. Module 9 — Hybrid Retrieval Optimisation
+
+Module 9 improves DevOps incident retrieval by combining semantic similarity with structured diagnostic signals. It does **not** replace Module 7 embedding-only retrieval or Module 8 routing.
+
+## Research question
+
+Does DevOps-specific hybrid retrieval improve root-cause diagnosis accuracy, evidence grounding and recommendation usefulness compared with embedding-only retrieval?
+
+## Retrieval modes
+
+| Mode | Behaviour |
+|------|-----------|
+| `embedding_only` | Module 7 baseline: vector search + existing keyword blend rerank. No structured boosts. |
+| `hybrid_static` | Semantic + lexical exact-match + metadata soft boosts (category, tech, error codes, stage, authority). No historical incidents. |
+| `hybrid_with_history` | hybrid_static + organisation-scoped resolved incidents (server flag required). |
+
+`ENABLE_HISTORICAL_RETRIEVAL` defaults to **false**. Clients cannot enable history when the server disables it.
+
+## Pipeline
+
+```text
+Diagnostic signals → masked/bounded query
+  → semantic candidates (+ optional lexical)
+  → optional historical candidates (org filter in store query)
+  → hybrid scoring (active-weight normalisation)
+  → dedupe → diversity → deterministic rerank
+  → Module 8 retrieval-quality → post-retrieval routing
+```
+
+## Weight profiles
+
+Versioned profiles: `embedding_baseline_v1`, `hybrid_static_v1`, `hybrid_history_v1`.
+
+Weights are **heuristic** and require experimental tuning. Missing optional metadata is not treated as zero evidence. Configuration hash is stable and excludes secrets.
+
+## Historical retrieval
+
+- Only resolved/trusted summaries (no full raw logs)
+- Organisation isolation enforced in the vector `where` clause
+- Idempotent indexing via content hash; removal archives the vector entry
+- Historical hits are **not** persisted as `retrieved_documents` FK rows (no migration); evaluation metadata records them
+
+## Limitations
+
+- Hybrid weights are heuristic.
+- Knowledge metadata completeness varies by document.
+- Historical quality is conservative when confirmation fields are sparse.
+- Recency is not equivalent to quality; authority does not guarantee correctness.
+- Embedding-only remains the reproducible baseline.
+
+---
+
 # 40. Final Architecture
 
 ```text
@@ -2034,15 +2190,21 @@ Hybrid Classification
     ↓
 Evidence Extraction
     ↓
-RAG Retrieval
+Baseline Confidence / Evidence Quality / Uncertainty
     ↓
-Grounded LLM Reasoning
+Initial Routing Decision
     ↓
-Recommendation Generation
+Optional RAG Retrieval + Retrieval-Quality Assessment
     ↓
-Guardrail Validation
+Post-Retrieval Routing Decision
     ↓
-Prediction + Evidence + Sources + Recommendations
+Optional Grounded Reasoning
+    ↓
+Recommendation Generation / Guardrails
+    ↓
+Diagnosis Fusion + Final Confidence
+    ↓
+Cost / Latency Finalisation + Persistence
     ↓
 Engineer Feedback
     ↓

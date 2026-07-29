@@ -223,6 +223,11 @@ class UploadService:
         safe_name = sanitize_original_filename(original_name)
         _, file_type = detect_file_type(safe_name)
         text = decode_text_content(raw)
+        if not text.strip():
+            raise ValidationBusinessError(
+                "Uploaded file contains no readable text.",
+                error_code="EMPTY_FILE",
+            )
 
         try:
             validate_syntax(file_type, text)

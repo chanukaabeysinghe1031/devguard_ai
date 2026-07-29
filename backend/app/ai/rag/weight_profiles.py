@@ -26,8 +26,8 @@ class HybridWeightProfile:
     category_mismatch_penalty: float = 0.08
     technology_mismatch_penalty: float = 0.05
     stale_penalty: float = 0.0
-    min_candidate_score: float = 0.35
-    min_semantic_score: float = 0.20
+    min_candidate_score: float = 0.15
+    min_semantic_score: float = 0.05
     min_exact_match_score: float = 0.50
     min_history_quality_score: float = 0.70
     max_candidates_before_rerank: int = 30

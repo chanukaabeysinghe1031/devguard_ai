@@ -22,6 +22,65 @@ def _p(expr: str, flags: int = re.IGNORECASE | re.MULTILINE) -> re.Pattern[str]:
 
 
 RULES: tuple[RulePattern, ...] = (
+    # ------------------------------------------------------------------ #
+    # CI runner failures — evaluated before Terraform to prevent the broad
+    # "Error: " pattern from stealing runner-offline logs.
+    # ------------------------------------------------------------------ #
+    RulePattern(
+        name="gha_runner_offline",
+        category_code="ci_runner_failure",
+        pattern=_p(
+            r"self-hosted runner(?:s)? (?:is |are )?"
+            r"(?:offline|unavailable|disconnected|not connected)"
+            r"|runner(?:s)? (?:is |are )?offline"
+            r"|runner(?:s)? (?:is |are )?unavailable"
+            r"|runner(?:s)? (?:is |are )?disconnected"
+            r"|runner(?:s)? (?:is |are )?not connected"
+            r"|no runner(?:s)? (?:available|matching|found)"
+            r"|waiting for (?:a )?(?:hosted |self-hosted )?runner"
+            r"|job is waiting for a runner"
+            r"|queued.*waiting.*runner"
+            r"|runner did not pick up"
+            r"|runner removed"
+            r"|runner lost communication"
+        ),
+        weight=0.94,
+        root_cause="The CI runner is offline, unavailable, or unable to pick up the job.",
+        technical="No matching runner was available to execute the queued workflow job.",
+        impact="The workflow job remains queued or fails without executing any steps.",
+    ),
+    RulePattern(
+        name="gha_runner_registration",
+        category_code="ci_runner_failure",
+        pattern=_p(
+            r"failed to (?:create a session|register runner|register the runner)"
+            r"|runner registration"
+            r"|runner service (?:stopped|failed|crashed|exited)"
+            r"|runner listener"
+            r"|actions.?runner"
+            r"|actions-runner"
+            r"|runner labels? (?:were )?not found"
+            r"|requested labels?"
+        ),
+        weight=0.90,
+        root_cause="The CI runner failed to register or its service stopped.",
+        technical="Runner registration or the runner listener process encountered a failure.",
+        impact="New workflow jobs cannot be picked up until the runner is re-registered.",
+    ),
+    RulePattern(
+        name="gha_runner_context",
+        category_code="ci_runner_failure",
+        pattern=_p(
+            r"runs-on:.*(?:ubuntu|windows|macos|self-hosted)"
+            r"|github-hosted runner"
+            r"|GITHUB_ACTIONS\s*=\s*true"
+            r"|GITHUB_RUN_ID"
+        ),
+        weight=0.72,
+        root_cause="GitHub Actions runner context detected alongside a failure.",
+        technical="Workflow metadata indicates a GitHub Actions runner environment.",
+        impact="The failure occurred within a GitHub Actions runner context.",
+    ),
     RulePattern(
         name="aws_access_denied",
         category_code="aws_permission_failure",
@@ -50,8 +109,13 @@ RULES: tuple[RulePattern, ...] = (
         name="terraform_error",
         category_code="terraform_failure",
         pattern=_p(
-            r"Error: |Terraform has no|Failed to .*terraform|terraform apply"
-            r"|terraform plan"
+            r"Terraform has no|Failed to .*terraform"
+            r"|terraform\s+(?:init|apply|plan|validate|destroy|import|refresh)\b"
+            r"|Error:.*\.tf\b"
+            r"|undeclared (?:resource|variable|module)"
+            r"|provider configuration|backend configuration"
+            r"|state (?:lock|backend|file)"
+            r"|\.tfstate\b|\.tf\b.*error|HCL"
         ),
         weight=0.88,
         root_cause="Terraform planning or apply failed.",

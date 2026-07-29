@@ -345,8 +345,14 @@ def analysis_detail(run: AnalysisRun) -> AnalysisRunDetailResponse:
         root_cause=root_cause,
         evidence_count=int(summary.get("evidence_count") or 0),
         recommendation_count=int(summary.get("recommendation_count") or 0),
+        retrieved_document_count=int(summary.get("retrieved_count") or 0),
         model_versions=summary.get("model_versions"),
         orchestration=orchestration,
+        limitations=list(summary.get("limitations") or []),
+        token_usage=summary.get("token_usage") or summary.get("provider_usage"),
+        cost=summary.get("budget_usage") or summary.get("cost_metrics"),
+        processing_time_ms=run.duration_ms
+        or (summary.get("evaluation_metadata") or {}).get("total_latency_ms"),
     )
 
 

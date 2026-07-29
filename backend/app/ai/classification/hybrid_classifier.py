@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 
 from app.ai.classification.rule_based_classifier import score_text
@@ -9,7 +10,8 @@ from app.ai.orchestration.analysis_context import AnalysisContext, Classificatio
 
 _KEYWORD_BOOSTS: dict[str, tuple[str, ...]] = {
     "aws_permission_failure": ("iam", "accessdenied", "sts", "unauthorized", "policy"),
-    "terraform_failure": ("terraform", "provider", "resource", "state", "plan", "apply"),
+    # Only unambiguously Terraform-specific terms to prevent false positives on GHA logs.
+    "terraform_failure": ("terraform", ".tfstate", "tfvars", "hcl", "terraform init"),
     "docker_failure": ("docker", "dockerfile", "image", "container", "registry"),
     "dependency_failure": ("npm", "pip", "yarn", "dependency", "package", "requirements"),
     "test_failure": ("pytest", "junit", "assertion", "failed test", "spec"),
@@ -18,7 +20,41 @@ _KEYWORD_BOOSTS: dict[str, tuple[str, ...]] = {
     "deployment_failure": ("deploy", "rollout", "helm", "kubernetes", "ecs", "release"),
     "network_failure": ("timeout", "dns", "connection", "refused", "unreachable"),
     "security_misconfiguration": ("tls", "certificate", "secret", "insecure", "cors"),
+    "ci_runner_failure": (
+        "runner offline",
+        "runner unavailable",
+        "self-hosted runner",
+        "github-hosted runner",
+        "actions runner",
+        "actions-runner",
+        "runner disconnected",
+        "runner registration",
+        "runner service",
+        "runs-on",
+        "no runner",
+        "waiting for a runner",
+        "queued",
+    ),
 }
+
+
+_FAILURE_MARKERS = re.compile(
+    r"\b("
+    r"error|failed|failure|fatal|exception|panic|traceback|segmentation fault|"
+    r"non[- ]zero exit|exit code[: ]+[1-9]\d*|exited with code[: ]+[1-9]\d*|"
+    r"build failed|deployment failed|compilation failed|rollback failed|"
+    r"could not|unable to|not authorized|accessdenied"
+    r")\b",
+    re.I,
+)
+_SUCCESS_MARKERS = re.compile(
+    r"\b("
+    r"success|succeeded|successfully|completed successfully|finished successfully|"
+    r"all checks passed|0 failed|no failures|exit code[: ]*0|exited with code[: ]*0|"
+    r"terraform has been successfully initialized"
+    r")\b",
+    re.I,
+)
 
 
 def _keyword_scores(text: str) -> dict[str, float]:
@@ -36,6 +72,8 @@ class HybridClassifier:
 
     def classify(self, context: AnalysisContext) -> list[ClassificationCandidate]:
         text = context.combined_text
+        has_failure_marker = bool(_FAILURE_MARKERS.search(text))
+        has_success_marker = bool(_SUCCESS_MARKERS.search(text))
         rule_hits = score_text(text)
         keyword_hits = _keyword_scores(text)
 
@@ -74,6 +112,30 @@ class HybridClassifier:
                 "technical": "No high-confidence rule or keyword pattern matched the inputs.",
                 "impact": "Manual review is required to determine the failure cause.",
             }
+
+        # Failure-state detection:
+        # - if logs explicitly indicate success and no failure evidence is present,
+        #   do not force a failure category from command/technology mentions alone.
+        if has_success_marker and not has_failure_marker:
+            aggregated["unknown_failure"] = {
+                "confidence": 0.90,
+                "matched_rules": ["policy:success_without_failure_markers"],
+                "root_cause": (
+                    "Execution appears successful; explicit failure-state evidence was not found."
+                ),
+                "technical": (
+                    "Success markers were detected without failure markers such as "
+                    "error/fatal/exception/non-zero exit."
+                ),
+                "impact": "No actionable failure could be confirmed from the provided log.",
+            }
+            for code, payload in aggregated.items():
+                if code == "unknown_failure":
+                    continue
+                payload["confidence"] = min(float(payload["confidence"]), 0.39)
+                payload["matched_rules"] = list(payload["matched_rules"]) + [
+                    "policy:demoted_without_failure_markers"
+                ]
 
         ordered = sorted(
             aggregated.items(),

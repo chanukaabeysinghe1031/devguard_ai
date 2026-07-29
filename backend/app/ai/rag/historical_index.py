@@ -71,7 +71,7 @@ class HistoricalIncidentIndexService:
             "resolved_at": document.resolved_at.isoformat() if document.resolved_at else "",
         }
         embedded = EmbeddedChunk(chunk_id=str(chunk_uuid), text=text, metadata=metadata)
-        vector = self._embeddings.embed([text])[0]
+        vector = self._embeddings.embed_documents([text])[0]
         self._store.upsert([embedded], [vector])
         self._docs[key] = document
         return "indexed" if existing is None else "reindexed"
@@ -96,7 +96,7 @@ class HistoricalIncidentIndexService:
                 "persist_citation": False,
             },
         )
-        vector = self._embeddings.embed(["archived"])[0]
+        vector = self._embeddings.embed_documents(["archived"])[0]
         self._store.upsert([embedded], [vector])
         return removed
 

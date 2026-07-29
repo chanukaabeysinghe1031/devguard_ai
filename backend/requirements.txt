@@ -10,6 +10,12 @@ PyJWT[crypto]>=2.9.0
 bcrypt>=4.2.0
 python-multipart>=0.0.9
 PyYAML>=6.0.2
+# Optional AI providers (Chroma HTTP client for Docker RAG_BACKEND=chroma).
+chromadb>=1.5.0,<2
+# Local sentence-transformer embeddings (CPU). First model download may take time.
+sentence-transformers>=3.0.0
+# Optional external reasoning provider (LLM_PROVIDER=openai).
+openai>=1.40.0
 
 # Development / testing
 pytest>=8.3.0

@@ -1,0 +1,393 @@
+{
+  "generated_at": "2026-07-28T16:07:08.386930+00:00",
+  "corpus_version": "0.5.0-official-docs",
+  "creation_date": "2026-07-28",
+  "document_count": 22,
+  "documents_downloaded": 22,
+  "documents_parsed": 22,
+  "chunk_count": 1868,
+  "chunks_created": 1868,
+  "chunks_indexed": 1868,
+  "chunks_indexed_this_run": 0,
+  "duplicate_count": 1868,
+  "vendors": {
+    "AWS": 4,
+    "Docker": 3,
+    "Terraform": 3,
+    "GitHub Actions": 2,
+    "Kubernetes": 2,
+    "Python": 2,
+    "OpenJDK": 1,
+    "Apache Maven": 1,
+    "Gradle": 1,
+    "npm": 2,
+    "Node.js": 1
+  },
+  "categories": {
+    "aws_permission_failure": 4,
+    "docker_failure": 3,
+    "terraform_failure": 3,
+    "configuration_failure": 2,
+    "deployment_failure": 2,
+    "dependency_failure": 5,
+    "build_failure": 3
+  },
+  "technologies": {
+    "aws": 4,
+    "docker": 3,
+    "terraform": 3,
+    "github_actions": 2,
+    "kubernetes": 2,
+    "python": 2,
+    "java": 3,
+    "node": 3
+  },
+  "average_chunk_size": 481.6,
+  "coverage": {
+    "aws": true,
+    "docker": true,
+    "terraform": true,
+    "github_actions": true,
+    "kubernetes": true,
+    "python": true,
+    "java": true,
+    "node": true
+  },
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "collection": "devguard_research_knowledge",
+  "collection_count": 3557,
+  "parse_failures": [],
+  "index": {
+    "chunks_indexed": 0,
+    "chunks_updated": 0,
+    "chunks_skipped": 1868,
+    "chunks_rejected": 0,
+    "chroma_status": "healthy_ready",
+    "product_collection_untouched": "devguard_knowledge"
+  },
+  "retrieval_verification": {
+    "queries": [
+      {
+        "query_id": "v-aws",
+        "query_text": "AWS AccessDenied during deployment",
+        "top_k": 25,
+        "passed": true,
+        "has_github_incidents": true,
+        "has_official_docs": true,
+        "first_github_hit": {
+          "chunk_id": "kn-gh-hashicorp-terraform-38638-c002",
+          "score": 0.6855,
+          "source_type": "research_knowledge",
+          "vendor": null,
+          "technology": "terraform",
+          "section": "Root cause"
+        },
+        "first_official_doc_hit": {
+          "chunk_id": "doc-aws-iam-access-denied-c026",
+          "score": 0.72,
+          "source_type": "official_documentation",
+          "vendor": "AWS",
+          "technology": "aws",
+          "section": "Access denied due to session policies – implicit denial"
+        },
+        "top_results": [
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c026",
+            "score": 0.72,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to session policies – implicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c023",
+            "score": 0.7179,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to a permissions boundary – implicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c029",
+            "score": 0.7167,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to resource-based policies – implicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c019",
+            "score": 0.7024,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to a resource control policy – explicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c028",
+            "score": 0.7002,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to session policies – explicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c016",
+            "score": 0.6974,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to a service control policy – implicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c031",
+            "score": 0.6973,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to role trust policies – implicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c027",
+            "score": 0.6973,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to session policies – explicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c033",
+            "score": 0.6917,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "Access denied due to identity-based policies – implicit denial"
+          },
+          {
+            "chunk_id": "doc-aws-iam-access-denied-c005",
+            "score": 0.689,
+            "source_type": "official_documentation",
+            "vendor": "AWS",
+            "technology": "aws",
+            "section": "I get \"access denied\" when I make a request to an AWS service"
+          }
+        ]
+      },
+      {
+        "query_id": "v-terraform",
+        "query_text": "Terraform undeclared resource",
+        "top_k": 25,
+        "passed": true,
+        "has_github_incidents": true,
+        "has_official_docs": true,
+        "first_github_hit": {
+          "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-38557-c001",
+          "score": 0.808,
+          "source_type": "research_knowledge",
+          "vendor": null,
+          "technology": "aws",
+          "section": "Symptoms"
+        },
+        "first_official_doc_hit": {
+          "chunk_id": "doc-terraform-resources-c014",
+          "score": 0.7837,
+          "source_type": "official_documentation",
+          "vendor": "Terraform",
+          "technology": "terraform",
+          "section": "[](/terraform/language/block/resource#resource)`resource \"<TYPE>\" \"<LABEL>\"`"
+        },
+        "top_results": [
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-38557-c001",
+            "score": 0.808,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "aws",
+            "section": "Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38624-c000",
+            "score": 0.7911,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "terraform",
+            "section": "TF deleted resources but not created because of another unrelated error"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-35158-c001",
+            "score": 0.7878,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "aws",
+            "section": "Symptoms"
+          },
+          {
+            "chunk_id": "doc-terraform-resources-c014",
+            "score": 0.7837,
+            "source_type": "official_documentation",
+            "vendor": "Terraform",
+            "technology": "terraform",
+            "section": "[](/terraform/language/block/resource#resource)`resource \"<TYPE>\" \"<LABEL>\"`"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38508-c003",
+            "score": 0.78,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "terraform",
+            "section": "Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38315-c002",
+            "score": 0.7793,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "terraform",
+            "section": "Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-provider-aws-35158-c002",
+            "score": 0.779,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "aws",
+            "section": "Root cause"
+          },
+          {
+            "chunk_id": "doc-terraform-resources-c001",
+            "score": 0.7774,
+            "source_type": "official_documentation",
+            "vendor": "Terraform",
+            "technology": "terraform",
+            "section": "resource block reference"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38575-c000",
+            "score": 0.7772,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "terraform",
+            "section": "Resource leaks: unclosed file handles in workspace_new, file provisioner, login, and local-exec"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38508-c001",
+            "score": 0.7719,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "terraform",
+            "section": "Symptoms"
+          }
+        ]
+      },
+      {
+        "query_id": "v-docker",
+        "query_text": "Docker COPY failed",
+        "top_k": 25,
+        "passed": true,
+        "has_github_incidents": true,
+        "has_official_docs": true,
+        "first_github_hit": {
+          "chunk_id": "kn-gh-moby-moby-52653-c002",
+          "score": 0.7887,
+          "source_type": "research_knowledge",
+          "vendor": null,
+          "technology": "docker",
+          "section": "Root cause"
+        },
+        "first_official_doc_hit": {
+          "chunk_id": "doc-docker-dockerfile-reference-c036",
+          "score": 0.7165,
+          "source_type": "official_documentation",
+          "vendor": "Docker",
+          "technology": "docker",
+          "section": "escape"
+        },
+        "top_results": [
+          {
+            "chunk_id": "kn-gh-moby-moby-52653-c002",
+            "score": 0.7887,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "docker",
+            "section": "Root cause"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-52739-c001",
+            "score": 0.7669,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "docker",
+            "section": "Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-52653-c001",
+            "score": 0.7616,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "docker",
+            "section": "Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-48907-c001",
+            "score": 0.7548,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "docker",
+            "section": "Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-52739-c000",
+            "score": 0.7431,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "docker",
+            "section": "Docker COPY with chmod fails to add permissions"
+          },
+          {
+            "chunk_id": "kn-gh-hashicorp-terraform-38536-c001",
+            "score": 0.7369,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "terraform",
+            "section": "Symptoms"
+          },
+          {
+            "chunk_id": "kn-gh-docker-compose-7397-c000",
+            "score": 0.7236,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "docker",
+            "section": "docker-compose up fails with symlinked Dockerfile"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-52653-c000",
+            "score": 0.7235,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "docker",
+            "section": "docker cp fails when target container has any file mounted with symlinked target"
+          },
+          {
+            "chunk_id": "kn-gh-moby-moby-52739-c002",
+            "score": 0.7207,
+            "source_type": "research_knowledge",
+            "vendor": null,
+            "technology": "docker",
+            "section": "Root cause"
+          },
+          {
+            "chunk_id": "doc-docker-dockerfile-reference-c036",
+            "score": 0.7165,
+            "source_type": "official_documentation",
+            "vendor": "Docker",
+            "technology": "docker",
+            "section": "escape"
+          }
+        ]
+      }
+    ],
+    "all_passed": true
+  },
+  "migration_created": false
+}

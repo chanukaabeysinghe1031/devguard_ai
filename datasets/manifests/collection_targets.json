@@ -1,0 +1,95 @@
+{
+  "dataset_version": "0.1.0-phase1",
+  "purpose": "Curated high-quality GitHub issue sources for a 300–600 incident MSc RAG/retrieval corpus. Prefer resolved issues with clear failure signals over bulk downloads.",
+  "notes": [
+    "Do not scrape HTML. Use the GitHub Issues REST API only.",
+    "Filter pull requests out of issue listings.",
+    "Prefer state=closed and bug/failure-related labels where available.",
+    "Official documentation collection is a separate later step under datasets/raw/docs/.",
+    "failure_category values must use the frozen DevGuard taxonomy."
+  ],
+  "targets": [
+    {
+      "repository": "actions/runner",
+      "technology": "github_actions",
+      "suggested_failure_category": "configuration_failure",
+      "state": "closed",
+      "labels": ["bug"],
+      "max_issues": 80,
+      "priority": 1
+    },
+    {
+      "repository": "actions/setup-node",
+      "technology": "node",
+      "suggested_failure_category": "dependency_failure",
+      "state": "closed",
+      "labels": ["bug"],
+      "max_issues": 40,
+      "priority": 2
+    },
+    {
+      "repository": "actions/setup-java",
+      "technology": "java",
+      "suggested_failure_category": "dependency_failure",
+      "state": "closed",
+      "labels": ["bug"],
+      "max_issues": 40,
+      "priority": 2
+    },
+    {
+      "repository": "actions/cache",
+      "technology": "github_actions",
+      "suggested_failure_category": "configuration_failure",
+      "state": "closed",
+      "labels": ["bug"],
+      "max_issues": 40,
+      "priority": 2
+    },
+    {
+      "repository": "hashicorp/terraform",
+      "technology": "terraform",
+      "suggested_failure_category": "terraform_failure",
+      "state": "closed",
+      "labels": ["bug"],
+      "max_issues": 80,
+      "priority": 1
+    },
+    {
+      "repository": "hashicorp/terraform-provider-aws",
+      "technology": "aws",
+      "suggested_failure_category": "aws_permission_failure",
+      "state": "closed",
+      "labels": ["bug"],
+      "max_issues": 80,
+      "priority": 1
+    },
+    {
+      "repository": "moby/moby",
+      "technology": "docker",
+      "suggested_failure_category": "docker_failure",
+      "state": "closed",
+      "labels": ["kind/bug"],
+      "max_issues": 60,
+      "priority": 1
+    },
+    {
+      "repository": "docker/compose",
+      "technology": "docker",
+      "suggested_failure_category": "docker_failure",
+      "state": "closed",
+      "labels": ["kind/bug"],
+      "max_issues": 40,
+      "priority": 2
+    },
+    {
+      "repository": "kubernetes/kubernetes",
+      "technology": "kubernetes",
+      "suggested_failure_category": "deployment_failure",
+      "state": "closed",
+      "labels": ["kind/bug"],
+      "max_issues": 40,
+      "priority": 3,
+      "notes": "Keep volume low; prefer CI/image-pull related issues during curation."
+    }
+  ]
+}

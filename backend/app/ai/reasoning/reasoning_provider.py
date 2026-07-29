@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
+import random
+import time
 from typing import Any
+
+import structlog
 
 from app.ai.reasoning.prompt_builder import (
     PROMPT_VERSION,
@@ -16,6 +21,10 @@ from app.domain.interfaces.ai_providers import (
     RecommendationRequest,
     RootCauseRequest,
 )
+
+logger = structlog.get_logger(__name__)
+
+_CIRCUIT_STATE: dict[str, dict[str, float | int]] = {}
 
 
 class LocalGroundedReasoningProvider(ReasoningProvider):
@@ -83,15 +92,37 @@ class LocalGroundedReasoningProvider(ReasoningProvider):
 class OpenAIReasoningProvider(ReasoningProvider):
     """Optional OpenAI provider behind the ReasoningProvider interface."""
 
-    def __init__(self, *, api_key: str, model: str = "gpt-4o-mini") -> None:
+    def __init__(
+        self,
+        *,
+        api_key: str,
+        model: str = "gpt-4o-mini",
+        timeout_seconds: float = 30.0,
+        max_retries: int = 3,
+        retry_base_delay_ms: int = 500,
+        retry_max_delay_ms: int = 8000,
+        circuit_breaker_failures: int = 5,
+        circuit_breaker_reset_seconds: int = 60,
+    ) -> None:
         if not api_key:
             raise ValueError("OPENAI_API_KEY is required for LLM_PROVIDER=openai")
         self._api_key = api_key
         self._model = model
+        self._timeout_seconds = max(5.0, float(timeout_seconds))
+        self._max_retries = max(0, int(max_retries))
+        self._retry_base_delay_ms = max(100, int(retry_base_delay_ms))
+        self._retry_max_delay_ms = max(self._retry_base_delay_ms, int(retry_max_delay_ms))
+        self._circuit_breaker_failures = max(1, int(circuit_breaker_failures))
+        self._circuit_breaker_reset_seconds = max(5, int(circuit_breaker_reset_seconds))
+        self._last_usage: dict[str, Any] = {}
 
     @property
     def name(self) -> str:
         return f"openai:{self._model}"
+
+    @property
+    def last_usage(self) -> dict[str, Any]:
+        return dict(self._last_usage)
 
     async def generate_root_cause(self, request: RootCauseRequest) -> dict[str, Any]:
         prompt = build_root_cause_prompt(
@@ -131,26 +162,92 @@ class OpenAIReasoningProvider(ReasoningProvider):
         except ImportError as exc:  # pragma: no cover - optional dependency
             raise RuntimeError("openai package is required for LLM_PROVIDER=openai") from exc
 
+        if _is_circuit_open(self._model):
+            raise RuntimeError("OpenAI circuit breaker is open; using fallback provider.")
+
         client = AsyncOpenAI(api_key=self._api_key)
-        response = await client.chat.completions.create(
-            model=self._model,
-            temperature=0.1,
-            response_format={"type": "json_object"},
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are DevGuard AI. Return grounded JSON only. "
-                        "Never invent evidence or documentation IDs."
+        last_error: Exception | None = None
+        for attempt in range(self._max_retries + 1):
+            started = time.perf_counter()
+            try:
+                response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=self._model,
+                        temperature=0.2,
+                        response_format={"type": "json_object"},
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": (
+                                    "You are DevGuard AI. Return grounded JSON only. "
+                                    "Never invent evidence or documentation IDs."
+                                ),
+                            },
+                            {"role": "user", "content": prompt},
+                        ],
                     ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-        )
-        content = response.choices[0].message.content
-        if not content:
-            raise ValueError("Empty OpenAI response.")
-        return content
+                    timeout=self._timeout_seconds,
+                )
+                content = response.choices[0].message.content
+                if not content:
+                    raise ValueError("Empty OpenAI response.")
+                usage = getattr(response, "usage", None)
+                input_tokens = int(getattr(usage, "prompt_tokens", 0) or 0)
+                output_tokens = int(getattr(usage, "completion_tokens", 0) or 0)
+                total_tokens = int(
+                    getattr(
+                        usage,
+                        "total_tokens",
+                        input_tokens + output_tokens,
+                    )
+                    or 0
+                )
+                latency_ms = int((time.perf_counter() - started) * 1000)
+                self._last_usage = {
+                    "provider": "openai",
+                    "model": self._model,
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "total_tokens": total_tokens,
+                    "latency_ms": latency_ms,
+                    "attempt": attempt + 1,
+                }
+                _record_circuit_success(self._model)
+                logger.info(
+                    "openai_reasoning_success",
+                    model=self._model,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    latency_ms=latency_ms,
+                    attempt=attempt + 1,
+                )
+                return content
+            except Exception as exc:  # noqa: BLE001 - classify + retry
+                last_error = exc
+                latency_ms = int((time.perf_counter() - started) * 1000)
+                _record_circuit_failure(
+                    self._model,
+                    failure_threshold=self._circuit_breaker_failures,
+                    reset_seconds=self._circuit_breaker_reset_seconds,
+                )
+                logger.warning(
+                    "openai_reasoning_attempt_failed",
+                    model=self._model,
+                    error_type=type(exc).__name__,
+                    latency_ms=latency_ms,
+                    attempt=attempt + 1,
+                    max_attempts=self._max_retries + 1,
+                )
+                if attempt >= self._max_retries:
+                    break
+                delay = min(
+                    self._retry_max_delay_ms,
+                    int(self._retry_base_delay_ms * (2**attempt)),
+                )
+                jitter = random.randint(0, max(50, delay // 4))
+                await asyncio.sleep((delay + jitter) / 1000)
+
+        raise RuntimeError(f"OpenAI request failed after retries: {type(last_error).__name__}")
 
 
 def build_reasoning_provider(
@@ -158,9 +255,24 @@ def build_reasoning_provider(
     *,
     api_key: str = "",
     model: str = "gpt-4o-mini",
+    timeout_seconds: float = 30.0,
+    max_retries: int = 3,
+    retry_base_delay_ms: int = 500,
+    retry_max_delay_ms: int = 8000,
+    circuit_breaker_failures: int = 5,
+    circuit_breaker_reset_seconds: int = 60,
 ) -> ReasoningProvider:
     if provider == "openai":
-        return OpenAIReasoningProvider(api_key=api_key, model=model)
+        return OpenAIReasoningProvider(
+            api_key=api_key,
+            model=model,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
+            retry_base_delay_ms=retry_base_delay_ms,
+            retry_max_delay_ms=retry_max_delay_ms,
+            circuit_breaker_failures=circuit_breaker_failures,
+            circuit_breaker_reset_seconds=circuit_breaker_reset_seconds,
+        )
     return LocalGroundedReasoningProvider()
 
 
@@ -173,3 +285,21 @@ def dump_prompt_for_debug(request: RootCauseRequest) -> str:
             "doc_count": len(request.retrieved_docs),
         }
     )
+
+
+def _is_circuit_open(model: str) -> bool:
+    state = _CIRCUIT_STATE.get(model) or {}
+    opened_until = float(state.get("opened_until", 0) or 0)
+    return opened_until > time.time()
+
+
+def _record_circuit_success(model: str) -> None:
+    _CIRCUIT_STATE[model] = {"failures": 0, "opened_until": 0.0}
+
+
+def _record_circuit_failure(model: str, *, failure_threshold: int, reset_seconds: int) -> None:
+    state = _CIRCUIT_STATE.setdefault(model, {"failures": 0, "opened_until": 0.0})
+    failures = int(state.get("failures", 0) or 0) + 1
+    state["failures"] = failures
+    if failures >= failure_threshold:
+        state["opened_until"] = time.time() + float(reset_seconds)

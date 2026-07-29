@@ -1,0 +1,130 @@
+{
+  "environment": {
+    "repo": "/Users/chanukaabbeysinghe/Downloads/MSC project/devguard_ai",
+    "retrieval_note": "primary=devguard_product_minilm; secondary=devguard_research_knowledge",
+    "openai_mode": "not_measured_no_paid_calls",
+    "hardware_note": "Docker backend container on host machine"
+  },
+  "stages": [
+    {
+      "name": "classification_small_cold",
+      "warm": false,
+      "n": 5,
+      "min_ms": 0.06187497638165951,
+      "max_ms": 0.13429095270112157,
+      "mean_ms": 0.08114977972581983,
+      "median_ms": 0.06737496005371213,
+      "p50_ms": 0.06737496005371213,
+      "p95_ms": 0.13429095270112157,
+      "stdev_ms": 0.027407741784664656
+    },
+    {
+      "name": "classification_small_warm",
+      "warm": true,
+      "n": 40,
+      "min_ms": 0.053750001825392246,
+      "max_ms": 0.058792007621377707,
+      "mean_ms": 0.05613322282442823,
+      "median_ms": 0.056145479902625084,
+      "p50_ms": 0.05641597090288997,
+      "p95_ms": 0.05825003609061241,
+      "stdev_ms": 0.001261174243411914
+    },
+    {
+      "name": "classification_large_warm",
+      "warm": true,
+      "n": 15,
+      "min_ms": 29.849540966097265,
+      "max_ms": 31.426541972905397,
+      "mean_ms": 30.32948619608457,
+      "median_ms": 30.245792004279792,
+      "p50_ms": 30.245792004279792,
+      "p95_ms": 30.61804099706933,
+      "stdev_ms": 0.353108788930665
+    },
+    {
+      "name": "secret_masking_medium",
+      "warm": true,
+      "n": 40,
+      "min_ms": 0.0499580055475235,
+      "max_ms": 0.05208299262449145,
+      "mean_ms": 0.05054062348790467,
+      "median_ms": 0.050083035603165627,
+      "p50_ms": 0.050083035603165627,
+      "p95_ms": 0.051916984375566244,
+      "stdev_ms": 0.000736921064603435
+    },
+    {
+      "name": "signals_and_query_construction",
+      "warm": true,
+      "n": 30,
+      "min_ms": 0.25862501934170723,
+      "max_ms": 0.29145798180252314,
+      "mean_ms": 0.26361933366085094,
+      "median_ms": 0.26060399250127375,
+      "p50_ms": 0.26050000451505184,
+      "p95_ms": 0.2803749521262944,
+      "stdev_ms": 0.007079990577822527
+    },
+    {
+      "name": "embedding_query_warm",
+      "warm": true,
+      "n": 15,
+      "min_ms": 5.415124993305653,
+      "max_ms": 7.783999957609922,
+      "mean_ms": 5.872433395901074,
+      "median_ms": 5.730999982915819,
+      "p50_ms": 5.730999982915819,
+      "p95_ms": 6.156374991405755,
+      "stdev_ms": 0.5500988878396219
+    },
+    {
+      "name": "primary_retrieval_warm",
+      "warm": true,
+      "n": 10,
+      "min_ms": 9.327042032964528,
+      "max_ms": 16.75766601692885,
+      "mean_ms": 10.711437504505739,
+      "median_ms": 9.827791509451345,
+      "p50_ms": 9.679707989562303,
+      "p95_ms": 16.75766601692885,
+      "stdev_ms": 2.1239146489781757
+    },
+    {
+      "name": "secondary_retrieval_warm",
+      "warm": true,
+      "n": 10,
+      "min_ms": 9.652125008869916,
+      "max_ms": 12.646874994970858,
+      "mean_ms": 10.757966706296429,
+      "median_ms": 10.592208505840972,
+      "p50_ms": 10.461667028721422,
+      "p95_ms": 12.646874994970858,
+      "stdev_ms": 0.8406123327803424
+    },
+    {
+      "name": "federated_merge_dedupe_warm",
+      "warm": true,
+      "n": 10,
+      "min_ms": 12.321207963395864,
+      "max_ms": 16.791250032838434,
+      "mean_ms": 13.879620900843292,
+      "median_ms": 14.02935350779444,
+      "p50_ms": 14.020916016306728,
+      "p95_ms": 16.791250032838434,
+      "stdev_ms": 1.2867778840281912
+    },
+    {
+      "name": "local_fallback_reasoning",
+      "warm": true,
+      "n": 20,
+      "min_ms": 0.13045896776020527,
+      "max_ms": 0.21374999778345227,
+      "mean_ms": 0.1487103960243985,
+      "median_ms": 0.14110401389189065,
+      "p50_ms": 0.14120800187811255,
+      "p95_ms": 0.16970897559076548,
+      "stdev_ms": 0.018247023021355505
+    }
+  ]
+}
