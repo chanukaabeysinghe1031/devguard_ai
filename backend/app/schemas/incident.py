@@ -71,6 +71,7 @@ class IncidentListItem(BaseModel):
     project: ProjectSummary
     severity: str
     status: str
+    source: str | None = None
     environment: str | None = None
     predicted_category: str | None = None
     ai_confidence: float | None = None

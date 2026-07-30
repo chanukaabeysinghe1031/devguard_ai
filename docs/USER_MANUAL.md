@@ -33,6 +33,16 @@ Requires API on `:8000` and UI on `:5173`. See `docs/PHASE5A_E2E_REPORT.md`.
 6. Add **Notes**, **Assign**, change **Status**, then **Resolve**.
 7. **Generate Report** from the Report tab; find the case under **History**.
 
+## Automated GitHub Actions (Phase 5B)
+
+1. Open a project → **Integrations**.
+2. Connect **GitHub Actions** (requires GitHub App configured on the server).
+3. Select a repository and enable automatic incidents / analysis.
+4. When a monitored workflow fails, DevGuard creates an incident, collects logs, and runs the same AI pipeline as manual uploads.
+5. Incidents show a **GitHub** source badge and workflow context when available.
+
+See `docs/PHASE5B_GITHUB_APP_SETUP.md` and `docs/PHASE5B_LOCAL_GITHUB_SETUP.md`.
+
 ## Tips
 
 - `/diagnose` redirects to the incident wizard — use the incident workflow.

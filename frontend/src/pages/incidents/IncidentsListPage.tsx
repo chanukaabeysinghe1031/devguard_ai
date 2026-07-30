@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { Activity, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Activity, ChevronLeft, ChevronRight, Github, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import { listIncidents } from "../../api/incidentsApi";
 import { listProjects } from "../../api/projectsApi";
 import { queryKeys } from "../../api/queryKeys";
+import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { DataTable, type DataTableColumn } from "../../components/ui/DataTable";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -16,8 +17,11 @@ import { SearchInput } from "../../components/ui/SearchInput";
 import { Select } from "../../components/ui/Select";
 import { SeverityBadge } from "../../components/ui/SeverityBadge";
 import { StatusBadge } from "../../components/ui/StatusBadge";
+import { Tooltip } from "../../components/ui/Tooltip";
 import type { IncidentListItem } from "../../types/incident";
 import { formatRelativeTime } from "../../utils/formatters";
+
+const GITHUB_SOURCES = new Set(["github_webhook", "webhook"]);
 
 const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
@@ -82,7 +86,16 @@ export function IncidentsListPage() {
       header: "Incident",
       render: (incident) => (
         <div>
-          <p className="font-medium text-text-primary">{incident.title}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-text-primary">{incident.title}</p>
+            {GITHUB_SOURCES.has(incident.source ?? "") && (
+              <Tooltip content="Created automatically from a GitHub Actions webhook">
+                <Badge tone="neutral">
+                  <Github className="h-3 w-3" /> GitHub
+                </Badge>
+              </Tooltip>
+            )}
+          </div>
           <p className="text-xs text-text-muted">{incident.incident_number}</p>
         </div>
       ),

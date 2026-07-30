@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Archive, Pencil, RotateCcw } from "lucide-react";
+import { Archive, Pencil, Plug, RotateCcw } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -114,6 +114,13 @@ export function ProjectDetailPage() {
         description={project.description || `${titleCase(project.ci_provider)} project · key ${project.key}`}
         actions={
           <>
+            <LinkButton
+              to={`/projects/${project.id}/integrations`}
+              variant="outline"
+              leftIcon={<Plug className="h-4 w-4" />}
+            >
+              Integrations
+            </LinkButton>
             <LinkButton to={`/projects/${project.id}/edit`} variant="outline" leftIcon={<Pencil className="h-4 w-4" />}>
               Edit
             </LinkButton>

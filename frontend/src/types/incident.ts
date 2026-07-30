@@ -75,6 +75,8 @@ export interface IncidentListItem {
   ai_confidence: number | null;
   detected_at: string;
   current_assignee: AssigneeSummary | null;
+  /** Optional: present when the backend includes it on the list response. */
+  source?: string | null;
 }
 
 export interface Incident {

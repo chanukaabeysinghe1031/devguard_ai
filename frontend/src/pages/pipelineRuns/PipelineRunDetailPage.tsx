@@ -1,3 +1,4 @@
+import { Github } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
@@ -5,6 +6,7 @@ import { getPipelineRun } from "../../api/pipelineRunsApi";
 import { listIncidents } from "../../api/incidentsApi";
 import { queryKeys } from "../../api/queryKeys";
 import { ErrorRetryAlert } from "../../components/ui/Alert";
+import { Badge } from "../../components/ui/Badge";
 import { Breadcrumbs } from "../../components/ui/Breadcrumbs";
 import { Card, CardBody, CardHeader } from "../../components/ui/Card";
 import { DataTable, type DataTableColumn } from "../../components/ui/DataTable";
@@ -15,6 +17,7 @@ import { Skeleton } from "../../components/ui/Skeleton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import type { IncidentListItem } from "../../types/incident";
 import { formatDateTime, formatDurationMs, titleCase } from "../../utils/formatters";
+import { isSafeGitHubUrl } from "../../utils/githubUrl";
 
 export function PipelineRunDetailPage() {
   const { pipelineRunId } = useParams<{ pipelineRunId: string }>();
@@ -46,11 +49,22 @@ export function PipelineRunDetailPage() {
   }
 
   const run = runQuery.data;
+  const isGithub = run.provider === "github_actions";
+  const showSourceLink = isGithub ? isSafeGitHubUrl(run.source_url) : Boolean(run.source_url);
 
   return (
     <div>
       <PageHeader
-        title={run.workflow_name ?? run.external_run_id ?? "Pipeline run"}
+        title={
+          <span className="flex flex-wrap items-center gap-2">
+            {run.workflow_name ?? run.external_run_id ?? "Pipeline run"}
+            {isGithub && (
+              <Badge tone="neutral">
+                <Github className="h-3 w-3" /> GitHub
+              </Badge>
+            )}
+          </span>
+        }
         breadcrumbs={<Breadcrumbs items={[{ label: "Projects", to: "/projects" }, { label: "Pipeline run" }]} />}
         description={
           <Link to={`/projects/${run.project_id}`} className="hover:underline">
@@ -78,9 +92,14 @@ export function PipelineRunDetailPage() {
               },
             ]}
           />
-          {run.source_url && (
-            <a href={run.source_url} target="_blank" rel="noreferrer" className="mt-4 inline-block text-sm text-primary hover:underline">
-              View in CI provider
+          {showSourceLink && run.source_url && (
+            <a
+              href={run.source_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-block text-sm text-primary hover:underline"
+            >
+              {isGithub ? "View run on GitHub" : "View in CI provider"}
             </a>
           )}
         </CardBody>

@@ -10,3 +10,4 @@ export * from "./dashboard";
 export * from "./notification";
 export * from "./report";
 export * from "./history";
+export * from "./integration";

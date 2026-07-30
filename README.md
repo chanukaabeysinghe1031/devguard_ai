@@ -27,7 +27,8 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Frontend product screens** | ✅ Phase 5A AppShell + incident workflow (see `docs/PHASE5A_*`) |
 | **Phase 4 — Production hardening** | ✅ Complete — `docs/PHASE4_PRODUCTION_HARDENING.md` / tag `v0.9.0-phase4` |
 | **Phase 5 — Release candidate validation** | ✅ See `docs/PHASE5_RELEASE_CANDIDATE_VALIDATION.md` |
-| **Phase 5A — Incident business application** | ✅ Core + Module 5A.10 quality gates — see `docs/PHASE5A_PRODUCTION_READINESS.md` / tag `v1.0.0-rc2` |
+| **Phase 5A — Incident business application** | ✅ Core + Module 5A.10 — `docs/PHASE5A_PRODUCTION_READINESS.md` / `v1.0.0-rc2` |
+| **Phase 5B — GitHub Actions ingestion** | 🔶 Implemented on branch — see `docs/PHASE5B_*` / ADR-005 |
 
 ### Phase 5A product UI
 

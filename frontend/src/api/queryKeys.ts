@@ -42,4 +42,16 @@ export const queryKeys = {
   dashboardActiveAnalyses: (params?: Record<string, unknown>) =>
     ["dashboard", "active-analyses", params ?? {}] as const,
   dashboardActivity: (params?: Record<string, unknown>) => ["dashboard", "activity", params ?? {}] as const,
+
+  githubStatus: () => ["integrations", "github", "status"] as const,
+  githubInstallations: () => ["integrations", "github", "installations"] as const,
+  githubInstallationRepositories: (installationId: string) =>
+    ["integrations", "github", "installations", installationId, "repositories"] as const,
+
+  projectIntegrations: (projectId: string) => ["projects", projectId, "integrations"] as const,
+  projectGithubConnection: (projectId: string) => ["projects", projectId, "integrations", "github"] as const,
+  projectGithubWorkflows: (projectId: string) =>
+    ["projects", projectId, "integrations", "github", "workflows"] as const,
+  projectGithubActivity: (projectId: string, params?: Record<string, unknown>) =>
+    ["projects", projectId, "integrations", "github", "activity", params ?? {}] as const,
 };

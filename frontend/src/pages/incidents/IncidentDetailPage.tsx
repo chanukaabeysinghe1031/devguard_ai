@@ -17,6 +17,7 @@ import { StatusBadge } from "../../components/ui/StatusBadge";
 import { Tabs } from "../../components/ui/Tabs";
 import { EvidenceTab } from "./detail/EvidenceTab";
 import { FilesTab } from "./detail/FilesTab";
+import { GitHubContextCard } from "./detail/GitHubContextCard";
 import { NotesTab } from "./detail/NotesTab";
 import { OverviewTab } from "./detail/OverviewTab";
 import { RecommendationsTab } from "./detail/RecommendationsTab";
@@ -127,6 +128,8 @@ export function IncidentDetailPage() {
           {reanalyseMutation.error instanceof ApiError ? reanalyseMutation.error.message : "Failed to start re-analysis."}
         </Alert>
       )}
+
+      <GitHubContextCard pipelineRunId={incident.pipeline_run_id} />
 
       <Tabs items={TAB_ITEMS} activeId={activeTab} onChange={setTab} />
 

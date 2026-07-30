@@ -10,6 +10,7 @@
 
 | ID | Title | Status |
 |----|-------|--------|
+| ADR-005 | Automated GitHub Actions Incident Ingestion | Accepted |
 | ADR-012 | Evolve Legacy Flat Schema to Incident-Centred Domain Model | Accepted |
 
 ---

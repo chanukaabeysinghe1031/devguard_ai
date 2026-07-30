@@ -13,6 +13,9 @@ import { IncidentAnalysisPage } from "../pages/incidents/IncidentAnalysisPage";
 import { IncidentCreatePage } from "../pages/incidents/IncidentCreatePage";
 import { IncidentDetailPage } from "../pages/incidents/IncidentDetailPage";
 import { IncidentsListPage } from "../pages/incidents/IncidentsListPage";
+import { GitHubIntegrationPage } from "../pages/integrations/GitHubIntegrationPage";
+import { GitHubSetupCallbackPage } from "../pages/integrations/GitHubSetupCallbackPage";
+import { ProjectIntegrationsPage } from "../pages/integrations/ProjectIntegrationsPage";
 import { NotificationsPage } from "../pages/notifications/NotificationsPage";
 import { PipelineRunDetailPage } from "../pages/pipelineRuns/PipelineRunDetailPage";
 import { ProfilePage } from "../pages/profile/ProfilePage";
@@ -58,6 +61,10 @@ export function AppRouter() {
         <Route path="/projects/new" element={<ProjectCreatePage />} />
         <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
         <Route path="/projects/:projectId/edit" element={<ProjectEditPage />} />
+        <Route path="/projects/:projectId/integrations" element={<ProjectIntegrationsPage />} />
+        <Route path="/projects/:projectId/integrations/github" element={<GitHubIntegrationPage />} />
+
+        <Route path="/integrations/github/setup" element={<GitHubSetupCallbackPage />} />
 
         <Route path="/pipeline-runs/:pipelineRunId" element={<PipelineRunDetailPage />} />
 

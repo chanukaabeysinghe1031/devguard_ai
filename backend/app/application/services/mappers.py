@@ -172,6 +172,7 @@ def incident_list_item(
         project=ProjectSummary(id=project.id, name=project.name),
         severity=incident.severity.value,
         status=incident.status.value,
+        source=incident.source,
         environment=incident.environment,
         predicted_category=predicted_category,
         ai_confidence=ai_confidence,
