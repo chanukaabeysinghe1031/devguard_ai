@@ -11,6 +11,7 @@ from app.api.v1.endpoints import (
     health,
     history,
     incidents,
+    integrations,
     notes,
     notifications,
     organizations,
@@ -34,3 +35,4 @@ api_router.include_router(notifications.router)
 api_router.include_router(reports.router)
 api_router.include_router(history.router)
 api_router.include_router(evaluation.router)
+api_router.include_router(integrations.router)

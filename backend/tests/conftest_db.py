@@ -33,6 +33,9 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 # All application tables registered in app.infrastructure.database.models.
 # `analysis_history` is deliberately absent — deprecated by ADR-012.
 ALL_APPLICATION_TABLES: tuple[str, ...] = (
+    "webhook_deliveries",
+    "github_repository_connections",
+    "github_installations",
     "audit_logs",
     "feedback",
     "notifications",

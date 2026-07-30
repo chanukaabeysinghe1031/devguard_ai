@@ -69,11 +69,17 @@ class UploadService:
         *,
         organization_id: UUID,
         incident_id: UUID,
-        uploader_id: UUID,
+        uploader_id: UUID | None,
         files: list[tuple[str | None, bytes]],
         file_category: str | None = None,
         description: str | None = None,
+        skip_duplicates: bool = False,
     ) -> UploadFilesResponse:
+        """Persist incident artifacts.
+
+        ``uploader_id`` is ``None`` for system ingestion (ADR-005), where the
+        files originate from a connected CI provider rather than a person.
+        """
         if not files:
             raise ValidationBusinessError("At least one file is required.", error_code="EMPTY_FILE")
         if len(files) > self._settings.max_files_per_upload:
@@ -85,16 +91,24 @@ class UploadService:
 
         try:
             for original_name, raw in files:
-                record, key = await self._process_one(
-                    incident=incident,
-                    uploader_id=uploader_id,
-                    original_name=original_name,
-                    raw=raw,
-                    file_category=file_category,
-                    description=description,
-                )
+                try:
+                    record, key = await self._process_one(
+                        incident=incident,
+                        uploader_id=uploader_id,
+                        original_name=original_name,
+                        raw=raw,
+                        file_category=file_category,
+                        description=description,
+                    )
+                except DuplicateFileError:
+                    if not skip_duplicates:
+                        raise
+                    continue
                 saved.append(record)
                 storage_keys.append(key)
+
+            if not saved:
+                raise DuplicateFileError()
 
             await self._session.flush()
             await self._record_event(
@@ -119,6 +133,26 @@ class UploadService:
             file_count=len(saved),
         )
         return UploadFilesResponse(files=[self._to_response(f) for f in saved])
+
+    async def ingest_system_files(
+        self,
+        *,
+        organization_id: UUID,
+        incident_id: UUID,
+        files: list[tuple[str | None, bytes]],
+        file_category: str | None = None,
+        description: str | None = None,
+    ) -> UploadFilesResponse:
+        """Persist files ingested by an automated connector (no human uploader)."""
+        return await self.upload_incident_files(
+            organization_id=organization_id,
+            incident_id=incident_id,
+            uploader_id=None,
+            files=files,
+            file_category=file_category,
+            description=description,
+            skip_duplicates=True,
+        )
 
     async def list_incident_files(
         self,
@@ -208,7 +242,7 @@ class UploadService:
         self,
         *,
         incident: Incident,
-        uploader_id: UUID,
+        uploader_id: UUID | None,
         original_name: str | None,
         raw: bytes,
         file_category: str | None,
@@ -350,7 +384,7 @@ class UploadService:
         self,
         *,
         incident_id: UUID,
-        actor_id: UUID,
+        actor_id: UUID | None,
         title: str,
         description: str | None = None,
         metadata: dict | None = None,
@@ -359,7 +393,7 @@ class UploadService:
             IncidentEvent(
                 incident_id=incident_id,
                 event_type="file_deleted" if title.startswith("File deleted") else "file_uploaded",
-                actor_type="user",
+                actor_type="user" if actor_id is not None else "system",
                 actor_user_id=actor_id,
                 title=title,
                 description=description,

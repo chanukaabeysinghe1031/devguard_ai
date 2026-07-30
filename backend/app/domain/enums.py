@@ -167,6 +167,33 @@ class GenerationStatus(StrEnum):
     FAILED = "failed"
 
 
+class WebhookProcessingStatus(StrEnum):
+    """Durable processing state of an inbound webhook delivery (ADR-005).
+
+    Persisted as VARCHAR rather than a PostgreSQL enum so the ingestion state
+    machine can evolve without a migration.
+    """
+
+    RECEIVED = "received"
+    VALIDATED = "validated"
+    QUEUED = "queued"
+    FETCHING_METADATA = "fetching_metadata"
+    DOWNLOADING_LOGS = "downloading_logs"
+    EXTRACTING_LOGS = "extracting_logs"
+    CREATING_INCIDENT = "creating_incident"
+    STARTING_ANALYSIS = "starting_analysis"
+    COMPLETED = "completed"
+    IGNORED = "ignored"
+    RETRYING = "retrying"
+    FAILED = "failed"
+
+
+class GitHubInstallationStatus(StrEnum):
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    DELETED = "deleted"
+
+
 class ModelVersionStatus(StrEnum):
     TRAINING = "training"
     ACTIVE = "active"

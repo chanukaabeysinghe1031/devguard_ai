@@ -7,6 +7,10 @@ from app.infrastructure.database.models.evaluation import Evaluation
 from app.infrastructure.database.models.evidence_item import EvidenceItem
 from app.infrastructure.database.models.failure_category import FailureCategory
 from app.infrastructure.database.models.feedback import Feedback
+from app.infrastructure.database.models.github_installation import GitHubInstallation
+from app.infrastructure.database.models.github_repository_connection import (
+    GitHubRepositoryConnection,
+)
 from app.infrastructure.database.models.incident import Incident
 from app.infrastructure.database.models.incident_assignment import IncidentAssignment
 from app.infrastructure.database.models.incident_event import IncidentEvent
@@ -29,6 +33,7 @@ from app.infrastructure.database.models.refresh_token import RefreshToken
 from app.infrastructure.database.models.retrieved_document import RetrievedDocument
 from app.infrastructure.database.models.uploaded_file import UploadedFile
 from app.infrastructure.database.models.user import User
+from app.infrastructure.database.models.webhook_delivery import WebhookDelivery
 
 __all__ = [
     "Base",
@@ -38,6 +43,8 @@ __all__ = [
     "EvidenceItem",
     "FailureCategory",
     "Feedback",
+    "GitHubInstallation",
+    "GitHubRepositoryConnection",
     "Incident",
     "IncidentAssignment",
     "IncidentEvent",
@@ -60,4 +67,5 @@ __all__ = [
     "RetrievedDocument",
     "UploadedFile",
     "User",
+    "WebhookDelivery",
 ]

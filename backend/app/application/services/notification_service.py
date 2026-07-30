@@ -9,16 +9,23 @@ import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.enums import DeliveryStatus, NotificationType
+from app.domain.enums import DeliveryStatus, NotificationType, OrganizationRole
 from app.domain.exceptions.business import ResourceNotFoundError
 from app.infrastructure.database.models.incident import Incident
 from app.infrastructure.database.models.notification import Notification
+from app.infrastructure.database.models.organization_member import OrganizationMember
 from app.schemas.common import build_paginated_response, normalize_pagination
 from app.schemas.notification import NotificationListResponse, NotificationResponse
 
 logger = structlog.get_logger(__name__)
 
 _IN_APP_CHANNEL = "in_app"
+
+# System-detected incidents are announced to the people accountable for the org.
+_ADMIN_RECIPIENT_ROLES = (
+    OrganizationRole.ORGANIZATION_OWNER,
+    OrganizationRole.ORGANIZATION_ADMIN,
+)
 
 
 class NotificationService:
@@ -111,6 +118,48 @@ class NotificationService:
         notification = await self._get_owned(user_id, notification_id)
         await self._session.delete(notification)
         await self._session.flush()
+
+    async def list_organization_recipient_ids(
+        self,
+        *,
+        organization_id: UUID,
+        roles: tuple[OrganizationRole, ...] = _ADMIN_RECIPIENT_ROLES,
+    ) -> list[UUID]:
+        """Active member user ids for the given organization roles."""
+        stmt = select(OrganizationMember.user_id).where(
+            OrganizationMember.organization_id == organization_id,
+            OrganizationMember.is_active.is_(True),
+            OrganizationMember.role.in_(roles),
+        )
+        return list((await self._session.scalars(stmt)).all())
+
+    async def notify_incident_created(
+        self,
+        *,
+        user_id: UUID,
+        incident_id: UUID,
+        title: str,
+        message: str,
+        severity: str | None = None,
+    ) -> Notification | None:
+        """Create an ``incident_created`` notification, skipping duplicates."""
+        existing = await self._session.scalar(
+            select(Notification).where(
+                Notification.user_id == user_id,
+                Notification.incident_id == incident_id,
+                Notification.notification_type == NotificationType.INCIDENT_CREATED,
+            )
+        )
+        if existing is not None:
+            return None
+        return await self._create(
+            user_id=user_id,
+            incident_id=incident_id,
+            notification_type=NotificationType.INCIDENT_CREATED,
+            title=title[:255],
+            message=message[:1000],
+            severity=severity,
+        )
 
     async def notify_assignment(
         self,

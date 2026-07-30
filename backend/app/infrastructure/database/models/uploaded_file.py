@@ -46,9 +46,10 @@ class UploadedFile(Base, UUIDPrimaryKeyMixin, CreatedAtMixin):
         Index("ix_uploaded_files_pipeline_run_id", "pipeline_run_id"),
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    # Nullable for system ingestion (e.g. GitHub Actions logs) with no human uploader.
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"),
@@ -86,7 +87,7 @@ class UploadedFile(Base, UUIDPrimaryKeyMixin, CreatedAtMixin):
     )
     extracted_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
-    user: Mapped[User] = relationship(back_populates="uploaded_files")
+    user: Mapped[User | None] = relationship(back_populates="uploaded_files")
     project: Mapped[Project] = relationship(back_populates="uploaded_files")
     pipeline_run: Mapped[PipelineRun | None] = relationship(back_populates="uploaded_files")
     incident: Mapped[Incident | None] = relationship(back_populates="uploaded_files")

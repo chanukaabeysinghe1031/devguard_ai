@@ -53,6 +53,13 @@ os.environ.setdefault("ENABLE_LEXICAL_RETRIEVAL", "true")
 os.environ.setdefault("ENABLE_STACK_TRACE_SIMILARITY", "true")
 os.environ.setdefault("ENABLE_RETRIEVAL_DIVERSITY", "true")
 os.environ.setdefault("HYBRID_WEIGHT_PROFILE", "hybrid_static_v1")
+# Phase 5B GitHub ingestion runs against the deterministic fake provider and
+# processes deliveries inline so assertions can read the resulting rows.
+os.environ["GITHUB_APP_ENABLED"] = "true"
+os.environ["GITHUB_PROVIDER"] = "fake"
+os.environ["GITHUB_APP_SLUG"] = "devguard-ai-test"
+os.environ["GITHUB_WEBHOOK_SECRET"] = "test-secret"
+os.environ["GITHUB_WEBHOOK_PROCESSING_MODE"] = "sync"
 
 from app.core.config import get_settings  # noqa: E402
 from app.main import app  # noqa: E402

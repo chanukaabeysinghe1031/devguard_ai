@@ -52,9 +52,16 @@ class AnalysisRunService:
         *,
         organization_id: UUID,
         incident_id: UUID,
-        requested_by: UUID,
+        requested_by: UUID | None,
         body: StartAnalysisRequest,
+        system_initiated: bool = False,
     ) -> AnalysisAcceptedResponse:
+        """Queue an analysis run.
+
+        Automated ingestion (ADR-005) sets ``system_initiated`` so the timeline
+        records a system actor while ``requested_by`` still identifies the user
+        accountable for the connection and receives completion notifications.
+        """
         incident = await self._load_incident(organization_id, incident_id)
         if incident.status in (IncidentStatus.CLOSED, IncidentStatus.IGNORED):
             raise ValidationBusinessError("Cannot analyse a closed or ignored incident.")
@@ -82,9 +89,13 @@ class AnalysisRunService:
         incident.latest_analysis_run_id = run.id
         await self._record_event(
             incident_id=incident.id,
-            actor_id=requested_by,
+            actor_id=None if system_initiated else requested_by,
             title="Analysis queued",
-            description="Analysis run accepted and queued.",
+            description=(
+                "Analysis run started automatically after CI failure ingestion."
+                if system_initiated
+                else "Analysis run accepted and queued."
+            ),
             metadata={"analysis_run_id": str(run.id)},
         )
         await self._session.flush()
@@ -102,7 +113,7 @@ class AnalysisRunService:
         *,
         organization_id: UUID,
         incident_id: UUID,
-        requested_by: UUID,
+        requested_by: UUID | None,
         body: ReanalyseRequest,
     ) -> AnalysisAcceptedResponse:
         return await self.start_analysis(
@@ -241,7 +252,7 @@ class AnalysisRunService:
         self,
         *,
         incident_id: UUID,
-        actor_id: UUID,
+        actor_id: UUID | None,
         title: str,
         description: str | None = None,
         metadata: dict | None = None,
@@ -250,7 +261,7 @@ class AnalysisRunService:
             IncidentEvent(
                 incident_id=incident_id,
                 event_type="analysis_queued",
-                actor_type="user",
+                actor_type="user" if actor_id is not None else "system",
                 actor_user_id=actor_id,
                 title=title,
                 description=description,

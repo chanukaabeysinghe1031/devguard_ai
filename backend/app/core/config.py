@@ -249,6 +249,55 @@ class Settings(BaseSettings):
     max_historical_results: int = Field(default=2, alias="MAX_HISTORICAL_RESULTS")
     diversity_lambda: float = Field(default=0.75, alias="DIVERSITY_LAMBDA")
 
+    # Phase 5B — automated GitHub Actions ingestion (ADR-005). Disabled by default.
+    # The App private key and webhook secret are environment/file values only and
+    # are never returned by an API or written to a log.
+    github_app_enabled: bool = Field(default=False, alias="GITHUB_APP_ENABLED")
+    github_provider: Literal["github", "fake"] = Field(default="github", alias="GITHUB_PROVIDER")
+    github_app_id: str = Field(default="", alias="GITHUB_APP_ID")
+    github_app_slug: str = Field(default="", alias="GITHUB_APP_SLUG")
+    github_app_name: str = Field(default="DevGuard AI", alias="GITHUB_APP_NAME")
+    github_app_private_key_path: str = Field(default="", alias="GITHUB_APP_PRIVATE_KEY_PATH")
+    github_app_private_key_pem: str = Field(default="", alias="GITHUB_APP_PRIVATE_KEY_PEM")
+    github_webhook_secret: str = Field(default="", alias="GITHUB_WEBHOOK_SECRET")
+    github_api_base_url: str = Field(default="https://api.github.com", alias="GITHUB_API_BASE_URL")
+    github_app_install_base_url: str = Field(
+        default="https://github.com/apps",
+        alias="GITHUB_APP_INSTALL_BASE_URL",
+    )
+    github_setup_redirect_url: str = Field(
+        default="http://localhost:5173/integrations/github/setup",
+        alias="GITHUB_SETUP_REDIRECT_URL",
+    )
+    github_api_timeout_seconds: float = Field(default=20.0, alias="GITHUB_API_TIMEOUT_SECONDS")
+    github_installation_token_buffer_seconds: int = Field(
+        default=120,
+        alias="GITHUB_INSTALLATION_TOKEN_BUFFER_SECONDS",
+    )
+    github_setup_state_ttl_seconds: int = Field(
+        default=900,
+        alias="GITHUB_SETUP_STATE_TTL_SECONDS",
+    )
+    github_webhook_processing_mode: Literal["background", "sync"] = Field(
+        default="background",
+        alias="GITHUB_WEBHOOK_PROCESSING_MODE",
+    )
+    github_max_delivery_attempts: int = Field(default=3, alias="GITHUB_MAX_DELIVERY_ATTEMPTS")
+    github_max_log_archive_bytes: int = Field(
+        default=52_428_800,
+        alias="GITHUB_MAX_LOG_ARCHIVE_BYTES",
+    )
+    github_max_extracted_bytes: int = Field(
+        default=104_857_600,
+        alias="GITHUB_MAX_EXTRACTED_BYTES",
+    )
+    github_max_log_files: int = Field(default=25, alias="GITHUB_MAX_LOG_FILES")
+    github_max_single_log_bytes: int = Field(
+        default=5_242_880,
+        alias="GITHUB_MAX_SINGLE_LOG_BYTES",
+    )
+    integration_encryption_key: str = Field(default="", alias="INTEGRATION_ENCRYPTION_KEY")
+
     @field_validator(
         "default_budget_usd",
         "max_budget_usd_per_analysis",
@@ -343,6 +392,7 @@ class Settings(BaseSettings):
             and self.llm_output_cost_usd_per_million_tokens < 0
         ):
             problems.append("OPENAI/LLM output cost must be >= 0")
+        problems.extend(self._github_problems())
         if self.is_production:
             if self.debug:
                 problems.append("DEBUG must be false in production")
@@ -360,6 +410,36 @@ class Settings(BaseSettings):
                 problems.append("OPENAI_API_KEY required when external OpenAI is enabled")
             if self.rag_backend == "chroma" and not (self.chroma_host or self.chroma_persist_path):
                 problems.append("Chroma requires CHROMA_HOST or CHROMA_PERSIST_PATH")
+            if self.github_app_enabled and not self.integration_encryption_key:
+                problems.append("INTEGRATION_ENCRYPTION_KEY required when GITHUB_APP_ENABLED=true")
+            if self.github_provider == "fake":
+                problems.append("GITHUB_PROVIDER=fake must not be used in production")
+        return problems
+
+    def _github_problems(self) -> list[str]:
+        """GitHub App configuration requirements when ingestion is enabled.
+
+        Credentials for the real GitHub API are only required when the real
+        provider is selected; the deterministic fake provider used by tests
+        still requires a webhook secret so signature validation stays exercised.
+        """
+        if not self.github_app_enabled:
+            return []
+        problems: list[str] = []
+        if not self.github_webhook_secret:
+            problems.append("GITHUB_WEBHOOK_SECRET is required when GITHUB_APP_ENABLED=true")
+        if self.github_provider == "github":
+            if not self.github_app_id:
+                problems.append("GITHUB_APP_ID is required when GITHUB_APP_ENABLED=true")
+            if not (self.github_app_private_key_path or self.github_app_private_key_pem):
+                problems.append(
+                    "GITHUB_APP_PRIVATE_KEY_PATH or GITHUB_APP_PRIVATE_KEY_PEM is required "
+                    "when GITHUB_APP_ENABLED=true"
+                )
+        if self.github_max_log_archive_bytes <= 0 or self.github_max_extracted_bytes <= 0:
+            problems.append("GitHub log archive size limits must be > 0")
+        if self.github_max_log_files <= 0:
+            problems.append("GITHUB_MAX_LOG_FILES must be > 0")
         return problems
 
 

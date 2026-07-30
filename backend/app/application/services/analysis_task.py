@@ -6,6 +6,7 @@ from uuid import UUID
 
 import structlog
 from fastapi import BackgroundTasks
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
 from app.infrastructure.database.session import ensure_session_factory, init_db
@@ -64,3 +65,34 @@ def schedule_analysis_execution(
         return
 
     background_tasks.add_task(execute_analysis_run_job, analysis_run_id)
+
+
+async def run_or_schedule_analysis(
+    analysis_run_id: UUID,
+    *,
+    settings: Settings,
+    session: AsyncSession,
+    background_tasks: BackgroundTasks | None = None,
+) -> None:
+    """Execute the analysis in the caller's session (sync) or hand it to a worker.
+
+    Used by non-request-driven callers such as automated ingestion, which must
+    reuse the existing analysis orchestration rather than duplicate it.
+    """
+    if settings.analysis_execution_mode == "sync":
+        from app.application.services.analysis_execution_service import AnalysisExecutionService
+
+        executor = AnalysisExecutionService(
+            session=session,
+            settings=settings,
+            storage=build_file_storage(settings),
+        )
+        await executor.execute(analysis_run_id)
+        return
+
+    await session.commit()
+    schedule_analysis_execution(
+        analysis_run_id,
+        settings=settings,
+        background_tasks=background_tasks,
+    )
