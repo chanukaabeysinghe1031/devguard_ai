@@ -261,6 +261,13 @@ class IncidentService:
             metadata={"assigned_to": str(user_id)},
         )
         await self._session.flush()
+        from app.application.services.notification_service import NotificationService
+
+        await NotificationService(self._session).notify_assignment(
+            incident=incident,
+            assignee_id=user_id,
+            actor_id=actor_id,
+        )
         return incident_to_response(incident)
 
     async def unassign(

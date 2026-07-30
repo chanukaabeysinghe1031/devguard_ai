@@ -8,10 +8,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_session
+from app.api.dependencies import get_session, get_settings_dep
+from app.core.config import Settings
+from app.domain.exceptions.business import ValidationBusinessError
+from app.domain.exceptions.upload import StorageConfigurationError
+from app.infrastructure.storage import build_file_storage
 from app.api.deps.access import require_org_reader, require_org_writer
 from app.application.services.incident_note_service import IncidentNoteService
 from app.application.services.incident_service import IncidentService
+from app.application.services.report_service import ReportService
 from app.application.services.resolution_service import ResolutionService
 from app.schemas.common import MessageResponse, PaginatedResponse
 from app.schemas.incident import (
@@ -32,6 +37,7 @@ from app.schemas.resolution import (
     ResolveIncidentRequest,
     ResolveIncidentResponse,
 )
+from app.schemas.report import ReportGenerateRequest, ReportGenerateResponse
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
 
@@ -46,6 +52,17 @@ def _note_service(session: AsyncSession = Depends(get_session)) -> IncidentNoteS
 
 def _resolution_service(session: AsyncSession = Depends(get_session)) -> ResolutionService:
     return ResolutionService(session)
+
+
+def _report_service(
+    session: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings_dep),
+) -> ReportService:
+    try:
+        storage = build_file_storage(settings)
+    except StorageConfigurationError as exc:
+        raise ValidationBusinessError(str(exc), error_code="STORAGE_MISCONFIGURED") from exc
+    return ReportService(session=session, storage=storage)
 
 
 @router.post("", response_model=IncidentResponse, status_code=status.HTTP_201_CREATED)
@@ -273,4 +290,24 @@ async def list_incident_resolutions(
     return await service.list_resolutions(
         organization_id=organization_id,
         incident_id=incident_id,
+    )
+
+
+@router.post(
+    "/{incident_id}/reports",
+    response_model=ReportGenerateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def generate_incident_report(
+    incident_id: UUID,
+    body: ReportGenerateRequest,
+    ctx: tuple = Depends(require_org_writer),
+    service: ReportService = Depends(_report_service),
+) -> ReportGenerateResponse:
+    user, organization_id, _ = ctx
+    return await service.generate(
+        organization_id=organization_id,
+        incident_id=incident_id,
+        generated_by=user.id,
+        body=body,
     )

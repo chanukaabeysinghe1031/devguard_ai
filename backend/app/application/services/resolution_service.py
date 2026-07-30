@@ -65,6 +65,13 @@ class ResolutionService:
             description=body.resolution_summary,
         )
         await self._session.flush()
+        from app.application.services.notification_service import NotificationService
+
+        await NotificationService(self._session).notify_resolved(
+            incident=incident,
+            resolved_by=resolved_by,
+            resolution_summary=body.resolution_summary,
+        )
         logger.info("incident_resolved", incident_id=str(incident.id))
         return ResolveIncidentResponse(
             incident_id=incident.id,

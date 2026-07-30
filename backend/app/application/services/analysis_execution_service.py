@@ -136,6 +136,15 @@ class AnalysisExecutionService:
                 event_type="analysis_failed",
                 metadata={"analysis_run_id": str(run.id), "error_code": run.error_code},
             )
+            incident = await self._session.get(Incident, run.incident_id)
+            if incident is not None:
+                from app.application.services.notification_service import NotificationService
+
+                await NotificationService(self._session).notify_analysis_failed(
+                    incident=incident,
+                    requested_by=run.requested_by,
+                    error_message=run.error_message,
+                )
             await self._session.flush()
             logger.exception("analysis_run_failed", analysis_run_id=str(analysis_run_id))
 
@@ -497,6 +506,16 @@ class AnalysisExecutionService:
                 "confidence": primary.confidence if primary else None,
             },
         )
+        incident = await self._session.get(Incident, run.incident_id)
+        if incident is not None:
+            from app.application.services.notification_service import NotificationService
+
+            await NotificationService(self._session).notify_analysis_completed(
+                incident=incident,
+                requested_by=run.requested_by,
+                category=primary.category_code if primary else None,
+                root_cause=primary.root_cause_summary if primary else None,
+            )
         logger.info(
             "analysis_observability_summary",
             analysis_run_id=str(run.id),
