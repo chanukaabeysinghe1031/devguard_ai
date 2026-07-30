@@ -4,7 +4,7 @@
 
 DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefacts to classify failures, extract evidence, retrieve documentation, and produce explainable remediation recommendations — centred on an **incident investigation** lifecycle.
 
-> **Important:** Architecture is frozen in `docs/`. The local release candidate provides Modules 1–9 plus Phase 3–5 diagnosis validation. Full commercial SaaS screens remain approval-gated.
+> **Important:** Architecture is frozen in `docs/`. Modules 1–9 and Phase 3–5 diagnosis validation remain. **Phase 5A** builds the incident-management business UI around existing APIs — see `docs/PHASE5A_IMPLEMENTATION_AUDIT.md`.
 
 ---
 
@@ -24,9 +24,10 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
-| **Frontend product screens** | 🔶 Diagnosis shell complete (full product screens gated) |
+| **Frontend product screens** | 🔶 Phase 5A in progress — AppShell + incident workflow live; see `docs/PHASE5A_*` |
 | **Phase 4 — Production hardening** | ✅ Complete — `docs/PHASE4_PRODUCTION_HARDENING.md` / tag `v0.9.0-phase4` |
 | **Phase 5 — Release candidate validation** | ✅ See `docs/PHASE5_RELEASE_CANDIDATE_VALIDATION.md` |
+| **Phase 5A — Incident business application** | 🔶 Core screens + APIs landed; Module 5A.10 quality gates remaining |
 
 ### Phase 4 hardening (index)
 
@@ -62,7 +63,8 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 - Full SaaS multi-tenant product surface
 - Mandatory live OpenAI or ChromaDB in default local mode (flags/providers optional)
 - ZIP archive uploads (deferred ADR-011)
-- Frontend product screens or complete API surface from `API_SPECIFICATION.md`
+- Frontend product screens incomplete (Phase 5A core is in progress; Module 5A.10 gates remain)
+- Complete API surface from `API_SPECIFICATION.md` (audit/models admin still deferred)
 
 ---
 

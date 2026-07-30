@@ -1,0 +1,32 @@
+# DevGuard AI — User Manual (Phase 5A)
+
+## Start the stack
+
+```bash
+docker compose up -d --build
+```
+
+- UI: http://localhost:5173  
+- API: http://localhost:8000/api/v1  
+- Health: http://localhost:8000/api/v1/health  
+
+## First session
+
+1. Open `/register` (or `/login` if you already have an account).
+2. You land on **Dashboard**.
+3. Create a **Project** (`Projects` → Create Project).
+4. Create an **Incident** (`Incidents` → Create Incident), upload a log, start analysis.
+5. Watch **Analysis progress**, then review **Evidence**, **Sources**, and **Recommendations**.
+6. Add **Notes**, **Assign**, change **Status**, then **Resolve**.
+7. **Generate Report** from the Report tab; find the case under **History**.
+
+## Tips
+
+- `/diagnose` redirects to the incident wizard — use the incident workflow.
+- Confidence badges are heuristic, not calibrated probability.
+- Source cards show High/Medium/Low relevance; weak matches are hidden.
+- Admin pages (Users, System Health) require organization owner/admin.
+
+## Sign-out
+
+Use the avatar menu → Sign out. If you see “Invalid or expired token”, sign out and sign in again (refresh should usually renew access automatically).

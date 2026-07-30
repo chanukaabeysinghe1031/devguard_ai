@@ -18,8 +18,10 @@ export async function login(email: string, password: string): Promise<AuthSessio
   if (!organizationId) {
     throw new Error("No organization membership on account.");
   }
-  const session = {
+  const session: AuthSession = {
     accessToken: body.access_token,
+    // Legacy demo login predates refresh-token rotation; no refresh token is issued here.
+    refreshToken: "",
     organizationId,
     email: body.user.email,
   };
