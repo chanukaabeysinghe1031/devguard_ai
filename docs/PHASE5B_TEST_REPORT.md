@@ -7,7 +7,7 @@
 | Suite | Result |
 |-------|--------|
 | `test_github_*` | **69 passed** |
-| Full `pytest` (after UI/source mapper) | Run in 5B.8 gate |
+| Full `pytest` | **334 passed**, 2 deselected |
 
 ## Frontend
 
