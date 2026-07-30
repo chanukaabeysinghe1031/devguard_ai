@@ -54,7 +54,14 @@ export function MobileNav() {
               }
             >
               <item.icon className="h-5 w-5 shrink-0" />
-              <span>{item.label}</span>
+              <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span className="shrink-0 rounded-full border border-border-strong px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    {item.badge}
+                  </span>
+                )}
+              </span>
             </NavLink>
           ))}
           {canSeeAdmin && (
@@ -77,7 +84,14 @@ export function MobileNav() {
                   }
                 >
                   <item.icon className="h-5 w-5 shrink-0" />
-                  <span>{item.label}</span>
+                  <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="shrink-0 rounded-full border border-border-strong px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                        {item.badge}
+                      </span>
+                    )}
+                  </span>
                 </NavLink>
               ))}
             </div>

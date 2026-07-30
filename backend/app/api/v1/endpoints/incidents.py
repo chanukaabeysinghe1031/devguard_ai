@@ -9,15 +9,15 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_session, get_settings_dep
-from app.core.config import Settings
-from app.domain.exceptions.business import ValidationBusinessError
-from app.domain.exceptions.upload import StorageConfigurationError
-from app.infrastructure.storage import build_file_storage
 from app.api.deps.access import require_org_reader, require_org_writer
 from app.application.services.incident_note_service import IncidentNoteService
 from app.application.services.incident_service import IncidentService
 from app.application.services.report_service import ReportService
 from app.application.services.resolution_service import ResolutionService
+from app.core.config import Settings
+from app.domain.exceptions.business import ValidationBusinessError
+from app.domain.exceptions.upload import StorageConfigurationError
+from app.infrastructure.storage import build_file_storage
 from app.schemas.common import MessageResponse, PaginatedResponse
 from app.schemas.incident import (
     AcknowledgeResponse,
@@ -30,6 +30,7 @@ from app.schemas.incident import (
     IncidentUpdateRequest,
 )
 from app.schemas.note import NoteCreateRequest, NoteResponse
+from app.schemas.report import ReportGenerateRequest, ReportGenerateResponse
 from app.schemas.resolution import (
     ReopenIncidentRequest,
     ReopenIncidentResponse,
@@ -37,7 +38,6 @@ from app.schemas.resolution import (
     ResolveIncidentRequest,
     ResolveIncidentResponse,
 )
-from app.schemas.report import ReportGenerateRequest, ReportGenerateResponse
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
 

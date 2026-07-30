@@ -18,6 +18,8 @@ export interface NavItem {
   to: string;
   icon: LucideIcon;
   matchPrefix?: boolean;
+  /** Shown in nav when the destination is intentionally deferred. */
+  badge?: string;
 }
 
 export const PRIMARY_NAV: NavItem[] = [
@@ -33,8 +35,8 @@ export const PRIMARY_NAV: NavItem[] = [
 
 export const ADMIN_NAV: NavItem[] = [
   { label: "Users", to: "/admin/users", icon: Users },
-  { label: "Models", to: "/admin/models", icon: FlaskConical },
+  { label: "Models", to: "/admin/models", icon: FlaskConical, badge: "Deferred" },
   { label: "System Health", to: "/admin/system-health", icon: Activity },
-  { label: "Audit Log", to: "/admin/audit", icon: ShieldCheck },
-  { label: "Evaluation", to: "/admin/evaluation", icon: BarChart3 },
+  { label: "Audit Log", to: "/admin/audit", icon: ShieldCheck, badge: "Deferred" },
+  { label: "Evaluation", to: "/admin/evaluation", icon: BarChart3, badge: "Deferred" },
 ];

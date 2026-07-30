@@ -9,13 +9,13 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_session, get_settings_dep
-from app.api.deps.access import require_org_reader, require_org_writer
+from app.api.deps.access import require_org_reader
 from app.application.services.report_service import ReportService
 from app.core.config import Settings
 from app.domain.exceptions.business import ValidationBusinessError
 from app.domain.exceptions.upload import StorageConfigurationError
 from app.infrastructure.storage import build_file_storage
-from app.schemas.report import ReportDetailResponse, ReportGenerateResponse, ReportListResponse
+from app.schemas.report import ReportDetailResponse, ReportListResponse
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 

@@ -93,11 +93,12 @@ Also read `docs/ARCHITECTURE_DECISION_LOG.md` for approved ADRs.
 ## Allowed next (requires separate approval)
 
 - Module 10 — Adaptive Prompts and Specialised Multi-Agent Diagnosis (not started)
-- Phase 5A Module 5A.10 — E2E, a11y, visual pack, remaining admin APIs
+- AWS deployment packaging (static frontend / non-dev compose profile)
 - Billing, analytics, integrations webhooks
 - Report PDF generation (JSON reports exist)
 - ZIP archive support (ADR-011)
-- Trained ML classifier / evaluation dashboards (write APIs)
+- Audit log writers + admin model registry APIs
+- Trained ML classifier
 
 ## Hard approval gates
 

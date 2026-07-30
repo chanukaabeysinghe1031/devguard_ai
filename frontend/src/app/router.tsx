@@ -31,6 +31,7 @@ import { NotificationSettingsPage } from "../pages/settings/NotificationSettings
 import { OrganizationSettingsPage } from "../pages/settings/OrganizationSettingsPage";
 import { SecuritySettingsPage } from "../pages/settings/SecuritySettingsPage";
 import { SettingsLayout } from "../pages/settings/SettingsLayout";
+import { ErrorPage } from "../pages/errors/ErrorPage";
 import { RequireAuth, RequireRole } from "./routeGuards";
 
 const ADMIN_ROLES = ["organization_owner", "organization_admin"] as const;
@@ -122,6 +123,7 @@ export function AppRouter() {
 
         <Route path="/diagnose" element={<Navigate to="/incidents/new" replace />} />
         <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="/error" element={<ErrorPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

@@ -13,15 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.application.services.mappers import note_to_response, timeline_event
-from app.domain.services.incident_transitions import format_incident_number
 from app.domain.enums import GenerationStatus
 from app.domain.exceptions.business import ResourceNotFoundError, ValidationBusinessError
 from app.domain.interfaces.storage_provider import FileStorage
-from app.infrastructure.database.models.analysis_run import AnalysisRun
+from app.domain.services.incident_transitions import format_incident_number
 from app.infrastructure.database.models.evidence_item import EvidenceItem
 from app.infrastructure.database.models.incident import Incident
 from app.infrastructure.database.models.incident_report import IncidentReport
-from app.infrastructure.database.models.incident_resolution import IncidentResolution
 from app.infrastructure.database.models.project import Project
 from app.infrastructure.database.models.recommendation import Recommendation
 from app.infrastructure.database.models.recommendation_step import RecommendationStep
@@ -68,14 +66,17 @@ class ReportService:
         )
         await self._storage.save(relative_path=relative_path, data=payload)
 
-        version = int(
-            await self._session.scalar(
-                select(func.count())
-                .select_from(IncidentReport)
-                .where(IncidentReport.incident_id == incident.id)
+        version = (
+            int(
+                await self._session.scalar(
+                    select(func.count())
+                    .select_from(IncidentReport)
+                    .where(IncidentReport.incident_id == incident.id)
+                )
+                or 0
             )
-            or 0
-        ) + 1
+            + 1
+        )
 
         report = IncidentReport(
             id=report_id,

@@ -1,30 +1,33 @@
-# Phase 5A — Test Report
+# Phase 5A — Test Report (Module 5A.10)
 
 **Date:** 2026-07-30
 
-## Backend
-
-```text
-.venv/bin/pytest tests/test_dashboard_api.py tests/test_notifications_api.py tests/test_reports_api.py
-→ 5 passed
-```
-
 ## Frontend
 
-```text
-npm run lint   → pass (tsc --noEmit)
-npm run test   → 5 passed (executionModeLabels)
-npm run build  → pass (vite production bundle)
-```
+| Command | Result |
+|---------|--------|
+| `npm run lint` (`tsc --noEmit`) | Pass |
+| `npm run test` (vitest; e2e excluded) | 5 passed |
+| `npm run build` | Pass |
+| `npm run test:e2e` (Playwright) | **19 passed**, 0 failed, 0 skipped critical |
 
-## Still required for full Phase 5A gate (Module 5A.10)
+See `docs/PHASE5A_E2E_REPORT.md` for scenario breakdown.
 
-- Broader component/integration tests (wizards, evidence viewer, resolution)
-- Playwright E2E critical incident workflow
-- Accessibility audit pass
-- Docker compose rebuild verification of new frontend + backend endpoints
-- Full `pytest` + `ruff` + `mypy` suite green after merge
+## Backend
 
-## Intentionally not claimed complete
+| Command | Result |
+|---------|--------|
+| `ruff check .` | Pass |
+| `ruff format --check .` | Pass |
+| `mypy app` | Pass (189 files) |
+| `pytest` | **265 passed**, 2 deselected, 38 warnings (chroma deprecation) |
 
-Do **not** use `PHASE 5A COMPLETE — INCIDENT MANAGEMENT BUSINESS APPLICATION VERIFIED` until Module 5A.10 quality gates and remaining admin stubs/E2E pass.
+## Related reports
+
+- `docs/PHASE5A_E2E_REPORT.md`
+- `docs/PHASE5A_ACCESSIBILITY_REPORT.md`
+- `docs/PHASE5A_VISUAL_REVIEW.md`
+- `docs/PHASE5A_DOCKER_SMOKE_REPORT.md`
+- `docs/PHASE5A_API_CONTRACT_REPORT.md`
+- `docs/PHASE5A_SECURITY_CHECK.md`
+- `docs/PHASE5A_PRODUCTION_READINESS.md`

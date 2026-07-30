@@ -1,12 +1,12 @@
 # Phase 5A — Known Limitations
 
-1. **Admin Models / Audit / Evaluation-admin** pages are intentional stubs pending list APIs and audit writers.
-2. **Reports** are JSON snapshots (view/download). PDF export is not faked.
-3. **Global search** uses composed list queries from the command palette pattern where implemented; dedicated `/search` API deferred.
-4. **Forgot password** is unsupported by backend — UI must not advertise it.
-5. **Access token TTL** remains short; refresh is wired in the product client (sessionStorage refresh token).
-6. **Evidence viewer** is structured but not a full VS Code-style multi-pane editor yet — list + excerpt + details.
-7. **Recommendation grouping** (Immediate / Verification / Prevention) depends on backend `prevention_type` / risk fields when present.
-8. **Notification preferences** are informational; per-user preference persistence deferred.
-9. **Docker frontend image** must be rebuilt to pick up the new SPA; bind-mount/dev server may already hot-reload.
-10. Full E2E Playwright product suite and visual screenshot pack remain Module 5A.10 work.
+1. **Admin Models / Audit / Evaluation-admin** — explicitly deferred (no list/write APIs); UI states deferred, nav badge, no fake actions.
+2. **Reports** — JSON snapshots only; PDF not faked.
+3. **Notification channel preferences** — in-app defaults documented; no preference store API.
+4. **Forgot password** — unsupported; not advertised.
+5. **Local Docker frontend** — compose bind-mount uses Vite **dev** server for MSc iteration; AWS/static packaging is a deployment step.
+6. **Evidence viewer** — structured list/excerpt/details (not full IDE multi-pane).
+7. **Visual screenshot pack** — covers login/dashboard/projects/incidents/history/reports/notifications at 3 viewports; not every incident tab.
+8. **axe serious colour-contrast** — residual on muted text within approved dark palette.
+9. **Global search** — Cmd+K searches projects + incidents via live list APIs (not a dedicated `/search` endpoint).
+10. **Tagging** — Phase 5A RC uses `v1.0.0-rc2` so prior `v1.0.0-rc1` (diagnosis shell) is preserved.

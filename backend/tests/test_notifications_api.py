@@ -30,7 +30,11 @@ async def test_notifications_lifecycle_via_assignment(auth_client) -> None:
     project = await auth_client.post(
         "/api/v1/projects",
         headers=headers,
-        json={"name": "Notif Proj", "key": f"N{uuid4().hex[:4].upper()}", "ci_provider": "github_actions"},
+        json={
+            "name": "Notif Proj",
+            "key": f"N{uuid4().hex[:4].upper()}",
+            "ci_provider": "github_actions",
+        },
     )
     assert project.status_code == 201
 
@@ -97,7 +101,11 @@ async def test_notifications_from_analysis_complete(auth_client) -> None:
     project = await auth_client.post(
         "/api/v1/projects",
         headers=headers,
-        json={"name": "Analysis Notif", "key": f"A{uuid4().hex[:4].upper()}", "ci_provider": "github_actions"},
+        json={
+            "name": "Analysis Notif",
+            "key": f"A{uuid4().hex[:4].upper()}",
+            "ci_provider": "github_actions",
+        },
     )
     incident = await auth_client.post(
         "/api/v1/incidents",

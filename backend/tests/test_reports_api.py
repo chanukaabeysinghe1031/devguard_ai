@@ -30,7 +30,11 @@ async def test_generate_list_and_download_report(auth_client) -> None:
     project = await auth_client.post(
         "/api/v1/projects",
         headers=headers,
-        json={"name": "Report Proj", "key": f"R{uuid4().hex[:4].upper()}", "ci_provider": "github_actions"},
+        json={
+            "name": "Report Proj",
+            "key": f"R{uuid4().hex[:4].upper()}",
+            "ci_provider": "github_actions",
+        },
     )
     assert project.status_code == 201
 
@@ -88,7 +92,11 @@ async def test_history_lists_resolved_incidents(auth_client) -> None:
     project = await auth_client.post(
         "/api/v1/projects",
         headers=headers,
-        json={"name": "Hist Proj", "key": f"H{uuid4().hex[:4].upper()}", "ci_provider": "github_actions"},
+        json={
+            "name": "Hist Proj",
+            "key": f"H{uuid4().hex[:4].upper()}",
+            "ci_provider": "github_actions",
+        },
     )
     incident = await auth_client.post(
         "/api/v1/incidents",

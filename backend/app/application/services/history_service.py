@@ -110,7 +110,9 @@ class HistoryService:
         order_col = Incident.resolved_at if sort_by == "resolved_at" else Incident.detected_at
         if sort_by == "created_at":
             order_col = Incident.created_at
-        order = order_col.desc().nullslast() if sort_order == "desc" else order_col.asc().nullsfirst()
+        order = (
+            order_col.desc().nullslast() if sort_order == "desc" else order_col.asc().nullsfirst()
+        )
 
         stmt = (
             select(Incident)

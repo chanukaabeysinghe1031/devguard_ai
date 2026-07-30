@@ -52,7 +52,9 @@ async def test_list_incident_analyses_for_history_reload(auth_client) -> None:
     upload = await auth_client.post(
         f"/api/v1/incidents/{incident_id}/files",
         headers=headers,
-        files=[("files", ("hist.log", b"AccessDenied not authorized sts:AssumeRole\n", "text/plain"))],
+        files=[
+            ("files", ("hist.log", b"AccessDenied not authorized sts:AssumeRole\n", "text/plain"))
+        ],
     )
     assert upload.status_code == 201, upload.text
     file_id = upload.json()["files"][0]["id"]

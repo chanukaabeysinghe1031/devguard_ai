@@ -53,6 +53,14 @@ backend/_phase4_out/
 # Logs
 *.log
 logs/
+# Committed zero-byte E2E fixture (intentionally exempt from the *.log rule above)
+!frontend/e2e/fixtures/empty.log
+
+# Playwright (Phase 5A Module 5A.10 E2E suite) local run artifacts
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
+frontend/playwright/.cache/
 
 # IDE
 .idea/
@@ -125,6 +133,12 @@ datasets/benchmark/gold_labels.candidates.csv
 !reports/performance/phase4/**
 !reports/phase5/
 !reports/phase5/**
+!reports/phase5a/
+!reports/phase5a/**
+!reports/phase5a/screenshots/
+!reports/phase5a/screenshots/**
+reports/phase5a/playwright/
+reports/phase5a/playwright-report/
 
 # Secrets
 *.pem

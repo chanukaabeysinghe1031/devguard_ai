@@ -31,6 +31,7 @@ export function UserMenu() {
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label="Account menu"
         className="flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-surface-hover"
       >
         <Avatar name={displayName} size="sm" />

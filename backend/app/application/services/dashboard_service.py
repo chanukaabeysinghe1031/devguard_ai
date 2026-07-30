@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.application.services.mappers import incident_list_item
-from app.domain.services.incident_transitions import format_incident_number
 from app.domain.enums import AnalysisRunStatus, IncidentSeverity, IncidentStatus, PipelineRunStatus
+from app.domain.services.incident_transitions import format_incident_number
 from app.infrastructure.database.models.analysis_run import AnalysisRun
 from app.infrastructure.database.models.failure_category import FailureCategory
 from app.infrastructure.database.models.incident import Incident
@@ -119,7 +119,7 @@ class DashboardService:
                     Project.organization_id == organization_id,
                     Incident.resolved_at.is_not(None),
                     Incident.resolved_at >= today_start,
-                    *( [Incident.project_id == project_id] if project_id else [] ),
+                    *([Incident.project_id == project_id] if project_id else []),
                 )
             )
             or 0
@@ -134,7 +134,7 @@ class DashboardService:
                 .where(
                     Project.organization_id == organization_id,
                     AnalysisRun.status.in_(_ACTIVE_ANALYSIS_STATUSES),
-                    *( [Incident.project_id == project_id] if project_id else [] ),
+                    *([Incident.project_id == project_id] if project_id else []),
                 )
             )
             or 0
@@ -176,9 +176,7 @@ class DashboardService:
 
         avg_minutes = await self._session.scalar(
             select(
-                func.avg(
-                    func.extract("epoch", Incident.resolved_at - Incident.detected_at) / 60.0
-                )
+                func.avg(func.extract("epoch", Incident.resolved_at - Incident.detected_at) / 60.0)
             )
             .select_from(Incident)
             .join(Project, Project.id == Incident.project_id)

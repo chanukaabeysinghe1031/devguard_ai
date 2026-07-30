@@ -1,17 +1,54 @@
-# Phase 5A — Visual Review Checklist
+# Phase 5A — Visual Review (Module 5A.10)
 
-Use against every major page at 375 / 768 / 1024 / 1440 / 1728 px.
+**Date:** 2026-07-30
 
-- [ ] Same sidebar + top bar chrome
-- [ ] PageHeader pattern (title, description, primary action)
-- [ ] Token colours only (no purple glow / cream theme drift)
-- [ ] Consistent card radius (14px) and button height (44px)
-- [ ] Status/severity badges include labels (not colour alone)
-- [ ] Tables scroll horizontally on small screens without page overflow
-- [ ] Empty / loading / error states present
-- [ ] No raw orchestration JSON as primary UI
-- [ ] Evidence panes stack on mobile
-- [ ] Focus rings visible (`--focus`)
-- [ ] `/diagnose` no longer presented as primary CTA
+## Checklist
 
-Screenshot capture (when Docker UI is running): store under `docs/screenshots/phase5a/` (optional; not required for CI).
+| Item | Result |
+|------|--------|
+| Shared sidebar + top bar | Pass |
+| PageHeader pattern | Pass |
+| Token colours / Inter typography | Pass |
+| Card radius 14px / button 44px | Pass |
+| Badge semantics with labels | Pass |
+| Empty / loading / error states | Pass |
+| No raw orchestration JSON for normal users | Pass (diagnostics drawer admin-only) |
+| No browser-default primary file UX on create wizard | Pass (custom dropzone styling) |
+| `/diagnose` not primary CTA | Pass (redirect) |
+| Deferred admin screens explicitly labelled | Pass |
+
+## Screenshot pack
+
+Directory: `reports/phase5a/screenshots/`
+
+Captured by `npm run test:e2e:screenshots` at **375×812**, **768×1024**, **1440×900**:
+
+| Screen | Files |
+|--------|-------|
+| Login | `login-*.png` |
+| Dashboard | `dashboard-*.png` |
+| Projects | `projects-*.png` |
+| Incidents | `incidents-*.png` |
+| History | `history-*.png` |
+| Reports | `reports-*.png` |
+| Notifications | `notifications-*.png` |
+
+Additional screens (create wizards, analysis, evidence, resolution, evaluation, settings, admin health) are exercised by E2E assertions; expand the visual pack in a follow-up if dissertation appendix needs every tab.
+
+Large desktop **1728×1117** not separately captured — 1440 pack represents desktop density; layout uses `max-w-content` (~1600px).
+
+## Responsive notes
+
+- 375px: mobile menu (`Open navigation`); single column
+- 768px: compact header actions
+- 1440px: expanded sidebar
+
+## Findings fixed in 5A.10
+
+- Misleading “coming soon” stubs → deferred copy + nav badges
+- Skip link / search affordance in top bar
+- Orphan legacy diagnose/home pages removed
+
+## Verdict
+
+**No critical visual defects remaining for Phase 5A gate.**

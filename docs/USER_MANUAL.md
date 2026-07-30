@@ -10,6 +10,19 @@ docker compose up -d --build
 - API: http://localhost:8000/api/v1  
 - Health: http://localhost:8000/api/v1/health  
 
+Use **Register** / **Login**, then Dashboard → Projects → Incidents. Prefer `/incidents/new` ( `/diagnose` redirects there ).
+
+Global search: **⌘K** / **Ctrl+K**.
+
+## Automated E2E
+
+```bash
+cd frontend
+npm run test:e2e
+```
+
+Requires API on `:8000` and UI on `:5173`. See `docs/PHASE5A_E2E_REPORT.md`.
+
 ## First session
 
 1. Open `/register` (or `/login` if you already have an account).

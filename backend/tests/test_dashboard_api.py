@@ -31,7 +31,11 @@ async def test_dashboard_summary_and_recent(auth_client) -> None:
     project = await auth_client.post(
         "/api/v1/projects",
         headers=headers,
-        json={"name": "Dash Proj", "key": f"D{uuid4().hex[:4].upper()}", "ci_provider": "github_actions"},
+        json={
+            "name": "Dash Proj",
+            "key": f"D{uuid4().hex[:4].upper()}",
+            "ci_provider": "github_actions",
+        },
     )
     assert project.status_code == 201
     project_id = project.json()["id"]

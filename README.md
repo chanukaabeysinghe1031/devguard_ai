@@ -24,10 +24,17 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
-| **Frontend product screens** | 🔶 Phase 5A in progress — AppShell + incident workflow live; see `docs/PHASE5A_*` |
+| **Frontend product screens** | ✅ Phase 5A AppShell + incident workflow (see `docs/PHASE5A_*`) |
 | **Phase 4 — Production hardening** | ✅ Complete — `docs/PHASE4_PRODUCTION_HARDENING.md` / tag `v0.9.0-phase4` |
 | **Phase 5 — Release candidate validation** | ✅ See `docs/PHASE5_RELEASE_CANDIDATE_VALIDATION.md` |
-| **Phase 5A — Incident business application** | 🔶 Core screens + APIs landed; Module 5A.10 quality gates remaining |
+| **Phase 5A — Incident business application** | ✅ Core + Module 5A.10 quality gates — see `docs/PHASE5A_PRODUCTION_READINESS.md` / tag `v1.0.0-rc2` |
+
+### Phase 5A product UI
+
+- Index: [`docs/PHASE5A_PRODUCTION_READINESS.md`](docs/PHASE5A_PRODUCTION_READINESS.md)
+- Audit: [`docs/PHASE5A_IMPLEMENTATION_AUDIT.md`](docs/PHASE5A_IMPLEMENTATION_AUDIT.md)
+- E2E: [`docs/PHASE5A_E2E_REPORT.md`](docs/PHASE5A_E2E_REPORT.md)
+- User manual: [`docs/USER_MANUAL.md`](docs/USER_MANUAL.md)
 
 ### Phase 4 hardening (index)
 

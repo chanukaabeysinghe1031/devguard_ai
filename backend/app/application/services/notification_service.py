@@ -153,7 +153,9 @@ class NotificationService:
 
         number = format_incident_number(incident.incident_number)
         title = f"Incident {number} resolved"
-        message = resolution_summary[:500] if resolution_summary else f"Incident {number} was resolved."
+        message = (
+            resolution_summary[:500] if resolution_summary else f"Incident {number} was resolved."
+        )
         recipients: set[UUID] = {resolved_by}
         if incident.current_assignee_id and incident.current_assignee_id != resolved_by:
             recipients.add(incident.current_assignee_id)
