@@ -33,6 +33,11 @@ def test_phase6a5_experimental_flags_default_off() -> None:
     assert Settings.model_fields["retrieval_follow_up_enabled"].default is False
     assert Settings.model_fields["hypothesis_exact_identifier_boost_enabled"].default is False
     assert Settings.model_fields["hypothesis_metadata_filtering_enabled"].default is False
+    assert Settings.model_fields["hypothesis_evidence_assessment_enabled"].default is False
+    assert Settings.model_fields["evidence_sufficiency_enabled"].default is False
+    assert Settings.model_fields["contradiction_analysis_enabled"].default is False
+    assert Settings.model_fields["hypothesis_ranking_enabled"].default is False
+    assert Settings.model_fields["candidate_selection_enabled"].default is False
 
 
 def test_phase6a5_part2_bounds_defaults() -> None:
@@ -52,6 +57,10 @@ def test_phase6a5_part2_bounds_defaults() -> None:
     assert Settings.model_fields["max_historical_results_per_query"].default == 10
     assert Settings.model_fields["max_official_document_results_per_query"].default == 10
     assert Settings.model_fields["max_retrieval_total_duration_seconds"].default == 60.0
+    assert Settings.model_fields["max_evidence_assessments_per_hypothesis"].default == 40
+    assert Settings.model_fields["max_candidate_hypotheses"].default == 5
+    assert Settings.model_fields["min_ranking_score_for_top_candidate"].default == 0.40
+    assert Settings.model_fields["ranking_tie_epsilon"].default == 0.02
 
 
 def test_phase6a5_supporting_toggles_default_on() -> None:
@@ -144,3 +153,16 @@ def test_part2_zero_bound_raises() -> None:
         _base_settings(MAX_QUERY_EXPANSIONS_PER_HYPOTHESIS=0)
     with pytest.raises(ValidationError):
         _base_settings(MAX_RETRIEVAL_TOTAL_DURATION_SECONDS=0)
+
+
+def test_part3_ranking_score_bounds() -> None:
+    with pytest.raises(ValidationError):
+        _base_settings(MIN_RANKING_SCORE_FOR_TOP_CANDIDATE=1.2)
+    with pytest.raises(ValidationError):
+        _base_settings(RANKING_TIE_EPSILON=-0.01)
+    settings = _base_settings(
+        MIN_RANKING_SCORE_FOR_TOP_CANDIDATE=0.4,
+        RANKING_TIE_EPSILON=0.02,
+    )
+    assert settings.min_ranking_score_for_top_candidate == 0.4
+    assert settings.ranking_tie_epsilon == 0.02

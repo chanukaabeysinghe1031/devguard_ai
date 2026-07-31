@@ -500,6 +500,44 @@ class Settings(BaseSettings):
         alias="MAX_RETRIEVAL_TOTAL_DURATION_SECONDS",
     )
 
+    # Phase 6A.5 Part 3 — evidence assessment / ranking / candidate selection (all OFF).
+    hypothesis_evidence_assessment_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_EVIDENCE_ASSESSMENT_ENABLED",
+    )
+    evidence_sufficiency_enabled: bool = Field(
+        default=False,
+        alias="EVIDENCE_SUFFICIENCY_ENABLED",
+    )
+    contradiction_analysis_enabled: bool = Field(
+        default=False,
+        alias="CONTRADICTION_ANALYSIS_ENABLED",
+    )
+    hypothesis_ranking_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_RANKING_ENABLED",
+    )
+    candidate_selection_enabled: bool = Field(
+        default=False,
+        alias="CANDIDATE_SELECTION_ENABLED",
+    )
+    max_evidence_assessments_per_hypothesis: int = Field(
+        default=40,
+        alias="MAX_EVIDENCE_ASSESSMENTS_PER_HYPOTHESIS",
+    )
+    max_candidate_hypotheses: int = Field(
+        default=5,
+        alias="MAX_CANDIDATE_HYPOTHESES",
+    )
+    min_ranking_score_for_top_candidate: float = Field(
+        default=0.40,
+        alias="MIN_RANKING_SCORE_FOR_TOP_CANDIDATE",
+    )
+    ranking_tie_epsilon: float = Field(
+        default=0.02,
+        alias="RANKING_TIE_EPSILON",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
@@ -677,6 +715,8 @@ class Settings(BaseSettings):
         "max_temporal_results_per_query",
         "max_historical_results_per_query",
         "max_official_document_results_per_query",
+        "max_evidence_assessments_per_hypothesis",
+        "max_candidate_hypotheses",
         mode="after",
     )
     @classmethod
@@ -711,6 +751,18 @@ class Settings(BaseSettings):
         score = float(value)
         if score < 0.0 or score > 1.0:
             raise ValueError("MIN_RETRIEVAL_SCORE_FOR_ACCEPTANCE must be in [0, 1]")
+        return score
+
+    @field_validator(
+        "min_ranking_score_for_top_candidate",
+        "ranking_tie_epsilon",
+        mode="after",
+    )
+    @classmethod
+    def evidence_assessment_score_bounds(cls, value: float) -> float:
+        score = float(value)
+        if score < 0.0 or score > 1.0:
+            raise ValueError("evidence assessment scores must be in [0, 1]")
         return score
 
     @field_validator("embedding_model", mode="after")
