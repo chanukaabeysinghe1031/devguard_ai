@@ -1,0 +1,12 @@
+2026-07-31T10:15:01.100Z ##[group]Run terraform apply
+2026-07-31T10:15:02.200Z terraform apply -auto-approve
+2026-07-31T10:15:03.300Z aws_s3_bucket.logs: Creating...
+2026-07-31T10:15:04.400Z Error: creating S3 Bucket (app-logs): AccessDenied: User: arn:aws:sts::123456789012:assumed-role/ci-deploy/session is not authorized to perform: s3:CreateBucket on resource: arn:aws:s3:::app-logs
+2026-07-31T10:15:04.500Z 	status code: 403, request id: ABC123
+2026-07-31T10:15:05.600Z Warning: deprecated argument
+2026-07-31T10:15:06.700Z Error: AccessDenied cascade — iam:PassRole also denied
+2026-07-31T10:15:07.800Z Traceback (most recent call last):
+2026-07-31T10:15:07.900Z   File "deploy.py", line 42, in <module>
+2026-07-31T10:15:08.000Z     raise RuntimeError("deployment failed")
+2026-07-31T10:15:08.100Z RuntimeError: deployment failed
+2026-07-31T10:15:09.200Z ##[error]Process completed with exit code 1

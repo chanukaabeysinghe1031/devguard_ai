@@ -200,3 +200,45 @@ class RecommendationListResponse(BaseModel):
     summary: str | None = None
     confidence_score: float | None = None
     llm_model: str | None = None
+
+
+class ArtifactParseSummary(BaseModel):
+    parser_name: str
+    parser_version: str
+    status: str
+    entity_count: int = 0
+    relationship_count: int = 0
+    evidence_candidate_count: int = 0
+    extraction_quality: float | None = None
+    warning_count: int = 0
+    error_count: int = 0
+
+
+class ArtifactInventoryItem(BaseModel):
+    id: UUID
+    artifact_kind: str
+    source: str
+    filename: str
+    content_hash: str
+    acquisition_status: str
+    redaction_status: str
+    parser_version: str | None = None
+    parse_results: list[ArtifactParseSummary] = Field(default_factory=list)
+
+
+class ArtifactBundleResponse(BaseModel):
+    """Debug/validation view of Phase 6A.1 artifact availability (not full Causal UI)."""
+
+    id: UUID
+    incident_id: UUID
+    analysis_run_id: UUID | None = None
+    provider: str | None = None
+    repository: str | None = None
+    commit_sha: str | None = None
+    available_artifacts: list[str] = Field(default_factory=list)
+    missing_artifacts: list[str] = Field(default_factory=list)
+    collection_errors: list[dict[str, Any]] = Field(default_factory=list)
+    quality_scores: dict[str, Any] = Field(default_factory=dict)
+    redaction_summary: dict[str, Any] = Field(default_factory=dict)
+    artifacts: list[ArtifactInventoryItem] = Field(default_factory=list)
+    created_at: datetime

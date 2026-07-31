@@ -20,6 +20,9 @@ import structlog
 from app.core.config import Settings
 from app.domain.exceptions.integration import GitHubProviderError, IntegrationDisabledError
 from app.domain.interfaces.github_provider import (
+    GitHubChangedFileInfo,
+    GitHubCommitInfo,
+    GitHubCompareInfo,
     GitHubInstallationInfo,
     GitHubRepositoryInfo,
     GitHubWorkflowInfo,
@@ -321,3 +324,170 @@ class GitHubAppProvider:
                 error_code="GITHUB_LOG_ARCHIVE_TOO_LARGE",
             )
         return content
+
+    async def get_repository_file_content(
+        self,
+        *,
+        installation_id: int,
+        repository_full_name: str,
+        path: str,
+        ref: str,
+    ) -> str | None:
+        """Fetch a single text file at ``ref`` via the Contents API (read-only)."""
+        import base64
+
+        token = await self._installation_token(installation_id)
+        try:
+            payload = await self._request(
+                "GET",
+                f"/repos/{repository_full_name}/contents/{path.lstrip('/')}",
+                token=token,
+                params={"ref": ref},
+            )
+        except GitHubProviderError as exc:
+            if "404" in (exc.message or ""):
+                return None
+            raise
+        if payload.get("type") != "file":
+            return None
+        encoding = payload.get("encoding")
+        raw = payload.get("content")
+        if not isinstance(raw, str):
+            return None
+        if encoding == "base64":
+            try:
+                decoded = base64.b64decode(raw).decode("utf-8")
+            except (ValueError, UnicodeDecodeError):
+                logger.info(
+                    "github_file_content_undecodeable",
+                    repository=repository_full_name,
+                    path=path,
+                )
+                return None
+            max_chars = self._settings.artifact_max_content_chars
+            return decoded[:max_chars]
+        return raw[: self._settings.artifact_max_content_chars]
+
+    async def get_commit(
+        self,
+        *,
+        installation_id: int,
+        repository_full_name: str,
+        sha: str,
+    ) -> GitHubCommitInfo | None:
+        token = await self._installation_token(installation_id)
+        try:
+            payload = await self._request(
+                "GET",
+                f"/repos/{repository_full_name}/commits/{sha}",
+                token=token,
+            )
+        except GitHubProviderError as exc:
+            if "404" in (exc.message or ""):
+                return None
+            raise
+        author = payload.get("author") or {}
+        commit = payload.get("commit") or {}
+        parents = [
+            str(p.get("sha"))
+            for p in (payload.get("parents") or [])
+            if isinstance(p, dict) and p.get("sha")
+        ]
+        return GitHubCommitInfo(
+            sha=str(payload.get("sha") or sha),
+            message=(commit.get("message") if isinstance(commit, dict) else None),
+            author_login=author.get("login") if isinstance(author, dict) else None,
+            html_url=payload.get("html_url"),
+            parents=parents,
+        )
+
+    async def compare_commits(
+        self,
+        *,
+        installation_id: int,
+        repository_full_name: str,
+        base: str,
+        head: str,
+    ) -> GitHubCompareInfo | None:
+        token = await self._installation_token(installation_id)
+        try:
+            payload = await self._request(
+                "GET",
+                f"/repos/{repository_full_name}/compare/{base}...{head}",
+                token=token,
+            )
+        except GitHubProviderError as exc:
+            if "404" in (exc.message or ""):
+                return None
+            raise
+        files: list[GitHubChangedFileInfo] = []
+        for item in payload.get("files") or []:
+            if not isinstance(item, dict) or not item.get("filename"):
+                continue
+            files.append(
+                GitHubChangedFileInfo(
+                    filename=str(item["filename"]),
+                    status=item.get("status"),
+                    additions=item.get("additions"),
+                    deletions=item.get("deletions"),
+                    changes=item.get("changes"),
+                    previous_filename=item.get("previous_filename"),
+                )
+            )
+        return GitHubCompareInfo(
+            base_sha=base,
+            head_sha=head,
+            status=payload.get("status"),
+            ahead_by=payload.get("ahead_by"),
+            behind_by=payload.get("behind_by"),
+            total_commits=payload.get("total_commits"),
+            files=files,
+        )
+
+    async def list_workflow_runs(
+        self,
+        *,
+        installation_id: int,
+        repository_full_name: str,
+        workflow_id: int | None = None,
+        branch: str | None = None,
+        status: str | None = None,
+        per_page: int = 10,
+    ) -> list[GitHubWorkflowRunInfo]:
+        token = await self._installation_token(installation_id)
+        params: dict[str, Any] = {"per_page": min(max(per_page, 1), 100)}
+        if branch:
+            params["branch"] = branch
+        if status:
+            params["status"] = status
+        if workflow_id is not None:
+            path = f"/repos/{repository_full_name}/actions/workflows/{workflow_id}/runs"
+        else:
+            path = f"/repos/{repository_full_name}/actions/runs"
+        payload = await self._request("GET", path, token=token, params=params)
+        runs = payload.get("workflow_runs") or []
+        results: list[GitHubWorkflowRunInfo] = []
+        for item in runs:
+            if not isinstance(item, dict) or item.get("id") is None:
+                continue
+            actor = item.get("actor") or {}
+            results.append(
+                GitHubWorkflowRunInfo(
+                    run_id=int(item["id"]),
+                    repository_full_name=repository_full_name,
+                    name=item.get("name"),
+                    workflow_id=item.get("workflow_id"),
+                    run_number=item.get("run_number"),
+                    run_attempt=item.get("run_attempt"),
+                    event=item.get("event"),
+                    status=item.get("status"),
+                    conclusion=item.get("conclusion"),
+                    head_branch=item.get("head_branch"),
+                    head_sha=item.get("head_sha"),
+                    html_url=item.get("html_url"),
+                    actor_login=actor.get("login") if isinstance(actor, dict) else None,
+                    run_started_at=_parse_timestamp(item.get("run_started_at")),
+                    updated_at=_parse_timestamp(item.get("updated_at")),
+                )
+            )
+        return results

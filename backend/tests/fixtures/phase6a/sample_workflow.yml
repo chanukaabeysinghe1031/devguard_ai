@@ -1,0 +1,59 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: eu-west-1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  terraform:
+    needs: [build]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [staging, production]
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/ci-deploy
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Terraform Apply
+        run: |
+          terraform init
+          terraform apply -auto-approve
+        env:
+          TF_VAR_secret_key: ${{ secrets.TF_SECRET_KEY }}
+      - name: Notify failure
+        if: failure()
+        run: echo "Deploy failed for ${{ matrix.environment }}"
+
+  reuse:
+    needs: terraform
+    uses: ./.github/workflows/notify.yml
+    secrets: inherit

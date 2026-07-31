@@ -59,6 +59,36 @@ class GitHubWorkflowInfo:
     state: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class GitHubCommitInfo:
+    sha: str
+    message: str | None = None
+    author_login: str | None = None
+    html_url: str | None = None
+    parents: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class GitHubChangedFileInfo:
+    filename: str
+    status: str | None = None
+    additions: int | None = None
+    deletions: int | None = None
+    changes: int | None = None
+    previous_filename: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class GitHubCompareInfo:
+    base_sha: str
+    head_sha: str
+    status: str | None = None
+    ahead_by: int | None = None
+    behind_by: int | None = None
+    total_commits: int | None = None
+    files: list[GitHubChangedFileInfo] = field(default_factory=list)
+
+
 @runtime_checkable
 class GitHubProvider(Protocol):
     """Read-only GitHub App operations. No write permissions are ever used."""
@@ -95,3 +125,40 @@ class GitHubProvider(Protocol):
         repository_full_name: str,
         run_id: int,
     ) -> bytes | None: ...
+
+    async def get_repository_file_content(
+        self,
+        *,
+        installation_id: int,
+        repository_full_name: str,
+        path: str,
+        ref: str,
+    ) -> str | None: ...
+
+    async def get_commit(
+        self,
+        *,
+        installation_id: int,
+        repository_full_name: str,
+        sha: str,
+    ) -> GitHubCommitInfo | None: ...
+
+    async def compare_commits(
+        self,
+        *,
+        installation_id: int,
+        repository_full_name: str,
+        base: str,
+        head: str,
+    ) -> GitHubCompareInfo | None: ...
+
+    async def list_workflow_runs(
+        self,
+        *,
+        installation_id: int,
+        repository_full_name: str,
+        workflow_id: int | None = None,
+        branch: str | None = None,
+        status: str | None = None,
+        per_page: int = 10,
+    ) -> list[GitHubWorkflowRunInfo]: ...

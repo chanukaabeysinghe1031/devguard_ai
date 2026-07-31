@@ -110,6 +110,7 @@ class AnalysisExecutionService:
                 await self._session.flush()
 
             context = await orchestrator.run(context, on_progress=on_progress)
+            await self._maybe_persist_artifact_bundle(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -486,6 +487,7 @@ class AnalysisExecutionService:
             "retrieval_configuration_hash": context.options.get("retrieval_configuration_hash"),
             "retrieval_weight_profile": context.options.get("retrieval_weight_profile"),
             "retrieval_result": context.options.get("retrieval_result"),
+            "artifact_bundle": context.options.get("artifact_bundle"),
             "model_versions": {
                 "classifier": f"{context.model_name}-{context.model_version}",
                 "reasoning": context.reasoning_provider_name
@@ -541,6 +543,79 @@ class AnalysisExecutionService:
             warnings=context.warnings,
             errors=(run.error_message if run.status == AnalysisRunStatus.FAILED else None),
         )
+
+    async def _maybe_persist_artifact_bundle(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Build/persist Phase 6A artifact bundle when enabled. Soft-fail only."""
+        if not self._settings.artifact_bundle_enabled:
+            return
+        try:
+            from app.ai.artifacts.bundle_service import ArtifactBundleService
+
+            incident = await self._session.get(Incident, run.incident_id)
+            if incident is None or context.organization_id is None:
+                return
+
+            stmt = select(UploadedFile).where(UploadedFile.incident_id == run.incident_id)
+            if context.file_ids:
+                stmt = stmt.where(UploadedFile.id.in_(context.file_ids))
+            uploaded_files = list((await self._session.scalars(stmt)).all())
+            file_contents: dict[UUID, str] = {}
+            for uploaded in uploaded_files:
+                raw = await self._storage.read(relative_path=uploaded.storage_path)
+                try:
+                    file_contents[uploaded.id] = raw.decode("utf-8")
+                except UnicodeDecodeError:
+                    file_contents[uploaded.id] = raw.decode("utf-8", errors="replace")
+
+            tags = incident.tags if isinstance(incident.tags, dict) else {}
+            github_raw = tags.get("github")
+            github: dict[str, Any] = github_raw if isinstance(github_raw, dict) else {}
+            bundle_ctx = {
+                "provider": "github" if github else "upload",
+                "repository": github.get("repository_full_name"),
+                "commit_sha": None,
+                "branch": None,
+                "workflow_name": github.get("workflow_name"),
+                "workflow_run_id": github.get("run_id"),
+                "workflow_run_attempt": github.get("run_attempt"),
+            }
+
+            service = ArtifactBundleService(self._session, self._settings)
+            bundle = await service.build_from_uploaded_files(
+                organization_id=context.organization_id,
+                incident_id=run.incident_id,
+                project_id=incident.project_id,
+                pipeline_run_id=incident.pipeline_run_id,
+                analysis_run_id=run.id,
+                files=uploaded_files,
+                file_contents=file_contents,
+                context=bundle_ctx,
+            )
+            parse_results = service.parse_bundle(bundle) if service.parsing_enabled() else {}
+            row = await service.persist_bundle(bundle, parse_results)
+            context.options["artifact_bundle"] = {
+                "bundle_id": str(row.id),
+                "available_artifacts": list(bundle.available_artifacts),
+                "missing_artifacts": list(bundle.missing_artifacts),
+                "artifact_count": len(bundle.artifacts),
+                "parse_result_count": sum(len(v) for v in parse_results.values()),
+                "collection_error_count": len(bundle.artifact_collection_errors),
+            }
+        except Exception as exc:  # noqa: BLE001 - never fail analysis for bundle issues
+            logger.warning(
+                "artifact_bundle_persist_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(f"artifact_bundle_failed:{type(exc).__name__}")
+            context.options["artifact_bundle"] = {
+                "error": type(exc).__name__,
+                "enabled": True,
+            }
 
     async def _ensure_model_version(self) -> ModelVersion:
         stmt = select(ModelVersion).where(

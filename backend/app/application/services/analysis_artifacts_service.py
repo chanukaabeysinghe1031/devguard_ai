@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from math import ceil
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from app.application.services.analysis_run_service import AnalysisRunService
+from app.domain.exceptions.business import ResourceNotFoundError
+from app.infrastructure.database.models.analysis_artifact_bundle import (
+    AnalysisArtifact,
+    AnalysisArtifactBundle,
+)
 from app.infrastructure.database.models.evidence_item import EvidenceItem
 from app.infrastructure.database.models.knowledge_chunk import KnowledgeChunk
 from app.infrastructure.database.models.knowledge_document import KnowledgeDocument
@@ -17,6 +23,9 @@ from app.infrastructure.database.models.recommendation_step import Recommendatio
 from app.infrastructure.database.models.retrieved_document import RetrievedDocument
 from app.infrastructure.database.models.uploaded_file import UploadedFile
 from app.schemas.analysis import (
+    ArtifactBundleResponse,
+    ArtifactInventoryItem,
+    ArtifactParseSummary,
     EvidenceItemResponse,
     EvidenceListResponse,
     RecommendationItemResponse,
@@ -206,4 +215,89 @@ class AnalysisArtifactsService:
             summary=summary,
             confidence_score=confidence,
             llm_model=llm_model,
+        )
+
+    async def get_artifact_bundle(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+    ) -> ArtifactBundleResponse:
+        """Return the latest Phase 6A artifact bundle for an analysis run (debug view)."""
+        run = await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
+
+        def _opts() -> Any:
+            return selectinload(AnalysisArtifactBundle.artifacts).selectinload(
+                AnalysisArtifact.parse_results
+            )
+
+        result = await self._session.execute(
+            select(AnalysisArtifactBundle)
+            .where(
+                AnalysisArtifactBundle.organization_id == organization_id,
+                AnalysisArtifactBundle.analysis_run_id == run.id,
+            )
+            .options(_opts())
+            .order_by(AnalysisArtifactBundle.created_at.desc())
+            .limit(1)
+        )
+        bundle = result.scalar_one_or_none()
+        if bundle is None:
+            result = await self._session.execute(
+                select(AnalysisArtifactBundle)
+                .where(
+                    AnalysisArtifactBundle.organization_id == organization_id,
+                    AnalysisArtifactBundle.incident_id == run.incident_id,
+                )
+                .options(_opts())
+                .order_by(AnalysisArtifactBundle.created_at.desc())
+                .limit(1)
+            )
+            bundle = result.scalar_one_or_none()
+        if bundle is None:
+            raise ResourceNotFoundError("Artifact bundle not found for this analysis run.")
+
+        items: list[ArtifactInventoryItem] = []
+        for art in bundle.artifacts:
+            parses = [
+                ArtifactParseSummary(
+                    parser_name=p.parser_name,
+                    parser_version=p.parser_version,
+                    status=p.status,
+                    entity_count=len(p.entities or []),
+                    relationship_count=len(p.relationships or []),
+                    evidence_candidate_count=len(p.evidence_candidates or []),
+                    extraction_quality=p.extraction_quality,
+                    warning_count=len(p.warnings or []),
+                    error_count=len(p.errors or []),
+                )
+                for p in (art.parse_results or [])
+            ]
+            items.append(
+                ArtifactInventoryItem(
+                    id=art.id,
+                    artifact_kind=art.artifact_kind,
+                    source=art.source,
+                    filename=art.filename,
+                    content_hash=art.content_hash,
+                    acquisition_status=art.acquisition_status,
+                    redaction_status=art.redaction_status,
+                    parser_version=art.parser_version,
+                    parse_results=parses,
+                )
+            )
+        return ArtifactBundleResponse(
+            id=bundle.id,
+            incident_id=bundle.incident_id,
+            analysis_run_id=bundle.analysis_run_id,
+            provider=bundle.provider,
+            repository=bundle.repository,
+            commit_sha=bundle.commit_sha,
+            available_artifacts=list(bundle.available_artifacts or []),
+            missing_artifacts=list(bundle.missing_artifacts or []),
+            collection_errors=list(bundle.collection_errors or []),
+            quality_scores=dict(bundle.quality_scores or {}),
+            redaction_summary=dict(bundle.redaction_summary or {}),
+            artifacts=items,
+            created_at=bundle.created_at,
         )

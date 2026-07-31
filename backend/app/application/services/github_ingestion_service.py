@@ -518,6 +518,18 @@ class GitHubIngestionService:
         await self._deliveries.mark_status(delivery, WebhookProcessingStatus.STARTING_ANALYSIS)
         from app.application.services.analysis_run_service import AnalysisRunService
 
+        analysis_file_ids = [item.id for item in stored.files]
+
+        if self._settings.github_artifact_acquisition_enabled:
+            analysis_file_ids = await self._acquire_extended_artifacts(
+                connection=connection,
+                incident=incident,
+                run=run,
+                uploads=uploads,
+                existing_file_ids=analysis_file_ids,
+                failed_log_present=bool(stored.files),
+            )
+
         analysis_service = AnalysisRunService(self._session)
         accepted = await analysis_service.start_analysis(
             organization_id=organization_id,
@@ -525,7 +537,7 @@ class GitHubIngestionService:
             requested_by=connection.created_by,
             body=StartAnalysisRequest(
                 analysis_type="full",
-                file_ids=[item.id for item in stored.files],
+                file_ids=analysis_file_ids,
                 options=AnalysisOptions(),
             ),
             system_initiated=True,
@@ -536,6 +548,91 @@ class GitHubIngestionService:
             session=self._session,
             background_tasks=background_tasks,
         )
+
+    async def _acquire_extended_artifacts(
+        self,
+        *,
+        connection: GitHubRepositoryConnection,
+        incident: Incident,
+        run: dict[str, Any],
+        uploads: UploadService,
+        existing_file_ids: list[UUID],
+        failed_log_present: bool,
+    ) -> list[UUID]:
+        """Soft-fail GitHub artifact acquisition; never abort log-based analysis."""
+        from app.ai.artifacts.github_acquisition import GitHubArtifactAcquisition
+
+        file_ids = list(existing_file_ids)
+        try:
+            acquisition = GitHubArtifactAcquisition(self._provider, self._settings)
+            collected = await acquisition.collect(
+                installation_id=connection.installation.github_installation_id,
+                repository_full_name=connection.repository_full_name,
+                run=run,
+                failed_log_present=failed_log_present,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("github_artifact_acquisition_failed", error=type(exc).__name__)
+            self._add_timeline_event(
+                organization_id=incident.organization_id,
+                incident_id=incident.id,
+                event_type="artifact_acquisition_failed",
+                title="Extended GitHub artifact acquisition failed",
+                description=type(exc).__name__,
+            )
+            await self._session.flush()
+            return file_ids
+
+        extra_files: list[tuple[str | None, bytes]] = []
+        for artifact in collected.artifacts:
+            if not artifact.content:
+                continue
+            extra_files.append((artifact.filename, artifact.content.encode("utf-8")))
+
+        if extra_files:
+            try:
+                stored_extra = await uploads.ingest_system_files(
+                    organization_id=connection.organization_id,
+                    incident_id=incident.id,
+                    files=extra_files,
+                    file_category="github_artifact",
+                    description=f"GitHub extended artifacts for run {run.get('id')}",
+                )
+                file_ids.extend(item.id for item in stored_extra.files)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("github_artifact_persist_failed", error=type(exc).__name__)
+                self._add_timeline_event(
+                    organization_id=incident.organization_id,
+                    incident_id=incident.id,
+                    event_type="artifact_acquisition_partial",
+                    title="Some GitHub artifacts could not be stored",
+                    description=type(exc).__name__,
+                    metadata={
+                        "available": collected.available,
+                        "missing": collected.missing,
+                        "error_codes": [e.code for e in collected.errors],
+                    },
+                )
+                await self._session.flush()
+                return file_ids
+
+        self._add_timeline_event(
+            organization_id=incident.organization_id,
+            incident_id=incident.id,
+            event_type="artifact_acquisition_completed",
+            title="Extended GitHub artifacts collected",
+            description=(
+                f"{len(collected.artifacts)} artifact(s); "
+                f"missing={len(collected.missing)}; errors={len(collected.errors)}"
+            ),
+            metadata={
+                "available": collected.available,
+                "missing": collected.missing,
+                "error_codes": [e.code for e in collected.errors],
+            },
+        )
+        await self._session.flush()
+        return file_ids
 
     async def _notify_incident_created(
         self,

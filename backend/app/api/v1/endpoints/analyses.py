@@ -20,6 +20,7 @@ from app.schemas.analysis import (
     AnalysisRunDetailResponse,
     AnalysisRunListItem,
     AnalysisStatusResponse,
+    ArtifactBundleResponse,
     EvidenceListResponse,
     ReanalyseRequest,
     RecommendationListResponse,
@@ -223,6 +224,23 @@ async def list_analysis_recommendations(
 ) -> RecommendationListResponse:
     _, organization_id, _ = ctx
     return await artifacts.list_recommendations(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/artifact-bundle",
+    response_model=ArtifactBundleResponse,
+)
+async def get_analysis_artifact_bundle(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    artifacts: AnalysisArtifactsService = Depends(_artifacts),
+) -> ArtifactBundleResponse:
+    """Debug/validation endpoint for Phase 6A.1 artifact availability."""
+    _, organization_id, _ = ctx
+    return await artifacts.get_artifact_bundle(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
     )

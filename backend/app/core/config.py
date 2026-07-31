@@ -227,6 +227,20 @@ class Settings(BaseSettings):
         alias="ENABLE_STACK_TRACE_SIMILARITY",
     )
     enable_retrieval_diversity: bool = Field(default=True, alias="ENABLE_RETRIEVAL_DIVERSITY")
+
+    # Phase 6A.1 — artifact bundle + deep parsers (causal pipeline). All OFF by default.
+    causal_analysis_enabled: bool = Field(default=False, alias="CAUSAL_ANALYSIS_ENABLED")
+    artifact_bundle_enabled: bool = Field(default=False, alias="ARTIFACT_BUNDLE_ENABLED")
+    artifact_parsing_enabled: bool = Field(default=False, alias="ARTIFACT_PARSING_ENABLED")
+    github_artifact_acquisition_enabled: bool = Field(
+        default=False,
+        alias="GITHUB_ARTIFACT_ACQUISITION_ENABLED",
+    )
+    artifact_max_content_chars: int = Field(
+        default=500_000,
+        alias="ARTIFACT_MAX_CONTENT_CHARS",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",

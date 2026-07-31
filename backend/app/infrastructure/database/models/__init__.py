@@ -1,6 +1,11 @@
 """Register all ORM models with SQLAlchemy metadata (Alembic autogenerate)."""
 
 from app.infrastructure.database.base import Base
+from app.infrastructure.database.models.analysis_artifact_bundle import (
+    AnalysisArtifact,
+    AnalysisArtifactBundle,
+    ArtifactParseResult,
+)
 from app.infrastructure.database.models.analysis_run import AnalysisRun
 from app.infrastructure.database.models.audit_log import AuditLog
 from app.infrastructure.database.models.evaluation import Evaluation
@@ -38,7 +43,10 @@ from app.infrastructure.database.models.webhook_delivery import WebhookDelivery
 
 __all__ = [
     "Base",
+    "AnalysisArtifact",
+    "AnalysisArtifactBundle",
     "AnalysisRun",
+    "ArtifactParseResult",
     "AuditLog",
     "Evaluation",
     "EvidenceItem",
