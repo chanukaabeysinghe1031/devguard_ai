@@ -33,6 +33,13 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 # All application tables registered in app.infrastructure.database.models.
 # `analysis_history` is deliberately absent — deprecated by ADR-012.
 ALL_APPLICATION_TABLES: tuple[str, ...] = (
+    "graph_consistency_reports",
+    "evidence_graph_edges",
+    "evidence_graph_nodes",
+    "evidence_graphs",
+    "temporal_event_links",
+    "temporal_events",
+    "temporal_localisation_results",
     "artifact_parse_results",
     "analysis_artifacts",
     "analysis_artifact_bundles",

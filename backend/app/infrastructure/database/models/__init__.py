@@ -37,6 +37,15 @@ from app.infrastructure.database.models.recommendation import Recommendation
 from app.infrastructure.database.models.recommendation_step import RecommendationStep
 from app.infrastructure.database.models.refresh_token import RefreshToken
 from app.infrastructure.database.models.retrieved_document import RetrievedDocument
+from app.infrastructure.database.models.temporal_evidence_graph import (
+    EvidenceGraphEdgeRow,
+    EvidenceGraphNodeRow,
+    EvidenceGraphRow,
+    GraphConsistencyReportRow,
+    TemporalEventLinkRow,
+    TemporalEventRow,
+    TemporalLocalisationResultRow,
+)
 from app.infrastructure.database.models.uploaded_file import UploadedFile
 from app.infrastructure.database.models.user import User
 from app.infrastructure.database.models.webhook_delivery import WebhookDelivery
@@ -49,11 +58,15 @@ __all__ = [
     "ArtifactParseResult",
     "AuditLog",
     "Evaluation",
+    "EvidenceGraphEdgeRow",
+    "EvidenceGraphNodeRow",
+    "EvidenceGraphRow",
     "EvidenceItem",
     "FailureCategory",
     "Feedback",
     "GitHubInstallation",
     "GitHubRepositoryConnection",
+    "GraphConsistencyReportRow",
     "Incident",
     "IncidentAssignment",
     "IncidentEvent",
@@ -75,6 +88,9 @@ __all__ = [
     "RecommendationStep",
     "RefreshToken",
     "RetrievedDocument",
+    "TemporalEventLinkRow",
+    "TemporalEventRow",
+    "TemporalLocalisationResultRow",
     "UploadedFile",
     "User",
     "WebhookDelivery",

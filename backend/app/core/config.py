@@ -241,6 +241,20 @@ class Settings(BaseSettings):
         alias="ARTIFACT_MAX_CONTENT_CHARS",
     )
 
+    # Phase 6A.2 — temporal localisation + evidence graph. All OFF by default.
+    temporal_localisation_enabled: bool = Field(
+        default=False,
+        alias="TEMPORAL_LOCALISATION_ENABLED",
+    )
+    evidence_graph_enabled: bool = Field(default=False, alias="EVIDENCE_GRAPH_ENABLED")
+    graph_consistency_enabled: bool = Field(
+        default=False,
+        alias="GRAPH_CONSISTENCY_ENABLED",
+    )
+    evidence_graph_max_nodes: int = Field(default=2000, alias="EVIDENCE_GRAPH_MAX_NODES")
+    evidence_graph_max_edges: int = Field(default=5000, alias="EVIDENCE_GRAPH_MAX_EDGES")
+    temporal_max_events: int = Field(default=5000, alias="TEMPORAL_MAX_EVENTS")
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
