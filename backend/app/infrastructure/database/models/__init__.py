@@ -8,6 +8,12 @@ from app.infrastructure.database.models.analysis_artifact_bundle import (
 )
 from app.infrastructure.database.models.analysis_run import AnalysisRun
 from app.infrastructure.database.models.audit_log import AuditLog
+from app.infrastructure.database.models.causal_hypotheses import (
+    CausalHypothesisRow,
+    CausalHypothesisRunRow,
+    HypothesisCriticResultRow,
+    HypothesisEvidenceLinkRow,
+)
 from app.infrastructure.database.models.evaluation import Evaluation
 from app.infrastructure.database.models.evidence_item import EvidenceItem
 from app.infrastructure.database.models.failure_category import FailureCategory
@@ -24,11 +30,12 @@ from app.infrastructure.database.models.hierarchical_classification import (
     OpenSetAssessmentRow,
     TaxonomyMappingRow,
 )
-from app.infrastructure.database.models.causal_hypotheses import (
-    CausalHypothesisRow,
-    CausalHypothesisRunRow,
-    HypothesisCriticResultRow,
-    HypothesisEvidenceLinkRow,
+from app.infrastructure.database.models.hypothesis_retrieval import (
+    HypothesisRetrievalQueryExecutionRow,
+    HypothesisRetrievalRunRow,
+    HypothesisRetrievalSessionRow,
+    HypothesisRetrievedItemQueryRow,
+    HypothesisRetrievedItemRow,
 )
 from app.infrastructure.database.models.incident import Incident
 from app.infrastructure.database.models.incident_assignment import IncidentAssignment
@@ -91,6 +98,11 @@ __all__ = [
     "CausalHypothesisRunRow",
     "HypothesisCriticResultRow",
     "HypothesisEvidenceLinkRow",
+    "HypothesisRetrievedItemQueryRow",
+    "HypothesisRetrievedItemRow",
+    "HypothesisRetrievalQueryExecutionRow",
+    "HypothesisRetrievalRunRow",
+    "HypothesisRetrievalSessionRow",
     "Incident",
     "IncidentAssignment",
     "IncidentEvent",
