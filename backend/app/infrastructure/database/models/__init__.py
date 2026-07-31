@@ -16,6 +16,14 @@ from app.infrastructure.database.models.github_installation import GitHubInstall
 from app.infrastructure.database.models.github_repository_connection import (
     GitHubRepositoryConnection,
 )
+from app.infrastructure.database.models.hierarchical_classification import (
+    ClassificationCandidateRow,
+    ClassificationConfidenceComponentRow,
+    ClassificationDisagreementResultRow,
+    HierarchicalClassificationResultRow,
+    OpenSetAssessmentRow,
+    TaxonomyMappingRow,
+)
 from app.infrastructure.database.models.incident import Incident
 from app.infrastructure.database.models.incident_assignment import IncidentAssignment
 from app.infrastructure.database.models.incident_event import IncidentEvent
@@ -67,6 +75,12 @@ __all__ = [
     "GitHubInstallation",
     "GitHubRepositoryConnection",
     "GraphConsistencyReportRow",
+    "ClassificationCandidateRow",
+    "ClassificationConfidenceComponentRow",
+    "ClassificationDisagreementResultRow",
+    "HierarchicalClassificationResultRow",
+    "OpenSetAssessmentRow",
+    "TaxonomyMappingRow",
     "Incident",
     "IncidentAssignment",
     "IncidentEvent",
