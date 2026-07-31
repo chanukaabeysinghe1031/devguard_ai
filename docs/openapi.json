@@ -5361,6 +5361,661 @@
         }
       }
     },
+    "/api/v1/analyses/{analysis_run_id}/hypothesis-retrieval-run": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Hypothesis Retrieval Run",
+        "description": "Experimental hypothesis-directed retrieval run \u2014 evidence candidates only.",
+        "operationId": "get_hypothesis_retrieval_run_api_v1_analyses__analysis_run_id__hypothesis_retrieval_run_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisRetrievalRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/hypothesis-retrieval-sessions": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Hypothesis Retrieval Sessions",
+        "operationId": "list_hypothesis_retrieval_sessions_api_v1_analyses__analysis_run_id__hypothesis_retrieval_sessions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisRetrievalSessionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Hypothesis Retrieval Session",
+        "operationId": "get_hypothesis_retrieval_session_api_v1_analyses__analysis_run_id__hypothesis_retrieval_sessions__session_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisRetrievalSessionDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/context": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Hypothesis Retrieval Context",
+        "operationId": "get_hypothesis_retrieval_context_api_v1_analyses__analysis_run_id__hypothesis_retrieval_sessions__session_id__context_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisRetrievalContextResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/plan": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Hypothesis Retrieval Plan",
+        "operationId": "get_hypothesis_retrieval_plan_api_v1_analyses__analysis_run_id__hypothesis_retrieval_sessions__session_id__plan_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisRetrievalPlanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/queries": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Hypothesis Retrieval Queries",
+        "operationId": "list_hypothesis_retrieval_queries_api_v1_analyses__analysis_run_id__hypothesis_retrieval_sessions__session_id__queries_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "query_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query Type"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisRetrievalQueryListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/items": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Hypothesis Retrieval Items",
+        "description": "Retrieved items are evidence candidates \u2014 not proven support/contradiction.",
+        "operationId": "list_hypothesis_retrieval_items_api_v1_analyses__analysis_run_id__hypothesis_retrieval_sessions__session_id__items_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "source_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Type"
+            }
+          },
+          {
+            "name": "adapter_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Adapter Name"
+            }
+          },
+          {
+            "name": "artifact_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Artifact Id"
+            }
+          },
+          {
+            "name": "graph_node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Graph Node Id"
+            }
+          },
+          {
+            "name": "historical_incident_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Historical Incident Id"
+            }
+          },
+          {
+            "name": "min_retrieval_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Retrieval Score"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisRetrievedItemListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/analyses/{analysis_run_id}/cancel": {
       "post": {
         "tags": [
@@ -12819,6 +13474,888 @@
           "total_items"
         ],
         "title": "HypothesisEvidenceListResponse"
+      },
+      "HypothesisRetrievalContextResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
+          },
+          "context_version": {
+            "type": "string",
+            "title": "Context Version"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Snapshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "context_version"
+        ],
+        "title": "HypothesisRetrievalContextResponse"
+      },
+      "HypothesisRetrievalPlanResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
+          },
+          "plan_version": {
+            "type": "string",
+            "title": "Plan Version"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Snapshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "plan_version"
+        ],
+        "title": "HypothesisRetrievalPlanResponse"
+      },
+      "HypothesisRetrievalQueryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "query_id": {
+            "type": "string",
+            "title": "Query Id"
+          },
+          "query_type": {
+            "type": "string",
+            "title": "Query Type"
+          },
+          "normalized_query": {
+            "type": "string",
+            "title": "Normalized Query"
+          },
+          "source_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Types"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "adapters_attempted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Adapters Attempted"
+          },
+          "adapters_succeeded": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Adapters Succeeded"
+          },
+          "raw_result_count": {
+            "type": "integer",
+            "title": "Raw Result Count",
+            "default": 0
+          },
+          "accepted_result_count": {
+            "type": "integer",
+            "title": "Accepted Result Count",
+            "default": 0
+          },
+          "cache_hit": {
+            "type": "boolean",
+            "title": "Cache Hit",
+            "default": false
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "failure_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Type"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "error_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "query_id",
+          "query_type",
+          "normalized_query",
+          "status"
+        ],
+        "title": "HypothesisRetrievalQueryItem"
+      },
+      "HypothesisRetrievalQueryListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HypothesisRetrievalQueryItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_items"
+        ],
+        "title": "HypothesisRetrievalQueryListResponse"
+      },
+      "HypothesisRetrievalRunResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "hypothesis_generation_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hypothesis Generation Run Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "execution_mode": {
+            "type": "string",
+            "title": "Execution Mode"
+          },
+          "hypothesis_count_requested": {
+            "type": "integer",
+            "title": "Hypothesis Count Requested",
+            "default": 0
+          },
+          "hypothesis_count_processed": {
+            "type": "integer",
+            "title": "Hypothesis Count Processed",
+            "default": 0
+          },
+          "session_count_complete": {
+            "type": "integer",
+            "title": "Session Count Complete",
+            "default": 0
+          },
+          "session_count_partial": {
+            "type": "integer",
+            "title": "Session Count Partial",
+            "default": 0
+          },
+          "session_count_failed": {
+            "type": "integer",
+            "title": "Session Count Failed",
+            "default": 0
+          },
+          "total_query_count": {
+            "type": "integer",
+            "title": "Total Query Count",
+            "default": 0
+          },
+          "total_result_count": {
+            "type": "integer",
+            "title": "Total Result Count",
+            "default": 0
+          },
+          "total_unique_source_count": {
+            "type": "integer",
+            "title": "Total Unique Source Count",
+            "default": 0
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "embedding_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Model Version"
+          },
+          "retrieval_pipeline_version": {
+            "type": "string",
+            "title": "Retrieval Pipeline Version"
+          },
+          "error_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Summary"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "configuration_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Configuration Snapshot"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "analysis_run_id",
+          "status",
+          "execution_mode",
+          "retrieval_pipeline_version",
+          "created_at"
+        ],
+        "title": "HypothesisRetrievalRunResponse"
+      },
+      "HypothesisRetrievalSessionDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "retrieval_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Retrieval Run Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "hypothesis_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Hypothesis Id"
+          },
+          "hypothesis_key": {
+            "type": "string",
+            "title": "Hypothesis Key"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "execution_mode": {
+            "type": "string",
+            "title": "Execution Mode"
+          },
+          "retrieval_context_version": {
+            "type": "string",
+            "title": "Retrieval Context Version"
+          },
+          "retrieval_plan_version": {
+            "type": "string",
+            "title": "Retrieval Plan Version"
+          },
+          "hypothesis_prior_score_snapshot": {
+            "type": "number",
+            "title": "Hypothesis Prior Score Snapshot",
+            "default": 0.0
+          },
+          "category_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Code"
+          },
+          "causal_claim_snapshot": {
+            "type": "string",
+            "title": "Causal Claim Snapshot"
+          },
+          "affected_artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Artifact Id"
+          },
+          "root_cause_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Cause Node Id"
+          },
+          "observed_failure_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Failure Node Id"
+          },
+          "query_count": {
+            "type": "integer",
+            "title": "Query Count",
+            "default": 0
+          },
+          "raw_result_count": {
+            "type": "integer",
+            "title": "Raw Result Count",
+            "default": 0
+          },
+          "accepted_result_count": {
+            "type": "integer",
+            "title": "Accepted Result Count",
+            "default": 0
+          },
+          "unique_source_count": {
+            "type": "integer",
+            "title": "Unique Source Count",
+            "default": 0
+          },
+          "cache_hit_count": {
+            "type": "integer",
+            "title": "Cache Hit Count",
+            "default": 0
+          },
+          "source_types_attempted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Types Attempted"
+          },
+          "source_types_succeeded": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Types Succeeded"
+          },
+          "source_types_unavailable": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Types Unavailable"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "retrieval_run_id",
+          "analysis_run_id",
+          "hypothesis_id",
+          "hypothesis_key",
+          "status",
+          "execution_mode",
+          "retrieval_context_version",
+          "retrieval_plan_version",
+          "causal_claim_snapshot",
+          "created_at"
+        ],
+        "title": "HypothesisRetrievalSessionDetailResponse"
+      },
+      "HypothesisRetrievalSessionListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "hypothesis_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Hypothesis Id"
+          },
+          "hypothesis_key": {
+            "type": "string",
+            "title": "Hypothesis Key"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "execution_mode": {
+            "type": "string",
+            "title": "Execution Mode"
+          },
+          "category_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Code"
+          },
+          "query_count": {
+            "type": "integer",
+            "title": "Query Count",
+            "default": 0
+          },
+          "accepted_result_count": {
+            "type": "integer",
+            "title": "Accepted Result Count",
+            "default": 0
+          },
+          "unique_source_count": {
+            "type": "integer",
+            "title": "Unique Source Count",
+            "default": 0
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "hypothesis_id",
+          "hypothesis_key",
+          "status",
+          "execution_mode"
+        ],
+        "title": "HypothesisRetrievalSessionListItem"
+      },
+      "HypothesisRetrievalSessionListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HypothesisRetrievalSessionListItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_items"
+        ],
+        "title": "HypothesisRetrievalSessionListResponse"
+      },
+      "HypothesisRetrievedItemListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HypothesisRetrievedItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_items",
+          "page",
+          "page_size"
+        ],
+        "title": "HypothesisRetrievedItemListResponse"
+      },
+      "HypothesisRetrievedItemResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "primary_query_id": {
+            "type": "string",
+            "title": "Primary Query Id"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "source_system": {
+            "type": "string",
+            "title": "Source System"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "document_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id"
+          },
+          "chunk_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Id"
+          },
+          "artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Id"
+          },
+          "graph_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Node Id"
+          },
+          "graph_edge_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Edge Id"
+          },
+          "temporal_event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temporal Event Id"
+          },
+          "historical_incident_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historical Incident Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "text_excerpt": {
+            "type": "string",
+            "title": "Text Excerpt"
+          },
+          "source_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Path"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line End"
+          },
+          "retrieval_score": {
+            "type": "number",
+            "title": "Retrieval Score",
+            "default": 0.0
+          },
+          "lexical_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lexical Score"
+          },
+          "vector_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector Score"
+          },
+          "historical_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historical Score"
+          },
+          "adapter_name": {
+            "type": "string",
+            "title": "Adapter Name"
+          },
+          "adapter_version": {
+            "type": "string",
+            "title": "Adapter Version"
+          },
+          "relation_candidate": {
+            "type": "string",
+            "title": "Relation Candidate"
+          },
+          "rank_within_query": {
+            "type": "integer",
+            "title": "Rank Within Query",
+            "default": 0
+          },
+          "global_session_order": {
+            "type": "integer",
+            "title": "Global Session Order",
+            "default": 0
+          },
+          "redaction_status": {
+            "type": "string",
+            "title": "Redaction Status"
+          },
+          "associated_query_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Associated Query Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "primary_query_id",
+          "source_type",
+          "source_system",
+          "text_excerpt",
+          "adapter_name",
+          "adapter_version",
+          "relation_candidate",
+          "redaction_status"
+        ],
+        "title": "HypothesisRetrievedItemResponse"
       },
       "IncidentAssignRequest": {
         "properties": {

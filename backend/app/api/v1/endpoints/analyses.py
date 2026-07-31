@@ -16,6 +16,7 @@ from app.application.services.analysis_task import schedule_analysis_execution
 from app.application.services.phase6a2_service import Phase6A2ArtifactsService
 from app.application.services.phase6a3_service import Phase6A3ClassificationService
 from app.application.services.phase6a4_service import Phase6A4HypothesisService
+from app.application.services.phase6a5_service import Phase6A5HypothesisRetrievalService
 from app.core.config import Settings
 from app.infrastructure.storage import build_file_storage
 from app.schemas.analysis import (
@@ -53,6 +54,15 @@ from app.schemas.phase6a4 import (
     HypothesisCausalPathResponse,
     HypothesisCriticResponse,
     HypothesisEvidenceListResponse,
+)
+from app.schemas.phase6a5 import (
+    HypothesisRetrievalContextResponse,
+    HypothesisRetrievalPlanResponse,
+    HypothesisRetrievalQueryListResponse,
+    HypothesisRetrievalRunResponse,
+    HypothesisRetrievalSessionDetailResponse,
+    HypothesisRetrievalSessionListResponse,
+    HypothesisRetrievedItemListResponse,
 )
 
 router = APIRouter(tags=["Analysis Runs"])
@@ -188,6 +198,10 @@ def _phase6a3(session: AsyncSession = Depends(get_session)) -> Phase6A3Classific
 
 def _phase6a4(session: AsyncSession = Depends(get_session)) -> Phase6A4HypothesisService:
     return Phase6A4HypothesisService(AnalysisRunService(session))
+
+
+def _phase6a5(session: AsyncSession = Depends(get_session)) -> Phase6A5HypothesisRetrievalService:
+    return Phase6A5HypothesisRetrievalService(AnalysisRunService(session))
 
 
 @router.get("/analyses/{analysis_run_id}/status", response_model=AnalysisStatusResponse)
@@ -621,6 +635,150 @@ async def get_hypothesis_critic(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
         hypothesis_id=hypothesis_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-run",
+    response_model=HypothesisRetrievalRunResponse,
+)
+async def get_hypothesis_retrieval_run(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> HypothesisRetrievalRunResponse:
+    """Experimental hypothesis-directed retrieval run — evidence candidates only."""
+    _, organization_id, _ = ctx
+    return await service.get_run(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions",
+    response_model=HypothesisRetrievalSessionListResponse,
+)
+async def list_hypothesis_retrieval_sessions(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+    status: str | None = None,
+) -> HypothesisRetrievalSessionListResponse:
+    _, organization_id, _ = ctx
+    return await service.list_sessions(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        status=status,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}",
+    response_model=HypothesisRetrievalSessionDetailResponse,
+)
+async def get_hypothesis_retrieval_session(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> HypothesisRetrievalSessionDetailResponse:
+    _, organization_id, _ = ctx
+    return await service.get_session(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/context",
+    response_model=HypothesisRetrievalContextResponse,
+)
+async def get_hypothesis_retrieval_context(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> HypothesisRetrievalContextResponse:
+    _, organization_id, _ = ctx
+    return await service.get_context(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/plan",
+    response_model=HypothesisRetrievalPlanResponse,
+)
+async def get_hypothesis_retrieval_plan(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> HypothesisRetrievalPlanResponse:
+    _, organization_id, _ = ctx
+    return await service.get_plan(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/queries",
+    response_model=HypothesisRetrievalQueryListResponse,
+)
+async def list_hypothesis_retrieval_queries(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+    query_type: str | None = None,
+) -> HypothesisRetrievalQueryListResponse:
+    _, organization_id, _ = ctx
+    return await service.list_queries(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
+        query_type=query_type,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/items",
+    response_model=HypothesisRetrievedItemListResponse,
+)
+async def list_hypothesis_retrieval_items(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+    page: int = 1,
+    page_size: int = 50,
+    source_type: str | None = None,
+    adapter_name: str | None = None,
+    artifact_id: str | None = None,
+    graph_node_id: str | None = None,
+    historical_incident_id: str | None = None,
+    min_retrieval_score: float | None = None,
+) -> HypothesisRetrievedItemListResponse:
+    """Retrieved items are evidence candidates — not proven support/contradiction."""
+    _, organization_id, _ = ctx
+    return await service.list_items(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
+        page=page,
+        page_size=page_size,
+        source_type=source_type,
+        adapter_name=adapter_name,
+        artifact_id=artifact_id,
+        graph_node_id=graph_node_id,
+        historical_incident_id=historical_incident_id,
+        min_retrieval_score=min_retrieval_score,
     )
 
 
