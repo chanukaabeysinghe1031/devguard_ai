@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasAnyRole = useCallback(
     (roles: OrganizationRole[]) => {
       if (!session?.role) return false;
-      if (session.platformRole === "platform_admin") return true;
+      // Platform admin must not silently pass org role checks — System nav uses isPlatformAdmin.
       return roles.includes(session.role);
     },
     [session],

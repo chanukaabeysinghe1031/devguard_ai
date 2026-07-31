@@ -33,7 +33,7 @@ async def list_notifications(
     notification_type: str | None = None,
     incident_id: UUID | None = None,
 ) -> NotificationListResponse:
-    user, _, _ = ctx
+    user, organization_id, _ = ctx
     return await service.list_notifications(
         user_id=user.id,
         page=page,
@@ -42,6 +42,7 @@ async def list_notifications(
         severity=severity,
         notification_type=notification_type,
         incident_id=incident_id,
+        organization_id=organization_id,
     )
 
 
@@ -60,8 +61,8 @@ async def mark_all_notifications_read(
     ctx: tuple = Depends(require_org_reader),
     service: NotificationService = Depends(_notification_service),
 ) -> MessageResponse:
-    user, _, _ = ctx
-    count = await service.mark_all_read(user_id=user.id)
+    user, organization_id, _ = ctx
+    count = await service.mark_all_read(user_id=user.id, organization_id=organization_id)
     return MessageResponse(message=f"Marked {count} notification(s) as read.")
 
 

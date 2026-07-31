@@ -53,6 +53,20 @@ class OrganizationService:
             raise ResourceNotFoundError("Organization not found.")
         if body.name is not None:
             org.name = body.name.strip()
+        if body.company_name is not None:
+            org.company_name = body.company_name.strip() or None
+        if body.description is not None:
+            org.description = body.description.strip() or None
+        if body.website is not None:
+            org.website = body.website.strip() or None
+        if body.industry is not None:
+            org.industry = body.industry.strip() or None
+        if body.country is not None:
+            org.country = body.country.strip() or None
+        if body.timezone is not None:
+            org.timezone = body.timezone.strip() or "UTC"
+        if body.logo_url is not None:
+            org.logo_url = body.logo_url.strip() or None
         await self._session.flush()
         logger.info("organization_updated", organization_id=str(organization_id))
         return organization_to_response(org)
@@ -193,16 +207,31 @@ async def create_default_organization_for_user(
     *,
     user: User,
     full_name: str,
+    organization_name: str | None = None,
+    company_name: str | None = None,
+    website: str | None = None,
+    industry: str | None = None,
+    country: str | None = None,
+    timezone: str | None = None,
 ) -> OrganizationMember:
     """Create a default organization and owner membership on registration."""
-    base_slug = _slugify(full_name or user.email.split("@")[0])
+    display_name = (organization_name or f"{full_name.strip()}'s Organization").strip()
+    base_slug = _slugify(display_name or full_name or user.email.split("@")[0])
     slug = base_slug
     suffix = 1
     while await session.scalar(select(Organization.id).where(Organization.slug == slug)):
         slug = f"{base_slug}-{suffix}"
         suffix += 1
 
-    org = Organization(name=f"{full_name.strip()}'s Organization", slug=slug)
+    org = Organization(
+        name=display_name[:150],
+        slug=slug,
+        company_name=(company_name or display_name)[:200] if company_name or display_name else None,
+        website=website,
+        industry=industry,
+        country=country,
+        timezone=(timezone or "UTC")[:80],
+    )
     session.add(org)
     await session.flush()
     membership = OrganizationMember(

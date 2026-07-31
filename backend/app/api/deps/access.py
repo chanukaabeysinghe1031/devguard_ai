@@ -117,7 +117,7 @@ async def load_incident_in_org(
         )
     )
     incident = await session.scalar(stmt)
-    if incident is None or incident.project.organization_id != organization_id:
+    if incident is None or incident.organization_id != organization_id:
         raise ResourceNotFoundError("Incident not found.")
     return incident
 

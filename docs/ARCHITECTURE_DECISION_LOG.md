@@ -12,6 +12,7 @@
 |----|-------|--------|
 | ADR-005 | Automated GitHub Actions Incident Ingestion | Accepted |
 | ADR-012 | Evolve Legacy Flat Schema to Incident-Centred Domain Model | Accepted |
+| ADR-013 | Phase 5C Multi-Tenant Completeness (Roles, Invites, Org Denormalization) | Accepted |
 
 ---
 
@@ -163,3 +164,36 @@ This ADR is **Accepted** (project owner, 24 July 2026).
 - `docs/SCHEMA_EVOLUTION_PLAN.md`
 - `docs/DATABASE_ARCHITECTURE.md`
 - `docs/MASTER_ARCHITECTURE.md`
+
+
+# ADR-013 — Phase 5C Multi-Tenant Completeness (Roles, Invites, Org Denormalization)
+
+## Status
+
+**Accepted** — approved by project owner, 31 July 2026.
+
+## Context
+
+DevGuard AI already ships organization-ready MVP tenancy (`organizations`, `organization_members`, `X-Organization-Id`). Phase 5C completes product multi-tenancy without rewriting auth or inventing parallel RBAC.
+
+## Decision
+
+1. **Roles:** Keep frozen v1.0 roles (`platform_admin`, `organization_owner`, `organization_admin`, `engineer`, `viewer`). Do not add `project_manager`. Document/UI may present `organization_admin` as covering Project Manager + Organization Administrator responsibilities for the MVP.
+2. **Registration:** Keep automatic personal organization + `organization_owner` on register; redesign onboarding copy/UX as workspace/organization creation.
+3. **Invitations:** Persist secure invitation tokens and accept/revoke/expiry flows; deliver via copyable link first. SMTP email is deferred.
+4. **Denormalization:** Migration `010` adds `organization_id` to high-volume tenant rows (`incidents`, `incident_events`, `notifications`, `webhook_deliveries`) with backfill from existing join paths; `audit_logs.organization_id` already exists.
+5. **GitHub:** Keep org-level `github_installations` and project-level `github_repository_connections`; Organization Settings surfaces org integrations (no duplicate credential store).
+6. **Platform admin:** System Administration UI/APIs visible only to `platform_admin`; organization users see Organization Settings IA instead of a mixed Admin menu.
+
+## Consequences
+
+- Constitution role freeze preserved.
+- Authorization and list queries can filter on `organization_id` directly while retaining project FKs.
+- Invitation email infrastructure is not a Phase 5C dependency.
+- Must not regress GitHub ingestion, AI analysis, or incident workflows.
+
+## Related documents
+
+- `docs/PHASE5C_ARCHITECTURE_AUDIT_AND_MIGRATION_PLAN.md`
+- `docs/DATABASE_ARCHITECTURE.md`
+- `docs/PROJECT_CONSTITUTION.md`

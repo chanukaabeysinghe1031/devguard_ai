@@ -165,6 +165,12 @@ class AuthService:
         email: str,
         password: str,
         full_name: str,
+        organization_name: str | None = None,
+        company_name: str | None = None,
+        website: str | None = None,
+        industry: str | None = None,
+        country: str | None = None,
+        timezone: str | None = None,
     ) -> UserPublicResponse:
         validate_password_strength(password)
         normalized_email = email.strip().lower()
@@ -191,6 +197,12 @@ class AuthService:
             self._session,
             user=user,
             full_name=full_name.strip(),
+            organization_name=organization_name,
+            company_name=company_name,
+            website=website,
+            industry=industry,
+            country=country,
+            timezone=timezone,
         )
 
         # Reload with memberships relationship populated.

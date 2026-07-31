@@ -55,17 +55,31 @@ class WebhookDeliveryService:
         signature_valid: bool,
         processing_status: WebhookProcessingStatus = WebhookProcessingStatus.RECEIVED,
         provider: str = GITHUB_PROVIDER,
+        organization_id: UUID | None = None,
     ) -> tuple[WebhookDelivery, bool]:
         """Return ``(delivery, created)``; duplicates return the existing row."""
         existing = await self.get_by_delivery_id(delivery_id=delivery_id, provider=provider)
         if existing is not None:
             return existing, False
 
+        resolved_org_id = organization_id
+        if resolved_org_id is None and installation_id is not None:
+            from app.infrastructure.database.models.github_installation import (
+                GitHubInstallation,
+            )
+
+            resolved_org_id = await self._session.scalar(
+                select(GitHubInstallation.organization_id).where(
+                    GitHubInstallation.github_installation_id == installation_id
+                )
+            )
+
         delivery = WebhookDelivery(
             provider=provider,
             delivery_id=delivery_id,
             event_name=event_name,
             event_action=event_action,
+            organization_id=resolved_org_id,
             installation_id=installation_id,
             repository_id=repository_id,
             payload_hash=payload_hash,

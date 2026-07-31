@@ -317,7 +317,7 @@ function EmptyStatePanel({
     <div className="flex flex-col gap-4">
       <EmptyState
         icon={Github}
-        title="Connect the DevHub AI GitHub App"
+        title="Connect the DevGuard AI GitHub App"
         description="Install the GitHub App, then choose which repository to connect for automated incident detection."
         action={
           canManage ? (
@@ -327,7 +327,7 @@ function EmptyStatePanel({
               isLoading={isInstalling}
               disabled={!appConfigured}
             >
-              Install DevHub AI GitHub App
+              Install DevGuard AI GitHub App
             </Button>
           ) : (
             <p className="text-sm text-text-muted">Ask an organization owner or admin to connect GitHub Actions.</p>

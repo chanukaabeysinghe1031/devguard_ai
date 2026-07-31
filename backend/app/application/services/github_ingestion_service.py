@@ -393,6 +393,7 @@ class GitHubIngestionService:
 
         now = datetime.now(UTC)
         incident = Incident(
+            organization_id=connection.organization_id,
             project_id=connection.project_id,
             pipeline_run_id=pipeline_run.id,
             title=title or "GitHub Actions workflow failure",
@@ -419,6 +420,7 @@ class GitHubIngestionService:
         await self._session.flush()
 
         self._add_timeline_event(
+            organization_id=connection.organization_id,
             incident_id=incident.id,
             event_type="incident_created",
             title="Incident detected from GitHub Actions",
@@ -451,6 +453,7 @@ class GitHubIngestionService:
         except GitHubProviderError as exc:
             connection.last_error = exc.message[:500]
             self._add_timeline_event(
+                organization_id=incident.organization_id,
                 incident_id=incident.id,
                 event_type="log_ingestion_failed",
                 title="Workflow logs could not be downloaded",
@@ -461,6 +464,7 @@ class GitHubIngestionService:
 
         if not archive:
             self._add_timeline_event(
+                organization_id=incident.organization_id,
                 incident_id=incident.id,
                 event_type="log_ingestion_skipped",
                 title="No workflow logs available",
@@ -475,6 +479,7 @@ class GitHubIngestionService:
         except LogArchiveError as exc:
             connection.last_error = exc.message[:500]
             self._add_timeline_event(
+                organization_id=incident.organization_id,
                 incident_id=incident.id,
                 event_type="log_ingestion_failed",
                 title="Workflow log archive rejected",
@@ -501,6 +506,7 @@ class GitHubIngestionService:
         except Exception as exc:  # noqa: BLE001 - log persistence must not abort ingestion
             logger.warning("github_log_persist_failed", error=type(exc).__name__)
             self._add_timeline_event(
+                organization_id=incident.organization_id,
                 incident_id=incident.id,
                 event_type="log_ingestion_failed",
                 title="Workflow logs could not be stored",
@@ -563,6 +569,7 @@ class GitHubIngestionService:
     def _add_timeline_event(
         self,
         *,
+        organization_id: UUID,
         incident_id: UUID,
         event_type: str,
         title: str,
@@ -571,6 +578,7 @@ class GitHubIngestionService:
     ) -> None:
         self._session.add(
             IncidentEvent(
+                organization_id=organization_id,
                 incident_id=incident_id,
                 event_type=event_type,
                 actor_type=SYSTEM_ACTOR,

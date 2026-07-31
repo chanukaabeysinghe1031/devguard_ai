@@ -21,10 +21,20 @@ if TYPE_CHECKING:
 class Notification(Base, UUIDPrimaryKeyMixin, CreatedAtMixin):
     __tablename__ = "notifications"
     __table_args__ = (
+        Index(
+            "ix_notifications_organization_id_user_id_created_at",
+            "organization_id",
+            "user_id",
+            "created_at",
+        ),
         Index("ix_notifications_user_id_is_read_created_at", "user_id", "is_read", "created_at"),
         Index("ix_notifications_incident_id", "incident_id"),
     )
 
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=True,
+    )
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,

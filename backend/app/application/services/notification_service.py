@@ -42,9 +42,12 @@ class NotificationService:
         severity: str | None = None,
         notification_type: str | None = None,
         incident_id: UUID | None = None,
+        organization_id: UUID | None = None,
     ) -> NotificationListResponse:
         page, page_size, offset = normalize_pagination(page, page_size)
         filters = [Notification.user_id == user_id]
+        if organization_id is not None:
+            filters.append(Notification.organization_id == organization_id)
         if is_read is not None:
             filters.append(Notification.is_read.is_(is_read))
         if severity:
@@ -60,11 +63,12 @@ class NotificationService:
             )
             or 0
         )
+        unread_filters = [Notification.user_id == user_id, Notification.is_read.is_(False)]
+        if organization_id is not None:
+            unread_filters.append(Notification.organization_id == organization_id)
         unread_count = int(
             await self._session.scalar(
-                select(func.count())
-                .select_from(Notification)
-                .where(Notification.user_id == user_id, Notification.is_read.is_(False))
+                select(func.count()).select_from(Notification).where(*unread_filters)
             )
             or 0
         )
@@ -100,12 +104,17 @@ class NotificationService:
             await self._session.flush()
         return self._to_response(notification)
 
-    async def mark_all_read(self, *, user_id: UUID) -> int:
+    async def mark_all_read(
+        self,
+        *,
+        user_id: UUID,
+        organization_id: UUID | None = None,
+    ) -> int:
         now = datetime.now(UTC)
-        stmt = select(Notification).where(
-            Notification.user_id == user_id,
-            Notification.is_read.is_(False),
-        )
+        filters = [Notification.user_id == user_id, Notification.is_read.is_(False)]
+        if organization_id is not None:
+            filters.append(Notification.organization_id == organization_id)
+        stmt = select(Notification).where(*filters)
         rows = list((await self._session.scalars(stmt)).all())
         for row in rows:
             row.is_read = True
@@ -291,9 +300,16 @@ class NotificationService:
         title: str,
         message: str,
         severity: str | None = None,
+        organization_id: UUID | None = None,
     ) -> Notification:
         now = datetime.now(UTC)
+        resolved_org_id = organization_id
+        if resolved_org_id is None and incident_id is not None:
+            resolved_org_id = await self._session.scalar(
+                select(Incident.organization_id).where(Incident.id == incident_id)
+            )
         notification = Notification(
+            organization_id=resolved_org_id,
             user_id=user_id,
             incident_id=incident_id,
             notification_type=notification_type,

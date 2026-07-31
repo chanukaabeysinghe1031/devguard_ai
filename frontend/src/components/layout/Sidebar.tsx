@@ -5,7 +5,12 @@ import { cn } from "../../utils/cn";
 import { useAuth } from "../../hooks/useAuth";
 import { useUiStore } from "../../stores/uiStore";
 import { Tooltip } from "../ui/Tooltip";
-import { ADMIN_NAV, PRIMARY_NAV, type NavItem } from "./navConfig";
+import {
+  ORGANIZATION_NAV,
+  PRIMARY_NAV,
+  SYSTEM_NAV,
+  type NavItem,
+} from "./navConfig";
 
 function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const content = (
@@ -48,8 +53,8 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
 
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useUiStore();
-  const { hasAnyRole } = useAuth();
-  const canSeeAdmin = hasAnyRole(["organization_owner", "organization_admin"]);
+  const { hasAnyRole, isPlatformAdmin, session } = useAuth();
+  const canManageOrg = hasAnyRole(["organization_owner", "organization_admin"]);
 
   return (
     <aside
@@ -69,7 +74,16 @@ export function Sidebar() {
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-white">
           <ShieldCheck className="h-5 w-5" />
         </div>
-        {!sidebarCollapsed && <span className="text-lg font-bold text-text-primary">DevGuard AI</span>}
+        {!sidebarCollapsed && (
+          <div className="min-w-0">
+            <span className="block text-lg font-bold text-text-primary">DevGuard AI</span>
+            {session?.role && (
+              <span className="block truncate text-[10px] uppercase tracking-wide text-text-muted">
+                {session.role.replace(/_/g, " ")}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-4">
@@ -77,14 +91,27 @@ export function Sidebar() {
           <NavRow key={item.to} item={item} collapsed={sidebarCollapsed} />
         ))}
 
-        {canSeeAdmin && (
+        {canManageOrg && (
           <div className="pt-4">
             {!sidebarCollapsed && (
               <p className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-wide text-text-disabled">
-                Admin
+                Organization
               </p>
             )}
-            {ADMIN_NAV.map((item) => (
+            {ORGANIZATION_NAV.map((item) => (
+              <NavRow key={item.to} item={item} collapsed={sidebarCollapsed} />
+            ))}
+          </div>
+        )}
+
+        {isPlatformAdmin && (
+          <div className="pt-4">
+            {!sidebarCollapsed && (
+              <p className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-wide text-text-disabled">
+                System
+              </p>
+            )}
+            {SYSTEM_NAV.map((item) => (
               <NavRow key={item.to} item={item} collapsed={sidebarCollapsed} />
             ))}
           </div>

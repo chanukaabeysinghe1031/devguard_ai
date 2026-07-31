@@ -12,12 +12,15 @@ import { LinkButton } from "../../components/ui/LinkButton";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { SearchInput } from "../../components/ui/SearchInput";
 import { StatusBadge } from "../../components/ui/StatusBadge";
+import { useAuth } from "../../hooks/useAuth";
 import type { ProjectListItem } from "../../types/project";
 import { formatRelativeTime, titleCase } from "../../utils/formatters";
 
 export function ProjectsListPage() {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const { hasAnyRole } = useAuth();
+  const canWrite = hasAnyRole(["organization_owner", "organization_admin", "engineer"]);
 
   const params = { page: 1, page_size: 50, search: search || undefined };
   const { data, isLoading, isError, refetch } = useQuery({
@@ -69,9 +72,11 @@ export function ProjectsListPage() {
         title="Projects"
         description="Repositories and services connected to DevGuard AI."
         actions={
-          <LinkButton to="/projects/new" leftIcon={<Plus className="h-4 w-4" />}>
-            New project
-          </LinkButton>
+          canWrite ? (
+            <LinkButton to="/projects/new" leftIcon={<Plus className="h-4 w-4" />}>
+              New project
+            </LinkButton>
+          ) : undefined
         }
       />
 
@@ -90,7 +95,7 @@ export function ProjectsListPage() {
               ? "Try a different search term."
               : "Create a project to start tracking pipeline runs and incidents."
           }
-          action={!search && <LinkButton to="/projects/new">Create project</LinkButton>}
+          action={!search && canWrite && <LinkButton to="/projects/new">Create project</LinkButton>}
         />
       ) : (
         <DataTable

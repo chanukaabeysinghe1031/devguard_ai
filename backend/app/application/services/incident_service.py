@@ -77,6 +77,7 @@ class IncidentService:
 
         now = datetime.now(UTC)
         incident = Incident(
+            organization_id=project.organization_id,
             project_id=project.id,
             pipeline_run_id=body.pipeline_run_id,
             title=body.title.strip(),
@@ -123,7 +124,7 @@ class IncidentService:
         sort_order: str = "desc",
     ) -> PaginatedResponse[IncidentListItem]:
         page, page_size, offset = normalize_pagination(page, page_size)
-        filters = [Project.organization_id == organization_id]
+        filters = [Incident.organization_id == organization_id]
         if project_id:
             filters.append(Incident.project_id == project_id)
         if pipeline_run_id:
@@ -148,19 +149,13 @@ class IncidentService:
         if date_to:
             filters.append(Incident.detected_at <= date_to)
 
-        count_stmt = (
-            select(func.count())
-            .select_from(Incident)
-            .join(Project, Project.id == Incident.project_id)
-            .where(*filters)
-        )
+        count_stmt = select(func.count()).select_from(Incident).where(*filters)
         total = int(await self._session.scalar(count_stmt) or 0)
 
         order_col = Incident.detected_at if sort_by != "created_at" else Incident.created_at
         order = order_col.desc() if sort_order == "desc" else order_col.asc()
         stmt = (
             select(Incident)
-            .join(Project, Project.id == Incident.project_id)
             .where(*filters)
             .options(
                 selectinload(Incident.project),
@@ -338,8 +333,7 @@ class IncidentService:
     async def _load_incident(self, organization_id: UUID, incident_id: UUID) -> Incident:
         stmt = (
             select(Incident)
-            .join(Project, Project.id == Incident.project_id)
-            .where(Incident.id == incident_id, Project.organization_id == organization_id)
+            .where(Incident.id == incident_id, Incident.organization_id == organization_id)
             .options(
                 selectinload(Incident.project),
                 selectinload(Incident.pipeline_run),
@@ -388,6 +382,7 @@ class IncidentService:
     ) -> None:
         self._session.add(
             IncidentEvent(
+                organization_id=incident.organization_id,
                 incident_id=incident.id,
                 event_type=event_type,
                 actor_type=actor_type,

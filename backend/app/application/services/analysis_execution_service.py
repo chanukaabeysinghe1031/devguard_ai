@@ -590,8 +590,14 @@ class AnalysisExecutionService:
         event_type: str,
         metadata: dict[str, Any] | None = None,
     ) -> None:
+        organization_id = await self._session.scalar(
+            select(Incident.organization_id).where(Incident.id == incident_id)
+        )
+        if organization_id is None:
+            return
         self._session.add(
             IncidentEvent(
+                organization_id=organization_id,
                 incident_id=incident_id,
                 event_type=event_type,
                 actor_type="ai",

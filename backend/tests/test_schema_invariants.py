@@ -80,6 +80,7 @@ async def _create_project(
 
 async def _create_incident(session, project: Project, *, title: str = "Build failed") -> Incident:
     incident = Incident(
+        organization_id=project.organization_id,
         project_id=project.id,
         title=title,
         source="pipeline",
@@ -229,6 +230,7 @@ async def test_incident_may_reference_pipeline_run(repository_db_session) -> Non
     await repository_db_session.flush()
 
     incident = Incident(
+        organization_id=project.organization_id,
         project_id=project.id,
         pipeline_run_id=pipeline_run.id,
         title="Pipeline-triggered incident",

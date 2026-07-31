@@ -32,6 +32,7 @@ class WebhookDelivery(Base, UUIDPrimaryKeyMixin):
     __tablename__ = "webhook_deliveries"
     __table_args__ = (
         UniqueConstraint("provider", "delivery_id", name="uq_webhook_deliveries_provider_id"),
+        Index("ix_webhook_deliveries_organization_id_received_at", "organization_id", "received_at"),
         Index("ix_webhook_deliveries_repository_id_received_at", "repository_id", "received_at"),
         Index("ix_webhook_deliveries_processing_status", "processing_status"),
     )
@@ -40,6 +41,10 @@ class WebhookDelivery(Base, UUIDPrimaryKeyMixin):
     delivery_id: Mapped[str] = mapped_column(String(128), nullable=False)
     event_name: Mapped[str] = mapped_column(String(80), nullable=False)
     event_action: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("organizations.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     installation_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     repository_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)

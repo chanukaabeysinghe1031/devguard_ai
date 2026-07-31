@@ -15,6 +15,7 @@ from app.domain.enums import (
     IncidentSeverity,
     IncidentStatus,
     IntegrationStatus,
+    InvitationStatus,
     KnowledgeDocumentStatus,
     ModelVersionStatus,
     NotificationType,
@@ -62,3 +63,4 @@ delivery_status_enum = _enum(DeliveryStatus, "delivery_status")
 knowledge_document_status_enum = _enum(KnowledgeDocumentStatus, "knowledge_document_status")
 generation_status_enum = _enum(GenerationStatus, "generation_status")
 model_version_status_enum = _enum(ModelVersionStatus, "model_version_status")
+invitation_status_enum = _enum(InvitationStatus, "invitation_status")

@@ -12,6 +12,12 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     full_name: str = Field(min_length=1, max_length=150)
+    organization_name: str | None = Field(default=None, min_length=1, max_length=150)
+    company_name: str | None = Field(default=None, max_length=200)
+    website: str | None = Field(default=None, max_length=500)
+    industry: str | None = Field(default=None, max_length=120)
+    country: str | None = Field(default=None, max_length=120)
+    timezone: str | None = Field(default=None, max_length=80)
 
     @field_validator("email")
     @classmethod

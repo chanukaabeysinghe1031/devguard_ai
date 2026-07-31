@@ -22,6 +22,7 @@ from app.infrastructure.database.models.knowledge_document import KnowledgeDocum
 from app.infrastructure.database.models.model_version import ModelVersion
 from app.infrastructure.database.models.notification import Notification
 from app.infrastructure.database.models.organization import Organization
+from app.infrastructure.database.models.organization_invitation import OrganizationInvitation
 from app.infrastructure.database.models.organization_member import OrganizationMember
 from app.infrastructure.database.models.pipeline_run import PipelineRun
 from app.infrastructure.database.models.prediction import Prediction
@@ -56,6 +57,7 @@ __all__ = [
     "ModelVersion",
     "Notification",
     "Organization",
+    "OrganizationInvitation",
     "OrganizationMember",
     "PipelineRun",
     "Prediction",

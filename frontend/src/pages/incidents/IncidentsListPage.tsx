@@ -18,6 +18,7 @@ import { Select } from "../../components/ui/Select";
 import { SeverityBadge } from "../../components/ui/SeverityBadge";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { Tooltip } from "../../components/ui/Tooltip";
+import { useAuth } from "../../hooks/useAuth";
 import type { IncidentListItem } from "../../types/incident";
 import { formatRelativeTime } from "../../utils/formatters";
 
@@ -47,6 +48,8 @@ const PAGE_SIZE = 20;
 
 export function IncidentsListPage() {
   const navigate = useNavigate();
+  const { hasAnyRole } = useAuth();
+  const canWrite = hasAnyRole(["organization_owner", "organization_admin", "engineer"]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [severity, setSeverity] = useState("");
@@ -120,9 +123,11 @@ export function IncidentsListPage() {
         title="Incidents"
         description="All CI/CD and deployment incidents detected across your organization."
         actions={
-          <LinkButton to="/incidents/new" leftIcon={<Plus className="h-4 w-4" />}>
-            New incident
-          </LinkButton>
+          canWrite ? (
+            <LinkButton to="/incidents/new" leftIcon={<Plus className="h-4 w-4" />}>
+              New incident
+            </LinkButton>
+          ) : undefined
         }
       />
 
@@ -176,7 +181,7 @@ export function IncidentsListPage() {
               ? "Try adjusting your filters."
               : "Incidents will appear here once a pipeline run fails or one is created manually."
           }
-          action={!hasFilters && <LinkButton to="/incidents/new">Create incident</LinkButton>}
+          action={!hasFilters && canWrite && <LinkButton to="/incidents/new">Create incident</LinkButton>}
         />
       ) : (
         <>

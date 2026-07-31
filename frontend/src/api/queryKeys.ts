@@ -3,6 +3,7 @@ export const queryKeys = {
   me: () => ["me"] as const,
   organization: () => ["organization", "current"] as const,
   organizationMembers: (orgId: string) => ["organization", orgId, "members"] as const,
+  organizationInvitations: (orgId: string) => ["organization", orgId, "invitations"] as const,
 
   projects: (params?: Record<string, unknown>) => ["projects", params ?? {}] as const,
   project: (id: string) => ["projects", id] as const,

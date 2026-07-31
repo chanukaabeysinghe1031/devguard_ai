@@ -4,12 +4,12 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useUiStore } from "../../stores/uiStore";
 import { cn } from "../../utils/cn";
-import { ADMIN_NAV, PRIMARY_NAV } from "./navConfig";
+import { ORGANIZATION_NAV, PRIMARY_NAV, SYSTEM_NAV } from "./navConfig";
 
 export function MobileNav() {
   const { mobileNavOpen, setMobileNavOpen } = useUiStore();
-  const { hasAnyRole } = useAuth();
-  const canSeeAdmin = hasAnyRole(["organization_owner", "organization_admin"]);
+  const { hasAnyRole, isPlatformAdmin } = useAuth();
+  const canManageOrg = hasAnyRole(["organization_owner", "organization_admin"]);
 
   if (!mobileNavOpen) return null;
 
@@ -64,12 +64,37 @@ export function MobileNav() {
               </span>
             </NavLink>
           ))}
-          {canSeeAdmin && (
+          {canManageOrg && (
             <div className="pt-4">
               <p className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-wide text-text-disabled">
-                Admin
+                Organization
               </p>
-              {ADMIN_NAV.map((item) => (
+              {ORGANIZATION_NAV.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/15 text-primary"
+                        : "text-text-secondary hover:bg-surface-hover hover:text-text-primary",
+                    )
+                  }
+                >
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          )}
+          {isPlatformAdmin && (
+            <div className="pt-4">
+              <p className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-wide text-text-disabled">
+                System
+              </p>
+              {SYSTEM_NAV.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}

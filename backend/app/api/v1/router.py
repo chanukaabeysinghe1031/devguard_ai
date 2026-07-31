@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     history,
     incidents,
     integrations,
+    invitations,
     notes,
     notifications,
     organizations,
@@ -36,3 +37,4 @@ api_router.include_router(reports.router)
 api_router.include_router(history.router)
 api_router.include_router(evaluation.router)
 api_router.include_router(integrations.router)
+api_router.include_router(invitations.router)

@@ -22,9 +22,14 @@ class IncidentEvent(Base, UUIDPrimaryKeyMixin):
 
     __tablename__ = "incident_events"
     __table_args__ = (
+        Index("ix_incident_events_organization_id_occurred_at", "organization_id", "occurred_at"),
         Index("ix_incident_events_incident_id_occurred_at", "incident_id", "occurred_at"),
     )
 
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("organizations.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     incident_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("incidents.id", ondelete="CASCADE"),
         nullable=False,

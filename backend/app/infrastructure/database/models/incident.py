@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from app.infrastructure.database.models.incident_report import IncidentReport
     from app.infrastructure.database.models.incident_resolution import IncidentResolution
     from app.infrastructure.database.models.notification import Notification
+    from app.infrastructure.database.models.organization import Organization
     from app.infrastructure.database.models.pipeline_run import PipelineRun
     from app.infrastructure.database.models.project import Project
     from app.infrastructure.database.models.uploaded_file import UploadedFile
@@ -46,6 +47,8 @@ class Incident(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin):
 
     __tablename__ = "incidents"
     __table_args__ = (
+        Index("ix_incidents_organization_id_created_at", "organization_id", "created_at"),
+        Index("ix_incidents_organization_id_status", "organization_id", "status"),
         Index("ix_incidents_project_id_created_at", "project_id", "created_at"),
         Index("ix_incidents_project_id_status", "project_id", "status"),
         Index("ix_incidents_severity_status", "severity", "status"),
@@ -59,6 +62,10 @@ class Incident(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin):
         unique=True,
         nullable=False,
         server_default=incident_number_seq.next_value(),
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("organizations.id", ondelete="RESTRICT"),
+        nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="RESTRICT"),
@@ -102,6 +109,7 @@ class Incident(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin):
     impact_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     tags: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
+    organization: Mapped[Organization] = relationship()
     project: Mapped[Project] = relationship(back_populates="incidents")
     pipeline_run: Mapped[PipelineRun | None] = relationship(back_populates="incidents")
     creator: Mapped[User | None] = relationship(

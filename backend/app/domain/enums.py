@@ -194,6 +194,15 @@ class GitHubInstallationStatus(StrEnum):
     DELETED = "deleted"
 
 
+class InvitationStatus(StrEnum):
+    """Organization invitation lifecycle (link-based; SMTP deferred)."""
+
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REVOKED = "revoked"
+    EXPIRED = "expired"
+
+
 class ModelVersionStatus(StrEnum):
     TRAINING = "training"
     ACTIVE = "active"

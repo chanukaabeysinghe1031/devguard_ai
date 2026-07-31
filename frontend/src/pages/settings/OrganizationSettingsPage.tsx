@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -16,6 +17,12 @@ import { formatDate, titleCase } from "../../utils/formatters";
 
 interface FormValues {
   name: string;
+  company_name: string;
+  website: string;
+  industry: string;
+  country: string;
+  timezone: string;
+  description: string;
 }
 
 export function OrganizationSettingsPage() {
@@ -37,11 +44,30 @@ export function OrganizationSettingsPage() {
   const { register, handleSubmit, reset } = useForm<FormValues>();
 
   useEffect(() => {
-    if (orgQuery.data) reset({ name: orgQuery.data.name });
+    if (orgQuery.data) {
+      reset({
+        name: orgQuery.data.name,
+        company_name: orgQuery.data.company_name ?? "",
+        website: orgQuery.data.website ?? "",
+        industry: orgQuery.data.industry ?? "",
+        country: orgQuery.data.country ?? "",
+        timezone: orgQuery.data.timezone ?? "UTC",
+        description: orgQuery.data.description ?? "",
+      });
+    }
   }, [orgQuery.data, reset]);
 
   const mutation = useMutation({
-    mutationFn: (values: FormValues) => organizationsApi.updateOrganization(orgQuery.data!.id, values),
+    mutationFn: (values: FormValues) =>
+      organizationsApi.updateOrganization(orgQuery.data!.id, {
+        name: values.name,
+        company_name: values.company_name || null,
+        website: values.website || null,
+        industry: values.industry || null,
+        country: values.country || null,
+        timezone: values.timezone || "UTC",
+        description: values.description || null,
+      }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.organization() }),
   });
 
@@ -53,7 +79,7 @@ export function OrganizationSettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <CardHeader title="Organization" subtitle={`Created ${formatDate(orgQuery.data.created_at)}`} />
+        <CardHeader title="Organization profile" subtitle={`Created ${formatDate(orgQuery.data.created_at)}`} />
         <CardBody>
           {mutation.isError && (
             <Alert variant="danger" className="mb-4">
@@ -62,19 +88,54 @@ export function OrganizationSettingsPage() {
           )}
           <form
             onSubmit={handleSubmit((values) => mutation.mutate(values))}
-            className="flex max-w-md flex-col gap-4"
+            className="grid max-w-2xl gap-4 md:grid-cols-2"
           >
             <Input label="Organization name" disabled={!canEdit} {...register("name")} />
+            <Input label="Company name" disabled={!canEdit} {...register("company_name")} />
+            <Input label="Website" disabled={!canEdit} {...register("website")} />
+            <Input label="Industry" disabled={!canEdit} {...register("industry")} />
+            <Input label="Country" disabled={!canEdit} {...register("country")} />
+            <Input label="Timezone" disabled={!canEdit} {...register("timezone")} />
+            <div className="md:col-span-2">
+              <Input label="Description" disabled={!canEdit} {...register("description")} />
+            </div>
             <Input label="Slug" value={orgQuery.data.slug} disabled />
             <Input label="Plan" value={titleCase(orgQuery.data.plan)} disabled />
             {canEdit && (
-              <div className="flex justify-end">
+              <div className="flex justify-end md:col-span-2">
                 <Button type="submit" isLoading={mutation.isPending}>
                   Save changes
                 </Button>
               </div>
             )}
           </form>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Quick links"
+          subtitle="Organization administration"
+          action={
+            canEdit ? (
+              <Link to="/organization/invitations" className="text-sm text-primary hover:underline">
+                Invitations
+              </Link>
+            ) : undefined
+          }
+        />
+        <CardBody className="flex flex-wrap gap-3 text-sm">
+          <Link to="/organization/members" className="text-primary hover:underline">
+            Members
+          </Link>
+          <Link to="/organization/roles" className="text-primary hover:underline">
+            Roles
+          </Link>
+          <Link to="/projects" className="text-primary hover:underline">
+            Projects / GitHub integrations
+          </Link>
+          <span className="text-text-muted">Billing (placeholder)</span>
+          <span className="text-text-muted">API keys (placeholder)</span>
         </CardBody>
       </Card>
 

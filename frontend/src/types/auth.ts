@@ -51,6 +51,12 @@ export interface RegisterRequest {
   email: string;
   password: string;
   full_name: string;
+  organization_name?: string;
+  company_name?: string;
+  website?: string;
+  industry?: string;
+  country?: string;
+  timezone?: string;
 }
 
 export interface ChangePasswordRequest {

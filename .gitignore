@@ -145,6 +145,8 @@ reports/phase5a/playwright-report/
 *.key
 credentials.json
 secrets/
+.secrets/
+
 
 # Local token scratch files
 githubtoken.txt

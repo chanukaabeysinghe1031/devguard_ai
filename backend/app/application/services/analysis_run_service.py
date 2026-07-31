@@ -257,8 +257,14 @@ class AnalysisRunService:
         description: str | None = None,
         metadata: dict | None = None,
     ) -> None:
+        organization_id = await self._session.scalar(
+            select(Incident.organization_id).where(Incident.id == incident_id)
+        )
+        if organization_id is None:
+            return
         self._session.add(
             IncidentEvent(
+                organization_id=organization_id,
                 incident_id=incident_id,
                 event_type="analysis_queued",
                 actor_type="user" if actor_id is not None else "system",

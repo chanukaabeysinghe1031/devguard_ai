@@ -77,6 +77,8 @@ services:
       - ./backend:/app
       - ./knowledge_base:/knowledge_base:ro
       - model_cache:/root/.cache
+      # GitHub App private key (Phase 5B). Place PEM at .secrets/github-app.pem before enabling.
+      - ./.secrets/github-app.pem:/run/secrets/github-app.pem:ro
     depends_on:
       postgres:
         condition: service_healthy

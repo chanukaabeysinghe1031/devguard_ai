@@ -8,6 +8,7 @@ import {
   FolderKanban,
   History,
   LayoutDashboard,
+  Mail,
   Settings,
   ShieldCheck,
   Users,
@@ -33,10 +34,20 @@ export const PRIMARY_NAV: NavItem[] = [
   { label: "Settings", to: "/settings", icon: Settings, matchPrefix: true },
 ];
 
-export const ADMIN_NAV: NavItem[] = [
-  { label: "Users", to: "/admin/users", icon: Users },
-  { label: "Models", to: "/admin/models", icon: FlaskConical, badge: "Deferred" },
-  { label: "System Health", to: "/admin/system-health", icon: Activity },
-  { label: "Audit Log", to: "/admin/audit", icon: ShieldCheck, badge: "Deferred" },
-  { label: "Evaluation", to: "/admin/evaluation", icon: BarChart3, badge: "Deferred" },
+/** Organization administration — owners/admins only (not platform System). */
+export const ORGANIZATION_NAV: NavItem[] = [
+  { label: "Members", to: "/organization/members", icon: Users },
+  { label: "Invitations", to: "/organization/invitations", icon: Mail },
+  { label: "Roles", to: "/organization/roles", icon: ShieldCheck },
 ];
+
+/** Platform / System — visible only to platform_admin. */
+export const SYSTEM_NAV: NavItem[] = [
+  { label: "System Health", to: "/system/health", icon: Activity },
+  { label: "Models", to: "/system/models", icon: FlaskConical, badge: "Deferred" },
+  { label: "Audit Log", to: "/system/audit", icon: ShieldCheck, badge: "Deferred" },
+  { label: "Evaluation", to: "/system/evaluation", icon: BarChart3, badge: "Deferred" },
+];
+
+/** @deprecated Use ORGANIZATION_NAV / SYSTEM_NAV */
+export const ADMIN_NAV = ORGANIZATION_NAV;

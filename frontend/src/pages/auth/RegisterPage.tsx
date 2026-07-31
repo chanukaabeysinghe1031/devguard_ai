@@ -13,12 +13,11 @@ import { useAuth } from "../../hooks/useAuth";
 
 const schema = z
   .object({
-    fullName: z.string().min(1, "Full name is required").max(150),
+    organizationName: z.string().min(1, "Organization name is required").max(150),
+    companyName: z.string().max(200).optional(),
+    fullName: z.string().min(1, "Your name is required").max(150),
     email: z.string().min(1, "Email is required").email("Enter a valid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .max(128),
+    password: z.string().min(8, "Password must be at least 8 characters").max(128),
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -50,6 +49,8 @@ export function RegisterPage() {
         full_name: values.fullName,
         email: values.email,
         password: values.password,
+        organization_name: values.organizationName,
+        company_name: values.companyName || values.organizationName,
       });
       setSuccess(true);
       await login({ email: values.email, password: values.password });
@@ -58,7 +59,7 @@ export function RegisterPage() {
       if (error instanceof ApiError) {
         setFormError(error.message);
       } else {
-        setFormError("Unable to create your account. Please try again.");
+        setFormError("Unable to create your workspace. Please try again.");
       }
     }
   };
@@ -71,9 +72,9 @@ export function RegisterPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-text-primary">Create your account</h1>
+      <h1 className="text-2xl font-bold text-text-primary">Create your DevGuard AI workspace</h1>
       <p className="mt-1.5 text-sm text-text-secondary">
-        Start diagnosing CI/CD failures with grounded, explainable AI analysis.
+        Set up your organization and owner account. You can invite engineers after you sign in.
       </p>
 
       {formError && (
@@ -83,13 +84,24 @@ export function RegisterPage() {
       )}
       {success && !formError && (
         <Alert variant="success" className="mt-5">
-          Account created. Signing you in…
+          Workspace created. Signing you in…
         </Alert>
       )}
 
       <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         <Input
-          label="Full name"
+          label="Organization name"
+          required
+          error={errors.organizationName?.message}
+          {...register("organizationName")}
+        />
+        <Input
+          label="Company name"
+          error={errors.companyName?.message}
+          {...register("companyName")}
+        />
+        <Input
+          label="Your name"
           autoComplete="name"
           required
           error={errors.fullName?.message}
@@ -97,7 +109,7 @@ export function RegisterPage() {
         />
         <Input
           type="email"
-          label="Email"
+          label="Work email"
           autoComplete="email"
           required
           error={errors.email?.message}
@@ -131,7 +143,7 @@ export function RegisterPage() {
           {...register("confirmPassword")}
         />
         <Button type="submit" size="lg" isLoading={isSubmitting} className="mt-2 w-full">
-          Create account
+          Create workspace
         </Button>
       </form>
 
@@ -139,6 +151,10 @@ export function RegisterPage() {
         Already have an account?{" "}
         <Link to="/login" className="font-medium text-primary hover:underline">
           Sign in
+        </Link>
+        {" · "}
+        <Link to="/invitations/accept" className="font-medium text-primary hover:underline">
+          Join with invite link
         </Link>
       </p>
     </div>

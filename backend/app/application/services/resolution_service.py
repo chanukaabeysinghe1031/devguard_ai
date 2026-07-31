@@ -16,7 +16,6 @@ from app.domain.services.incident_transitions import validate_status_transition
 from app.infrastructure.database.models.incident import Incident
 from app.infrastructure.database.models.incident_event import IncidentEvent
 from app.infrastructure.database.models.incident_resolution import IncidentResolution
-from app.infrastructure.database.models.project import Project
 from app.schemas.resolution import (
     ReopenIncidentRequest,
     ReopenIncidentResponse,
@@ -126,8 +125,7 @@ class ResolutionService:
     async def _load_incident(self, organization_id: UUID, incident_id: UUID) -> Incident:
         stmt = (
             select(Incident)
-            .join(Project, Project.id == Incident.project_id)
-            .where(Incident.id == incident_id, Project.organization_id == organization_id)
+            .where(Incident.id == incident_id, Incident.organization_id == organization_id)
         )
         incident = await self._session.scalar(stmt)
         if incident is None:
@@ -144,8 +142,14 @@ class ResolutionService:
         description: str | None = None,
         metadata: dict | None = None,
     ) -> None:
+        organization_id = await self._session.scalar(
+            select(Incident.organization_id).where(Incident.id == incident_id)
+        )
+        if organization_id is None:
+            return
         self._session.add(
             IncidentEvent(
+                organization_id=organization_id,
                 incident_id=incident_id,
                 event_type=event_type,
                 actor_type="user",

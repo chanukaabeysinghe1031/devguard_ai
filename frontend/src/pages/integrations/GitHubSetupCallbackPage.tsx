@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Github, Lock } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import {
@@ -16,14 +16,42 @@ import { Badge } from "../../components/ui/Badge";
 import { Card, CardBody, CardHeader } from "../../components/ui/Card";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Select } from "../../components/ui/Select";
-import { Skeleton } from "../../components/ui/Skeleton";
+import { Spinner } from "../../components/ui/Spinner";
 import { useAuth } from "../../hooks/useAuth";
-import type { GitHubInstallationResponse, GitHubRepositoryResponse } from "../../types/integration";
+import type { GitHubInstallationResponse, GitHubRepositoryResponse, SetupCompleteResponse } from "../../types/integration";
 
 const ADMIN_ROLES = ["organization_owner", "organization_admin"] as const;
 
 function describeError(error: unknown): string {
   return error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
+}
+
+function SetupConnectingPanel({ elapsedSeconds }: { elapsedSeconds: number }) {
+  return (
+    <Card className="mb-6 overflow-hidden">
+      <CardBody className="relative flex flex-col items-center justify-center gap-4 py-14">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.12),transparent_65%)]"
+        />
+        <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-border-strong bg-surface">
+          <span className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+          <Spinner size="lg" className="relative text-primary" />
+        </div>
+        <div className="relative text-center">
+          <p className="text-base font-semibold text-text-primary">Connecting GitHub App installation</p>
+          <p className="mt-1 max-w-md text-sm text-text-muted">
+            Verifying the installation with GitHub and linking it to your organization. This usually takes a few
+            seconds.
+          </p>
+          <p className="mt-3 font-mono text-xs text-text-muted" aria-live="polite">
+            Elapsed {elapsedSeconds}s
+            {elapsedSeconds >= 8 ? " — still working, please wait…" : ""}
+          </p>
+        </div>
+      </CardBody>
+    </Card>
+  );
 }
 
 export function GitHubSetupCallbackPage() {
@@ -38,6 +66,8 @@ export function GitHubSetupCallbackPage() {
   const hasSetupParams = Boolean(installationIdParam && stateParam);
 
   const [devInstallation, setDevInstallation] = useState<GitHubInstallationResponse | null>(null);
+  const [setupResult, setSetupResult] = useState<SetupCompleteResponse | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const completeSetupMutation = useMutation({
     mutationFn: () =>
@@ -45,25 +75,48 @@ export function GitHubSetupCallbackPage() {
         installation_id: Number(installationIdParam),
         state: stateParam ?? "",
       }),
+    onSuccess: (data) => {
+      setSetupResult(data);
+    },
   });
 
-  const setupTriggered = useRef(false);
+  // Always (re)run setup when callback params are present. Avoid ref+isIdle traps that leave a blank skeleton.
   useEffect(() => {
-    if (canManage && hasSetupParams && !setupTriggered.current) {
-      setupTriggered.current = true;
-      completeSetupMutation.mutate();
+    if (!canManage || !hasSetupParams) {
+      return;
     }
+    if (completeSetupMutation.isPending || setupResult) {
+      return;
+    }
+    if (completeSetupMutation.isError) {
+      return;
+    }
+    completeSetupMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canManage, hasSetupParams]);
+  }, [canManage, hasSetupParams, installationIdParam, stateParam]);
+
+  useEffect(() => {
+    if (!hasSetupParams || setupResult || completeSetupMutation.isError) {
+      setElapsedSeconds(0);
+      return;
+    }
+    setElapsedSeconds(0);
+    const timer = window.setInterval(() => {
+      setElapsedSeconds((value) => value + 1);
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [hasSetupParams, setupResult, completeSetupMutation.isError, completeSetupMutation.isPending]);
 
   const installationsQuery = useQuery({
     queryKey: queryKeys.githubInstallations(),
     queryFn: listGithubInstallations,
-    enabled: canManage && !hasSetupParams,
+    enabled: canManage && (!hasSetupParams || completeSetupMutation.isError),
   });
 
-  const resolvedInstallation = hasSetupParams ? completeSetupMutation.data?.installation ?? null : devInstallation;
-  const resolvedProjectId = hasSetupParams ? completeSetupMutation.data?.project_id ?? null : projectIdParam;
+  const resolvedInstallation = hasSetupParams
+    ? setupResult?.installation ?? null
+    : devInstallation;
+  const resolvedProjectId = hasSetupParams ? setupResult?.project_id ?? null : projectIdParam;
 
   const repositoriesQuery = useQuery({
     queryKey: queryKeys.githubInstallationRepositories(resolvedInstallation?.id ?? ""),
@@ -94,6 +147,9 @@ export function GitHubSetupCallbackPage() {
     [repositoriesQuery.data],
   );
 
+  const isSetupLoading =
+    hasSetupParams && !setupResult && !completeSetupMutation.isError && canManage;
+
   if (!canManage) {
     return (
       <div>
@@ -116,27 +172,79 @@ export function GitHubSetupCallbackPage() {
         description="Finish connecting your GitHub App installation to a DevGuard AI project."
       />
 
-      {hasSetupParams ? (
-        completeSetupMutation.isPending || completeSetupMutation.isIdle ? (
-          <Skeleton className="h-40 w-full" />
-        ) : completeSetupMutation.isError ? (
+      {isSetupLoading ? (
+        <SetupConnectingPanel elapsedSeconds={elapsedSeconds} />
+      ) : hasSetupParams && completeSetupMutation.isError ? (
+        <div className="mb-6 flex flex-col gap-4">
           <ErrorRetryAlert
             message={describeError(completeSetupMutation.error)}
-            onRetry={() => completeSetupMutation.mutate()}
+            onRetry={() => {
+              setSetupResult(null);
+              completeSetupMutation.reset();
+              completeSetupMutation.mutate();
+            }}
           />
-        ) : null
-      ) : (
+          <Card>
+            <CardHeader
+              title="Continue with an existing installation"
+              subtitle="If setup already succeeded once, pick the installation below and open your project integrations page."
+            />
+            <CardBody className="flex flex-col gap-4">
+              {installationsQuery.isLoading ? (
+                <div className="flex items-center gap-3 text-sm text-text-muted">
+                  <Spinner size="sm" /> Loading installations…
+                </div>
+              ) : installationsQuery.isError ? (
+                <ErrorRetryAlert
+                  message="Failed to load installations."
+                  onRetry={() => installationsQuery.refetch()}
+                />
+              ) : (installationsQuery.data?.items.length ?? 0) === 0 ? (
+                <Alert variant="warning">
+                  No installations are registered yet. Retry setup, or install the App again from a project&apos;s
+                  Integrations page.
+                </Alert>
+              ) : (
+                <>
+                  <Select
+                    label="GitHub App installation"
+                    placeholder="Select an installation"
+                    value={devInstallation?.id ?? ""}
+                    onChange={(event) => {
+                      const found = installationsQuery.data?.items.find((item) => item.id === event.target.value);
+                      setDevInstallation(found ?? null);
+                    }}
+                    options={(installationsQuery.data?.items ?? []).map((item) => ({
+                      value: item.id,
+                      label: `${item.github_account_login} (#${item.github_installation_id})`,
+                    }))}
+                  />
+                  <Alert variant="info">
+                    Then open{" "}
+                    <Link to="/projects" className="underline">
+                      Projects
+                    </Link>
+                    , choose a project → Integrations → GitHub Actions, and use{" "}
+                    <strong>Complete setup using an existing installation</strong>.
+                  </Alert>
+                </>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+      ) : !hasSetupParams ? (
         <Card className="mb-6">
-          <CardHeader title="Development mode" subtitle="No GitHub redirect parameters were found." />
+          <CardHeader title="Manual setup" subtitle="No GitHub redirect parameters were found." />
           <CardBody className="flex flex-col gap-4">
             {!projectIdParam && (
               <Alert variant="warning" title="Missing project context">
-                Add a <code>project_id</code> query parameter, or start this flow from a project&apos;s integrations
-                page.
+                Start from a project&apos;s Integrations page, or add a <code>project_id</code> query parameter.
               </Alert>
             )}
             {installationsQuery.isLoading ? (
-              <Skeleton className="h-11 w-full" />
+              <div className="flex items-center gap-3 text-sm text-text-muted">
+                <Spinner size="sm" /> Loading installations…
+              </div>
             ) : installationsQuery.isError ? (
               <ErrorRetryAlert message="Failed to load installations." onRetry={() => installationsQuery.refetch()} />
             ) : (
@@ -157,7 +265,12 @@ export function GitHubSetupCallbackPage() {
             )}
           </CardBody>
         </Card>
-      )}
+      ) : setupResult ? (
+        <Alert variant="success" title="Installation linked" className="mb-6">
+          GitHub account <strong>{setupResult.installation.github_account_login}</strong> is connected to your
+          organization. Choose a repository below to map it to your project.
+        </Alert>
+      ) : null}
 
       {resolvedInstallation && (
         <Card>
@@ -167,9 +280,19 @@ export function GitHubSetupCallbackPage() {
           />
           <CardBody>
             {!resolvedProjectId ? (
-              <Alert variant="danger">Missing project context; return to the project integrations page.</Alert>
+              <Alert variant="danger" title="Missing project context">
+                The install link did not include a project. Go to{" "}
+                <Link to="/projects" className="underline">
+                  Projects
+                </Link>{" "}
+                → your project → Integrations → GitHub Actions →{" "}
+                <strong>Complete setup using an existing installation</strong>.
+              </Alert>
             ) : repositoriesQuery.isLoading ? (
-              <Skeleton className="h-48 w-full" />
+              <div className="flex flex-col items-center gap-3 py-10">
+                <Spinner size="lg" className="text-primary" />
+                <p className="text-sm text-text-muted">Loading repositories from GitHub…</p>
+              </div>
             ) : repositoriesQuery.isError ? (
               <ErrorRetryAlert message="Failed to load repositories." onRetry={() => repositoriesQuery.refetch()} />
             ) : availableRepositories.length === 0 ? (
@@ -198,7 +321,13 @@ export function GitHubSetupCallbackPage() {
                       disabled={connectMutation.isPending}
                       className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Connect
+                      {connectMutation.isPending ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Spinner size="sm" /> Connecting…
+                        </span>
+                      ) : (
+                        "Connect"
+                      )}
                     </button>
                   </li>
                 ))}

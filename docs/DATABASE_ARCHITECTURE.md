@@ -163,8 +163,15 @@ Represents a company, team or workspace using DevGuard AI.
 | Column | Type | Constraints | Description |
 |---|---|---|---|
 | id | UUID | PK | Organization identifier |
-| name | VARCHAR(150) | NOT NULL | Organization name |
+| name | VARCHAR(150) | NOT NULL | Organization / workspace name |
 | slug | VARCHAR(120) | UNIQUE, NOT NULL | URL-safe identifier |
+| company_name | VARCHAR(200) | NULL | Legal / trading company name (Phase 5C) |
+| description | TEXT | NULL | Short description (Phase 5C) |
+| website | VARCHAR(500) | NULL | Public website (Phase 5C) |
+| industry | VARCHAR(120) | NULL | Industry label (Phase 5C) |
+| country | VARCHAR(120) | NULL | Country (Phase 5C) |
+| timezone | VARCHAR(80) | NOT NULL, DEFAULT `UTC` | IANA timezone (Phase 5C) |
+| logo_url | TEXT | NULL | Logo URL/path (Phase 5C) |
 | plan | VARCHAR(50) | NOT NULL, DEFAULT `mvp` | Subscription or deployment plan |
 | status | VARCHAR(30) | NOT NULL, DEFAULT `active` | active, suspended, archived |
 | created_at | TIMESTAMPTZ | NOT NULL | Creation timestamp |
@@ -173,7 +180,7 @@ Represents a company, team or workspace using DevGuard AI.
 
 ### Notes
 
-For the MSc MVP, the system may create one default organization automatically.
+For the MSc MVP, registration creates a personal organization automatically. Phase 5C onboarding UX presents this as workspace creation.
 
 ---
 
@@ -218,6 +225,7 @@ Links users to organizations.
 | role | VARCHAR(40) | NOT NULL | Frozen org roles (see below) |
 | joined_at | TIMESTAMPTZ | NOT NULL | Membership creation time |
 | is_active | BOOLEAN | NOT NULL, DEFAULT true | Membership status |
+| invited_by | UUID | FK users, NULL | User who invited this member (Phase 5C) |
 
 ### Frozen organization roles (v1.0)
 
@@ -229,13 +237,35 @@ Links users to organizations.
 | `viewer` | Read-only access |
 
 **Not used:** `analyst` (no analyst role in v1.0).  
-**Not an org role:** `platform_admin` (platform-level on `users`, see §5.2).
+**Not an org role:** `platform_admin` (platform-level on `users`, see §5.2).  
+**MVP UX note (ADR-013):** `organization_admin` covers Organization Administrator + Project Manager responsibilities; no separate `project_manager` role.
 
 ### Constraints
 
 ```text
 UNIQUE (organization_id, user_id)
 ```
+
+---
+
+## 5.3A organization_invitations (Phase 5C)
+
+Secure, link-based invitations (SMTP deferred).
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| id | UUID | PK | Invitation identifier |
+| organization_id | UUID | FK, NOT NULL | Target organization |
+| email | VARCHAR(255) | NOT NULL | Invitee email |
+| role | organization_role | NOT NULL | Role granted on accept |
+| token_hash | VARCHAR(64) | UNIQUE, NOT NULL | Hash of invite token (never store raw) |
+| status | invitation_status | NOT NULL | pending, accepted, revoked, expired |
+| invited_by | UUID | FK users, NULL | Inviting user |
+| expires_at | TIMESTAMPTZ | NOT NULL | Expiry |
+| accepted_at | TIMESTAMPTZ | NULL | Acceptance time |
+| revoked_at | TIMESTAMPTZ | NULL | Revocation time |
+| accepted_user_id | UUID | FK users, NULL | User created/linked on accept |
+| created_at / updated_at | TIMESTAMPTZ | NOT NULL | Audit timestamps |
 
 ---
 

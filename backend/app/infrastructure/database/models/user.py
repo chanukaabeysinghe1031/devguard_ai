@@ -54,6 +54,7 @@ class User(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin):
     organization_memberships: Mapped[list[OrganizationMember]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
+        foreign_keys="OrganizationMember.user_id",
     )
     refresh_tokens: Mapped[list[RefreshToken]] = relationship(
         back_populates="user",

@@ -298,6 +298,17 @@ class Settings(BaseSettings):
     )
     integration_encryption_key: str = Field(default="", alias="INTEGRATION_ENCRYPTION_KEY")
 
+    # Phase 5C — organization invitations (link-based; SMTP deferred).
+    invitation_ttl_hours: int = Field(default=168, alias="INVITATION_TTL_HOURS")
+    invitation_accept_base_url: str = Field(
+        default="http://localhost:5173/invitations/accept",
+        alias="INVITATION_ACCEPT_BASE_URL",
+    )
+    frontend_public_url: str = Field(
+        default="http://localhost:5173",
+        alias="FRONTEND_PUBLIC_URL",
+    )
+
     @field_validator(
         "default_budget_usd",
         "max_budget_usd_per_analysis",

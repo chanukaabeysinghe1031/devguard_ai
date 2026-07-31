@@ -42,6 +42,14 @@ class OrganizationMember(Base, UUIDPrimaryKeyMixin):
         default=lambda: datetime.now(UTC),
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    invited_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     organization: Mapped[Organization] = relationship(back_populates="members")
-    user: Mapped[User] = relationship(back_populates="organization_memberships")
+    user: Mapped[User] = relationship(
+        back_populates="organization_memberships",
+        foreign_keys=[user_id],
+    )
+    inviter: Mapped[User | None] = relationship(foreign_keys=[invited_by])

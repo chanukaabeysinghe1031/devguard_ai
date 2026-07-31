@@ -37,21 +37,17 @@ Also read `docs/ARCHITECTURE_DECISION_LOG.md` for approved ADRs.
 
 ## Current project phase
 
-**Module 9 — Hybrid Retrieval Optimisation** (complete).
+**Phase 5C — Multi-Tenant Organization Architecture** (in progress: 5C.0 / 5C.1).
 
 | Status | Detail |
 |--------|--------|
-| Module 1 foundation | Complete |
-| Module 2 schema | Complete (migrations `001`–`008`) |
-| Module 3 auth | Complete (JWT + RBAC) |
-| Module 4 business APIs | Complete |
-| Module 5 file uploads | Complete |
-| Module 6 AI pipeline | Complete (deterministic rules/hybrid) |
-| Module 7 RAG + LLM | Complete (grounded retrieval + structured reasoning; deterministic fallback) |
-| Module 8 confidence/cost orchestration | Complete (execution routing + uncertainty/cost metadata) |
-| Module 9 hybrid retrieval | Complete (embedding baseline + hybrid static + org-safe history) |
-| Frozen roles | `platform_admin`, `organization_owner`, `organization_admin`, `engineer`, `viewer` |
+| Module 1–9 | Complete (do not regress) |
+| Phase 5A / 5B | Complete (incident UI + GitHub ingestion) |
+| Phase 5C | In progress — org UX, invitations (link-only), denormalized `organization_id`, platform-admin isolation |
+| Frozen roles | `platform_admin`, `organization_owner`, `organization_admin`, `engineer`, `viewer` — **no `project_manager`**; UX may label `organization_admin` as Project Manager + Org Admin |
 | Org authorization | From `organization_members` only — never invent `analyst` |
+| Invitations | Secure links in 5C; SMTP deferred |
+| Registration | Keep auto personal org + owner; UX presents workspace/org creation |
 
 ## Module 9 delivered (do not regress)
 

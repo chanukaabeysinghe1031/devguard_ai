@@ -80,9 +80,13 @@ export function LoginPage() {
       </form>
 
       <p className="mt-6 text-center text-sm text-text-muted">
-        Don&apos;t have an account?{" "}
+        Don&apos;t have a workspace?{" "}
         <Link to="/register" className="font-medium text-primary hover:underline">
           Create one
+        </Link>
+        {" · "}
+        <Link to="/invitations/accept" className="font-medium text-primary hover:underline">
+          Join with invite
         </Link>
       </p>
     </div>

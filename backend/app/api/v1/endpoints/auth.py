@@ -47,6 +47,12 @@ async def register(
         email=body.email,
         password=body.password,
         full_name=body.full_name,
+        organization_name=body.organization_name,
+        company_name=body.company_name,
+        website=body.website,
+        industry=body.industry,
+        country=body.country,
+        timezone=body.timezone,
     )
 
 
