@@ -24,6 +24,12 @@ from app.infrastructure.database.models.hierarchical_classification import (
     OpenSetAssessmentRow,
     TaxonomyMappingRow,
 )
+from app.infrastructure.database.models.causal_hypotheses import (
+    CausalHypothesisRow,
+    CausalHypothesisRunRow,
+    HypothesisCriticResultRow,
+    HypothesisEvidenceLinkRow,
+)
 from app.infrastructure.database.models.incident import Incident
 from app.infrastructure.database.models.incident_assignment import IncidentAssignment
 from app.infrastructure.database.models.incident_event import IncidentEvent
@@ -81,6 +87,10 @@ __all__ = [
     "HierarchicalClassificationResultRow",
     "OpenSetAssessmentRow",
     "TaxonomyMappingRow",
+    "CausalHypothesisRow",
+    "CausalHypothesisRunRow",
+    "HypothesisCriticResultRow",
+    "HypothesisEvidenceLinkRow",
     "Incident",
     "IncidentAssignment",
     "IncidentEvent",
