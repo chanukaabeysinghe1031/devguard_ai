@@ -409,6 +409,97 @@ class Settings(BaseSettings):
         alias="MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS",
     )
 
+    # Phase 6A.5 Part 2 — adaptive hypothesis retrieval intelligence (all OFF by default).
+    adaptive_hypothesis_retrieval_enabled: bool = Field(
+        default=False,
+        alias="ADAPTIVE_HYPOTHESIS_RETRIEVAL_ENABLED",
+    )
+    hypothesis_query_expansion_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_QUERY_EXPANSION_ENABLED",
+    )
+    hypothesis_source_routing_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_SOURCE_ROUTING_ENABLED",
+    )
+    retrieval_result_validation_enabled: bool = Field(
+        default=False,
+        alias="RETRIEVAL_RESULT_VALIDATION_ENABLED",
+    )
+    retrieval_follow_up_enabled: bool = Field(
+        default=False,
+        alias="RETRIEVAL_FOLLOW_UP_ENABLED",
+    )
+    hypothesis_exact_identifier_boost_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_EXACT_IDENTIFIER_BOOST_ENABLED",
+    )
+    hypothesis_metadata_filtering_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_METADATA_FILTERING_ENABLED",
+    )
+    max_query_expansions_per_hypothesis: int = Field(
+        default=4,
+        alias="MAX_QUERY_EXPANSIONS_PER_HYPOTHESIS",
+    )
+    max_follow_up_rounds: int = Field(default=1, alias="MAX_FOLLOW_UP_ROUNDS")
+    max_total_queries_per_hypothesis: int = Field(
+        default=10,
+        alias="MAX_TOTAL_QUERIES_PER_HYPOTHESIS",
+    )
+    max_source_types_per_query: int = Field(
+        default=5,
+        alias="MAX_SOURCE_TYPES_PER_QUERY",
+    )
+    min_results_before_follow_up: int = Field(
+        default=2,
+        alias="MIN_RESULTS_BEFORE_FOLLOW_UP",
+    )
+    min_retrieval_score_for_acceptance: float = Field(
+        default=0.35,
+        alias="MIN_RETRIEVAL_SCORE_FOR_ACCEPTANCE",
+    )
+    max_exact_identifiers_per_query: int = Field(
+        default=8,
+        alias="MAX_EXACT_IDENTIFIERS_PER_QUERY",
+    )
+    max_retrieval_validation_items: int = Field(
+        default=50,
+        alias="MAX_RETRIEVAL_VALIDATION_ITEMS",
+    )
+    max_graph_retrieval_depth: int = Field(
+        default=4,
+        alias="MAX_GRAPH_RETRIEVAL_DEPTH",
+    )
+    max_graph_retrieval_nodes: int = Field(
+        default=80,
+        alias="MAX_GRAPH_RETRIEVAL_NODES",
+    )
+    max_graph_retrieval_edges: int = Field(
+        default=150,
+        alias="MAX_GRAPH_RETRIEVAL_EDGES",
+    )
+    max_artifact_results_per_query: int = Field(
+        default=15,
+        alias="MAX_ARTIFACT_RESULTS_PER_QUERY",
+    )
+    max_temporal_results_per_query: int = Field(
+        default=15,
+        alias="MAX_TEMPORAL_RESULTS_PER_QUERY",
+    )
+    max_historical_results_per_query: int = Field(
+        default=10,
+        alias="MAX_HISTORICAL_RESULTS_PER_QUERY",
+    )
+    max_official_document_results_per_query: int = Field(
+        default=10,
+        alias="MAX_OFFICIAL_DOCUMENT_RESULTS_PER_QUERY",
+    )
+    max_retrieval_total_duration_seconds: float = Field(
+        default=60.0,
+        alias="MAX_RETRIEVAL_TOTAL_DURATION_SECONDS",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
@@ -572,6 +663,20 @@ class Settings(BaseSettings):
         "max_artifact_evidence_items_for_retrieval",
         "max_historical_incidents_per_hypothesis",
         "max_concurrent_hypothesis_retrieval_sessions",
+        "max_query_expansions_per_hypothesis",
+        "max_follow_up_rounds",
+        "max_total_queries_per_hypothesis",
+        "max_source_types_per_query",
+        "min_results_before_follow_up",
+        "max_exact_identifiers_per_query",
+        "max_retrieval_validation_items",
+        "max_graph_retrieval_depth",
+        "max_graph_retrieval_nodes",
+        "max_graph_retrieval_edges",
+        "max_artifact_results_per_query",
+        "max_temporal_results_per_query",
+        "max_historical_results_per_query",
+        "max_official_document_results_per_query",
         mode="after",
     )
     @classmethod
@@ -590,6 +695,23 @@ class Settings(BaseSettings):
         if float(value) > 600:
             raise ValueError("HYPOTHESIS_RETRIEVAL_TIMEOUT_SECONDS exceeds safe maximum")
         return float(value)
+
+    @field_validator("max_retrieval_total_duration_seconds", mode="after")
+    @classmethod
+    def positive_retrieval_total_duration(cls, value: float) -> float:
+        if float(value) <= 0:
+            raise ValueError("MAX_RETRIEVAL_TOTAL_DURATION_SECONDS must be greater than zero")
+        if float(value) > 600:
+            raise ValueError("MAX_RETRIEVAL_TOTAL_DURATION_SECONDS exceeds safe maximum")
+        return float(value)
+
+    @field_validator("min_retrieval_score_for_acceptance", mode="after")
+    @classmethod
+    def retrieval_acceptance_score_bounds(cls, value: float) -> float:
+        score = float(value)
+        if score < 0.0 or score > 1.0:
+            raise ValueError("MIN_RETRIEVAL_SCORE_FOR_ACCEPTANCE must be in [0, 1]")
+        return score
 
     @field_validator("embedding_model", mode="after")
     @classmethod
@@ -666,6 +788,12 @@ class Settings(BaseSettings):
             problems.append(
                 "MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS cannot exceed "
                 "MAX_HYPOTHESES_FOR_RETRIEVAL"
+            )
+        if self.max_follow_up_rounds > 2:
+            problems.append("MAX_FOLLOW_UP_ROUNDS cannot exceed 2")
+        if self.max_total_queries_per_hypothesis < self.max_queries_per_hypothesis:
+            problems.append(
+                "MAX_TOTAL_QUERIES_PER_HYPOTHESIS must be >= MAX_QUERIES_PER_HYPOTHESIS"
             )
         problems.extend(self._github_problems())
         if self.is_production:

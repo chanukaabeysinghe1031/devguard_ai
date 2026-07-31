@@ -7,18 +7,23 @@ from datetime import UTC, datetime
 from typing import Any
 
 from app.domain.hypothesis_retrieval.enums import (
+    EstimatedCostClass,
     HypothesisRetrievalRunStatus,
     HypothesisRetrievalSessionStatus,
     HypothesisRetrievalSourceType,
+    QueryIntentType,
     RetrievalExecutionMode,
     RetrievalFailureType,
     RetrievalItemRelation,
     RetrievalQueryType,
+    RetrievalValidationStatus,
 )
 
 CONTEXT_VERSION = "retrieval_context_v1"
 PLAN_VERSION = "retrieval_plan_v1"
+PLAN_VERSION_V2 = "retrieval_plan_v2"
 RETRIEVAL_PIPELINE_VERSION = "hypothesis_directed_v1"
+RETRIEVAL_PIPELINE_VERSION_V2 = "hypothesis_directed_v2"
 TRUNCATION_RULE_VERSION = "truncation_v1"
 
 
@@ -435,4 +440,298 @@ class HypothesisRetrievalRun:
             "error_summary": self.error_summary,
             "warnings": list(self.warnings),
             "sessions": [s.to_dict() for s in self.sessions],
+        }
+
+
+@dataclass(slots=True)
+class HypothesisQueryIntent:
+    intent_id: str
+    hypothesis_id: str
+    intent_type: QueryIntentType
+    objective: str
+    session_id: str | None = None
+    evidence_gap: str | None = None
+    expected_observation: str | None = None
+    falsifying_observation: str | None = None
+    target_entity_ids: list[str] = field(default_factory=list)
+    target_artifact_ids: list[str] = field(default_factory=list)
+    target_source_paths: list[str] = field(default_factory=list)
+    target_identifiers: list[str] = field(default_factory=list)
+    preferred_source_types: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    excluded_source_types: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    required_source_types: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    priority: int = 100
+    estimated_cost_class: EstimatedCostClass = EstimatedCostClass.LOW
+    required: bool = False
+    reason: str = ""
+    generating_rule_id: str | None = None
+    generating_rule_version: str | None = None
+    created_at: datetime = field(default_factory=_utc_now)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "intent_id": self.intent_id,
+            "hypothesis_id": self.hypothesis_id,
+            "session_id": self.session_id,
+            "intent_type": self.intent_type.value,
+            "objective": self.objective,
+            "evidence_gap": self.evidence_gap,
+            "expected_observation": self.expected_observation,
+            "falsifying_observation": self.falsifying_observation,
+            "target_entity_ids": list(self.target_entity_ids),
+            "target_artifact_ids": list(self.target_artifact_ids),
+            "target_source_paths": list(self.target_source_paths),
+            "target_identifiers": list(self.target_identifiers),
+            "preferred_source_types": [s.value for s in self.preferred_source_types],
+            "excluded_source_types": [s.value for s in self.excluded_source_types],
+            "required_source_types": [s.value for s in self.required_source_types],
+            "priority": self.priority,
+            "estimated_cost_class": self.estimated_cost_class.value,
+            "required": self.required,
+            "reason": self.reason,
+            "generating_rule_id": self.generating_rule_id,
+            "generating_rule_version": self.generating_rule_version,
+            "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass(slots=True)
+class GraphRetrievalConstraints:
+    start_node_ids: list[str] = field(default_factory=list)
+    target_node_types: list[str] = field(default_factory=list)
+    allowed_edge_types: list[str] = field(default_factory=list)
+    excluded_edge_types: list[str] = field(default_factory=list)
+    traversal_direction: str = "out"
+    max_depth: int = 4
+    max_nodes: int = 80
+    max_edges: int = 150
+    minimum_edge_confidence: float | None = None
+    allowed_derivation_types: list[str] = field(default_factory=list)
+    include_consistency_warnings: bool = True
+    include_orphans: bool = False
+    include_changed_files: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class ArtifactRetrievalConstraints:
+    artifact_ids: list[str] = field(default_factory=list)
+    artifact_types: list[str] = field(default_factory=list)
+    source_paths: list[str] = field(default_factory=list)
+    line_ranges: list[dict[str, int]] = field(default_factory=list)
+    parser_entity_types: list[str] = field(default_factory=list)
+    failing_commit: str | None = None
+    previous_success_commit: str | None = None
+    changed_only: bool = False
+    directly_linked_only: bool = False
+    workflow_path: str | None = None
+    terraform_module: str | None = None
+    terraform_resource: str | None = None
+    iam_policy_reference: str | None = None
+    dependency_file: str | None = None
+    maximum_results: int = 15
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class TemporalRetrievalConstraints:
+    primary_event_id: str | None = None
+    same_step_only: bool = False
+    same_job_only: bool = False
+    include_upstream: bool = True
+    include_downstream_symptoms: bool = True
+    include_retries: bool = True
+    include_parallel_context: bool = False
+    timestamp_window: dict[str, Any] = field(default_factory=dict)
+    maximum_events: int = 15
+    event_types: list[str] = field(default_factory=list)
+    minimum_confidence: float | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class HypothesisSourceRoutingDecision:
+    query_id: str
+    selected_sources: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    required_sources: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    optional_sources: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    excluded_sources: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    unavailable_sources: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    source_priorities: dict[str, int] = field(default_factory=dict)
+    reasons: list[str] = field(default_factory=list)
+    routing_version: str = "hypothesis_source_router_v1"
+    was_downgraded: bool = False
+    downgrade_reason: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "query_id": self.query_id,
+            "selected_sources": [s.value for s in self.selected_sources],
+            "required_sources": [s.value for s in self.required_sources],
+            "optional_sources": [s.value for s in self.optional_sources],
+            "excluded_sources": [s.value for s in self.excluded_sources],
+            "unavailable_sources": [s.value for s in self.unavailable_sources],
+            "source_priorities": dict(self.source_priorities),
+            "reasons": list(self.reasons),
+            "routing_version": self.routing_version,
+            "was_downgraded": self.was_downgraded,
+            "downgrade_reason": self.downgrade_reason,
+        }
+
+
+@dataclass(slots=True)
+class AdaptiveHypothesisRetrievalPlan:
+    hypothesis_id: str
+    session_id: str | None = None
+    base_plan_version: str = PLAN_VERSION
+    adaptive_plan_version: str = PLAN_VERSION_V2
+    intents: list[HypothesisQueryIntent] = field(default_factory=list)
+    query_specs: list[HypothesisRetrievalQuerySpec] = field(default_factory=list)
+    enabled_source_types: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    required_source_types: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    optional_source_types: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    excluded_source_types: list[HypothesisRetrievalSourceType] = field(default_factory=list)
+    graph_constraints: GraphRetrievalConstraints | None = None
+    artifact_constraints: ArtifactRetrievalConstraints | None = None
+    temporal_constraints: TemporalRetrievalConstraints | None = None
+    repository_constraints: dict[str, Any] = field(default_factory=dict)
+    metadata_constraints: dict[str, Any] = field(default_factory=dict)
+    total_query_limit: int = 10
+    follow_up_limit: int = 1
+    timeout_seconds: float = 45.0
+    estimated_cost: EstimatedCostClass = EstimatedCostClass.MEDIUM
+    planning_warnings: list[str] = field(default_factory=list)
+    planning_decisions: list[str] = field(default_factory=list)
+    was_downgraded: bool = False
+    downgrade_reason: str | None = None
+    created_at: datetime = field(default_factory=_utc_now)
+    basic_plan_snapshot: dict[str, Any] = field(default_factory=dict)
+    planner_version: str = "adaptive_retrieval_planner_v1"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "hypothesis_id": self.hypothesis_id,
+            "session_id": self.session_id,
+            "base_plan_version": self.base_plan_version,
+            "adaptive_plan_version": self.adaptive_plan_version,
+            "planner_version": self.planner_version,
+            "intents": [i.to_dict() for i in self.intents],
+            "query_specs": [q.to_dict() for q in self.query_specs],
+            "enabled_source_types": [s.value for s in self.enabled_source_types],
+            "required_source_types": [s.value for s in self.required_source_types],
+            "optional_source_types": [s.value for s in self.optional_source_types],
+            "excluded_source_types": [s.value for s in self.excluded_source_types],
+            "graph_constraints": (
+                self.graph_constraints.to_dict() if self.graph_constraints else {}
+            ),
+            "artifact_constraints": (
+                self.artifact_constraints.to_dict() if self.artifact_constraints else {}
+            ),
+            "temporal_constraints": (
+                self.temporal_constraints.to_dict() if self.temporal_constraints else {}
+            ),
+            "repository_constraints": dict(self.repository_constraints),
+            "metadata_constraints": dict(self.metadata_constraints),
+            "total_query_limit": self.total_query_limit,
+            "follow_up_limit": self.follow_up_limit,
+            "timeout_seconds": self.timeout_seconds,
+            "estimated_cost": self.estimated_cost.value,
+            "planning_warnings": list(self.planning_warnings),
+            "planning_decisions": list(self.planning_decisions),
+            "was_downgraded": self.was_downgraded,
+            "downgrade_reason": self.downgrade_reason,
+            "created_at": self.created_at.isoformat(),
+            "basic_plan_snapshot": dict(self.basic_plan_snapshot),
+        }
+
+
+@dataclass(slots=True)
+class RetrievalValidationResult:
+    item_key: str
+    status: RetrievalValidationStatus
+    warnings: list[str] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
+    validator_version: str = "retrieval_result_validator_v1"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "item_key": self.item_key,
+            "status": self.status.value,
+            "warnings": list(self.warnings),
+            "reasons": list(self.reasons),
+            "validator_version": self.validator_version,
+        }
+
+
+@dataclass(slots=True)
+class RetrievalCandidateFeatureVector:
+    vector_similarity: float | None = None
+    lexical_similarity: float | None = None
+    exact_error_match: float | None = None
+    exact_identifier_overlap: float | None = None
+    category_match: float | None = None
+    technology_match: float | None = None
+    vendor_match: float | None = None
+    artifact_type_match: float | None = None
+    source_path_match: float | None = None
+    graph_distance: float | None = None
+    graph_derivation_quality: float | None = None
+    temporal_proximity: float | None = None
+    same_repository: float | None = None
+    same_workflow: float | None = None
+    same_job: float | None = None
+    same_step: float | None = None
+    same_terraform_resource: float | None = None
+    same_aws_service: float | None = None
+    same_aws_action: float | None = None
+    previous_success_relevance: float | None = None
+    historical_incident_quality: float | None = None
+    official_source_authority: float | None = None
+    provenance_completeness: float | None = None
+    metadata_completeness: float | None = None
+    source_freshness: float | None = None
+    validation_warning_penalty: float | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def active_components(self) -> dict[str, float]:
+        return {
+            key: float(value)
+            for key, value in self.to_dict().items()
+            if value is not None
+        }
+
+
+@dataclass(slots=True)
+class HypothesisRetrievalRelevanceAssessment:
+    item_id: str
+    raw_score: float
+    normalized_score: float
+    component_values: dict[str, float] = field(default_factory=dict)
+    active_weights: dict[str, float] = field(default_factory=dict)
+    contribution_by_component: dict[str, float] = field(default_factory=dict)
+    scorer_version: str = "hypothesis_retrieval_relevance_v1"
+    warnings: list[str] = field(default_factory=list)
+    limitations: list[str] = field(default_factory=list)
+    retrieval_relevance_score: float = 0.0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "item_id": self.item_id,
+            "raw_score": self.raw_score,
+            "normalized_score": self.normalized_score,
+            "retrieval_relevance_score": self.retrieval_relevance_score,
+            "component_values": dict(self.component_values),
+            "active_weights": dict(self.active_weights),
+            "contribution_by_component": dict(self.contribution_by_component),
+            "scorer_version": self.scorer_version,
+            "warnings": list(self.warnings),
+            "limitations": list(self.limitations),
         }

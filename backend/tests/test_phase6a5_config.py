@@ -26,6 +26,32 @@ def test_phase6a5_experimental_flags_default_off() -> None:
     assert Settings.model_fields["multi_query_retrieval_enabled"].default is False
     assert Settings.model_fields["hypothesis_graph_context_enabled"].default is False
     assert Settings.model_fields["causal_ranking_enabled"].default is False
+    assert Settings.model_fields["adaptive_hypothesis_retrieval_enabled"].default is False
+    assert Settings.model_fields["hypothesis_query_expansion_enabled"].default is False
+    assert Settings.model_fields["hypothesis_source_routing_enabled"].default is False
+    assert Settings.model_fields["retrieval_result_validation_enabled"].default is False
+    assert Settings.model_fields["retrieval_follow_up_enabled"].default is False
+    assert Settings.model_fields["hypothesis_exact_identifier_boost_enabled"].default is False
+    assert Settings.model_fields["hypothesis_metadata_filtering_enabled"].default is False
+
+
+def test_phase6a5_part2_bounds_defaults() -> None:
+    assert Settings.model_fields["max_query_expansions_per_hypothesis"].default == 4
+    assert Settings.model_fields["max_follow_up_rounds"].default == 1
+    assert Settings.model_fields["max_total_queries_per_hypothesis"].default == 10
+    assert Settings.model_fields["max_source_types_per_query"].default == 5
+    assert Settings.model_fields["min_results_before_follow_up"].default == 2
+    assert Settings.model_fields["min_retrieval_score_for_acceptance"].default == 0.35
+    assert Settings.model_fields["max_exact_identifiers_per_query"].default == 8
+    assert Settings.model_fields["max_retrieval_validation_items"].default == 50
+    assert Settings.model_fields["max_graph_retrieval_depth"].default == 4
+    assert Settings.model_fields["max_graph_retrieval_nodes"].default == 80
+    assert Settings.model_fields["max_graph_retrieval_edges"].default == 150
+    assert Settings.model_fields["max_artifact_results_per_query"].default == 15
+    assert Settings.model_fields["max_temporal_results_per_query"].default == 15
+    assert Settings.model_fields["max_historical_results_per_query"].default == 10
+    assert Settings.model_fields["max_official_document_results_per_query"].default == 10
+    assert Settings.model_fields["max_retrieval_total_duration_seconds"].default == 60.0
 
 
 def test_phase6a5_supporting_toggles_default_on() -> None:
@@ -89,3 +115,32 @@ def test_concurrent_sessions_within_max_hypotheses_ok() -> None:
     )
     problems = settings.validate_for_runtime()
     assert not any("MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS" in p for p in problems)
+
+
+def test_follow_up_rounds_cannot_exceed_two() -> None:
+    settings = _base_settings(MAX_FOLLOW_UP_ROUNDS=3)
+    problems = settings.validate_for_runtime()
+    assert any("MAX_FOLLOW_UP_ROUNDS cannot exceed 2" in p for p in problems)
+
+
+def test_total_queries_must_be_gte_max_queries() -> None:
+    settings = _base_settings(
+        MAX_QUERIES_PER_HYPOTHESIS=6,
+        MAX_TOTAL_QUERIES_PER_HYPOTHESIS=3,
+    )
+    problems = settings.validate_for_runtime()
+    assert any("MAX_TOTAL_QUERIES_PER_HYPOTHESIS must be >=" in p for p in problems)
+
+
+def test_acceptance_score_out_of_range_raises() -> None:
+    with pytest.raises(ValidationError):
+        _base_settings(MIN_RETRIEVAL_SCORE_FOR_ACCEPTANCE=1.5)
+    with pytest.raises(ValidationError):
+        _base_settings(MIN_RETRIEVAL_SCORE_FOR_ACCEPTANCE=-0.1)
+
+
+def test_part2_zero_bound_raises() -> None:
+    with pytest.raises(ValidationError):
+        _base_settings(MAX_QUERY_EXPANSIONS_PER_HYPOTHESIS=0)
+    with pytest.raises(ValidationError):
+        _base_settings(MAX_RETRIEVAL_TOTAL_DURATION_SECONDS=0)
