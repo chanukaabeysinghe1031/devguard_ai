@@ -113,6 +113,7 @@ class AnalysisExecutionService:
             await self._maybe_persist_artifact_bundle(run, context)
             await self._maybe_run_phase6a3(run, context)
             await self._maybe_run_phase6a4(run, context)
+            await self._maybe_run_phase6a5_hypothesis_retrieval(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -1035,6 +1036,93 @@ class AnalysisExecutionService:
                 title="Causal hypothesis generation failed",
                 description=type(exc).__name__,
                 event_type="hypothesis_generation_failed",
+                metadata={"analysis_run_id": str(run.id)},
+            )
+
+    async def _maybe_run_phase6a5_hypothesis_retrieval(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Hypothesis-directed retrieval. Soft-fail; does not alter baseline RAG/diagnosis."""
+        if not self._settings.hypothesis_directed_rag_enabled:
+            return
+        if context.organization_id is None:
+            return
+        try:
+            from app.ai.hypothesis_retrieval.orchestrator import (
+                HypothesisDirectedRetrievalOrchestrator,
+            )
+
+            _, hybrid_pipeline = await build_hybrid_pipeline(self._session, self._settings)
+            orchestrator = HypothesisDirectedRetrievalOrchestrator(
+                self._settings,
+                hybrid_pipeline=hybrid_pipeline,
+            )
+            logger.info(
+                "hypothesis_retrieval_run_started",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+                incident_id=str(run.incident_id),
+                hypothesis_run_id=str(
+                    (context.options.get("causal_hypotheses") or {}).get("run_id") or ""
+                ),
+            )
+            result = await orchestrator.run(self._session, context)
+            # Never overwrite legacy retrieved_chunks / diagnosis / recommendations.
+            context.options["hypothesis_directed_retrieval"] = {
+                "status": result.status.value,
+                "run_id": result.id,
+                "hypothesis_count_processed": result.hypothesis_count_processed,
+                "session_count_complete": result.session_count_complete,
+                "session_count_partial": result.session_count_partial,
+                "session_count_failed": result.session_count_failed,
+                "total_query_count": result.total_query_count,
+                "total_result_count": result.total_result_count,
+                "duration_ms": result.duration_ms,
+                "warnings": list(result.warnings),
+                "retrieval_pipeline_version": result.retrieval_pipeline_version,
+            }
+            logger.info(
+                "hypothesis_retrieval_run_completed",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+                project_id=str(context.options.get("project_id") or ""),
+                incident_id=str(run.incident_id),
+                retrieval_run_id=result.id,
+                status=result.status.value,
+                hypothesis_count_processed=result.hypothesis_count_processed,
+                duration_ms=result.duration_ms,
+            )
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Hypothesis-directed retrieval completed",
+                description=(
+                    f"{result.status.value}: {result.hypothesis_count_processed} sessions"
+                ),
+                event_type="hypothesis_retrieval_completed",
+                metadata={
+                    "analysis_run_id": str(run.id),
+                    "status": result.status.value,
+                    "processed": result.hypothesis_count_processed,
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "phase6a5_hypothesis_retrieval_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(f"phase6a5_failed:{type(exc).__name__}")
+            context.options["hypothesis_directed_retrieval"] = {
+                "status": "FAILED",
+                "error": type(exc).__name__,
+            }
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Hypothesis-directed retrieval failed",
+                description=type(exc).__name__,
+                event_type="hypothesis_retrieval_failed",
                 metadata={"analysis_run_id": str(run.id)},
             )
 

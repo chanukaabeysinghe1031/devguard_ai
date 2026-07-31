@@ -20,9 +20,15 @@ class HybridDiagnosticQueryBuilder:
 
     def build(self, context: AnalysisContext) -> DiagnosticQuery:
         signals = self._signals.extract(context)
-        raw_parts = self._semantic_parts(context, signals)
-        raw_text = " ".join(raw_parts)
-        sanitised = self._sanitise(raw_text)
+        # Phase 6A.5: optional explicit query override for hypothesis-directed adapters.
+        override = context.options.get("hypothesis_directed_query")
+        if isinstance(override, str) and override.strip():
+            raw_text = override.strip()
+            sanitised = self._sanitise(raw_text)
+        else:
+            raw_parts = self._semantic_parts(context, signals)
+            raw_text = " ".join(raw_parts)
+            sanitised = self._sanitise(raw_text)
 
         org_id = context.organization_id
         if org_id is None and context.options.get("organisation_id"):
