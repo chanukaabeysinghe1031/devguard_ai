@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { AcceptInvitationPage } from "../pages/auth/AcceptInvitationPage";
+import { BrandSplashPage } from "../pages/auth/BrandSplashPage";
 import { CreatingWorkspacePage } from "../pages/auth/CreatingWorkspacePage";
 import { JoiningOrganizationPage } from "../pages/auth/JoiningOrganizationPage";
 import { LoginPage } from "../pages/auth/LoginPage";
@@ -41,6 +42,7 @@ import { OrganizationSettingsPage } from "../pages/settings/OrganizationSettings
 import { SecuritySettingsPage } from "../pages/settings/SecuritySettingsPage";
 import { SettingsLayout } from "../pages/settings/SettingsLayout";
 import { ErrorPage } from "../pages/errors/ErrorPage";
+import { RequireBrandSplash } from "./RequireBrandSplash";
 import { RequireAuth, RequirePlatformAdmin, RequireRole } from "./routeGuards";
 
 const ORG_ADMIN_ROLES = ["organization_owner", "organization_admin"] as const;
@@ -49,7 +51,16 @@ const WRITER_ROLES = ["organization_owner", "organization_admin", "engineer"] as
 export function AppRouter() {
   return (
     <Routes>
-      <Route element={<AuthLayout />}>
+      <Route path="/welcome" element={<BrandSplashPage />} />
+      <Route path="/" element={<Navigate to="/welcome?next=/login" replace />} />
+
+      <Route
+        element={
+          <RequireBrandSplash>
+            <AuthLayout />
+          </RequireBrandSplash>
+        }
+      >
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/invitations/accept" element={<AcceptInvitationPage />} />
@@ -66,7 +77,6 @@ export function AppRouter() {
           </RequireAuth>
         }
       >
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
 
         <Route path="/projects" element={<ProjectsListPage />} />

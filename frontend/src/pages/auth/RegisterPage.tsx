@@ -149,11 +149,15 @@ export function RegisterPage() {
 
       <p className="mt-6 text-center text-sm text-text-muted">
         Already have an account?{" "}
-        <Link to="/login" className="font-medium text-primary hover:underline">
+        <Link to="/login" state={{ fromSplash: true }} className="font-medium text-primary hover:underline">
           Sign in
         </Link>
         {" · "}
-        <Link to="/invitations/accept" className="font-medium text-primary hover:underline">
+        <Link
+          to="/invitations/accept"
+          state={{ fromSplash: true }}
+          className="font-medium text-primary hover:underline"
+        >
           Join with invite link
         </Link>
       </p>

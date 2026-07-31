@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-import { registerViaUi, uniqueUser } from "./helpers/auth";
+import { registerViaUi, skipBrandSplash, uniqueUser } from "./helpers/auth";
 
 /**
  * Accessibility smoke test using axe-core. Zero *critical* impact violations are required to
@@ -20,6 +20,7 @@ function summarize(violations: Awaited<ReturnType<AxeBuilder["analyze"]>>["viola
 
 test.describe("accessibility smoke (axe-core)", () => {
   test("login page has zero critical violations", async ({ page }, testInfo) => {
+    await skipBrandSplash(page);
     await page.goto("/login");
     const results = await new AxeBuilder({ page }).analyze();
 

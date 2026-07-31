@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { registerViaUi, uniqueUser } from "./helpers/auth";
+import { registerViaUi, skipBrandSplash, uniqueUser } from "./helpers/auth";
 import { sidebarNav } from "./helpers/nav";
 
 /**
@@ -22,6 +22,7 @@ for (const viewport of VIEWPORTS) {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
 
     test("login page renders", async ({ page }) => {
+      await skipBrandSplash(page);
       await page.goto("/login");
       await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
       await expect(page.getByLabel("Email")).toBeVisible();

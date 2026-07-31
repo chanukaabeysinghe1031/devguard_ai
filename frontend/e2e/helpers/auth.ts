@@ -1,5 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
+import { SPLASH_SEEN_KEY } from "../../src/assets/brandConstants";
+
 export interface TestUser {
   email: string;
   password: string;
@@ -25,8 +27,16 @@ export function uniqueUser(prefix = "e2e-user"): TestUser {
   };
 }
 
+/** Skip the brand splash intro so auth forms are reachable immediately in E2E. */
+export async function skipBrandSplash(page: Page): Promise<void> {
+  await page.addInitScript((key) => {
+    sessionStorage.setItem(key, "1");
+  }, SPLASH_SEEN_KEY);
+}
+
 /** Registers a new user via the UI. Registration auto-creates an owned organization and signs in. */
 export async function registerViaUi(page: Page, user: TestUser): Promise<void> {
+  await skipBrandSplash(page);
   await page.goto("/register");
   await page.getByLabel(/^Organization name/).fill(user.organizationName ?? `Org ${user.fullName}`);
   await page.getByLabel(/^Your name/).fill(user.fullName);
@@ -39,6 +49,7 @@ export async function registerViaUi(page: Page, user: TestUser): Promise<void> {
 
 /** Logs in an existing user via the UI login form. */
 export async function loginViaUi(page: Page, user: Pick<TestUser, "email" | "password">): Promise<void> {
+  await skipBrandSplash(page);
   await page.goto("/login");
   await page.getByLabel(/Email/).fill(user.email);
   await page.getByLabel(/^Password/).fill(user.password);

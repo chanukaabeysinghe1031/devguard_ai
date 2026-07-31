@@ -301,10 +301,15 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-# Ensure PostgreSQL is reachable with DATABASE_URL
+# Host-side: Postgres must be on localhost (Compose publishes POSTGRES_PORT).
+# Do not use hostname `postgres` outside Docker — it will not resolve.
+export POSTGRES_HOST=localhost
+export DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-devguard}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB:-devguard}
 alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Prefer `docker compose exec backend alembic upgrade head` when the stack runs via Compose.
 
 ### Local frontend
 
@@ -316,9 +321,50 @@ npm run dev
 
 ---
 
-## Database Migrations (target schema)
+## Database Migrations
 
-Revision chain: `001` → `002` → `003` → `004` → `005` → `006` → `007` → `008` (head).
+Alembic reads `settings.database_url` via `get_settings()` in `backend/alembic/env.py`
+(not the placeholder URL in `alembic.ini`). Compose sets `DATABASE_URL` with hostname
+`postgres`, which **only resolves inside the Docker network**.
+
+### Recommended — run Alembic inside the backend container
+
+```bash
+docker compose up -d postgres backend
+docker compose exec backend alembic current
+docker compose exec backend alembic heads
+docker compose exec backend alembic upgrade head
+docker compose exec backend alembic current
+```
+
+Expected head after Phase 6A.5 Part 1B: `015_phase6a5_hyp_retrieval`.
+
+Safe settings diagnostic (masks nothing itself — print only non-secret parts):
+
+```bash
+docker compose exec backend python -c "
+from urllib.parse import urlparse
+from app.core.config import get_settings
+u = urlparse(get_settings().database_url)
+print(u.scheme, u.hostname, u.port, u.path)
+"
+```
+
+There is **no** module-level `settings` export. Use `get_settings()` or `Settings()`.
+
+### Host-side Alembic (alternative)
+
+Only when PostgreSQL is reachable on the published host port (default `localhost:5432`).
+Do **not** use hostname `postgres` from the Mac host.
+
+```bash
+cd backend
+source .venv/bin/activate
+export POSTGRES_HOST=localhost
+export DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-devguard}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB:-devguard}
+alembic current
+alembic upgrade head
+```
 
 ### Option B — recreate local development database
 
@@ -349,10 +395,9 @@ docker compose run --rm backend python -m app.infrastructure.database.seed
 Do not log or commit bootstrap passwords. Do not enable bootstrap in production.
 
 ```bash
-docker compose exec backend alembic upgrade head
-docker compose exec backend alembic current
 docker compose exec backend alembic history
-docker compose exec backend alembic downgrade base
+# Destructive — deletes application table data:
+# docker compose exec backend alembic downgrade base
 ```
 
 **Warning:** `alembic downgrade base` deletes application table data.

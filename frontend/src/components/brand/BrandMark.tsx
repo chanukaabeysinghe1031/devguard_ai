@@ -16,7 +16,7 @@ export interface BrandMarkProps {
 export function BrandMark({
   size = "sm",
   className,
-  framed = true,
+  framed = false,
   priority = false,
   animated = false,
   title = "DevGuard AI",

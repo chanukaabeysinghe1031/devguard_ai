@@ -1,4 +1,3 @@
-import { BrandLoadingMark } from "../components/brand/BrandLoadingMark";
 import { cn } from "../utils/cn";
 
 const NODES = [
@@ -9,7 +8,10 @@ const NODES = [
   { top: "46%", left: "48%", delay: "2.2s" },
 ] as const;
 
-/** Ambient left/right visual panel for authentication screens. */
+/**
+ * Ambient visual panel for authentication screens.
+ * No brand image here — the splash page and form header own the logo.
+ */
 export function AuthVisualPanel({ className }: { className?: string }) {
   return (
     <div
@@ -27,7 +29,6 @@ export function AuthVisualPanel({ className }: { className?: string }) {
         }}
       />
 
-      {/* Soft circuit grid */}
       <div
         className="absolute inset-0 opacity-[0.12]"
         style={{
@@ -46,12 +47,9 @@ export function AuthVisualPanel({ className }: { className?: string }) {
         />
       ))}
 
-      <div className="brand-float relative z-10 flex flex-col items-center px-10 text-center">
-        <BrandLoadingMark size="xl" showRing label="DevGuard AI" />
-        <h2 className="mt-10 text-2xl font-bold text-text-primary">
-          AI-powered incident intelligence
-        </h2>
-        <p className="mt-4 max-w-md text-sm leading-relaxed text-text-secondary">
+      <div className="relative z-10 max-w-md px-10 text-center">
+        <h2 className="text-2xl font-bold text-text-primary">AI-powered incident intelligence</h2>
+        <p className="mt-4 text-sm leading-relaxed text-text-secondary">
           Classify CI/CD failures, extract grounded evidence, and get explainable root-cause
           reasoning with confidence-aware recommendations — in one incident workspace.
         </p>

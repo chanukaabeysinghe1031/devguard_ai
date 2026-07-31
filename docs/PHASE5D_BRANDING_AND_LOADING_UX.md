@@ -3,31 +3,26 @@
 **Status:** Implemented  
 **Scope:** Frontend presentation only (no backend API contract changes)
 
-## Asset audit
+## Brand splash (`/welcome`)
 
-| Role | Original path | Format | Dimensions | Notes |
-|------|---------------|--------|------------|-------|
-| Complete logo (wordmark + tagline) | `frontend/assets/banner.png` | PNG RGB | 1983×793 | Fixed dark navy plate |
-| Symbol-only logo | `frontend/assets/logo.png` | PNG RGBA | 1536×1024 | Dark plate; framed in UI |
+Full-screen intro (~5s) before login/register (once per browser tab):
 
-Runtime imports use optimized copies (originals preserved):
+1. Symbol logo fades in
+2. HTML title **DevGuard AI** animates in
+3. Tagline **AI-Powered Incident Intelligence** animates in (correct spelling; not the typo in `logo2.png`)
+4. Navigates to `next` (default `/register`)
 
-| Alias | Path | Approx size |
-|-------|------|-------------|
-| `brandLogoFull` | `frontend/src/assets/brand-logo-full.png` | 800×320 |
-| `brandLogoIcon` | `frontend/src/assets/brand-logo-icon.png` | 256×170 |
+Gated by `RequireBrandSplash` + `sessionStorage` key `devguard.splash.seen`.
 
-Favicon / PWA icons derived from the symbol:
+## Assets (updated)
 
-- `frontend/public/favicon-16x16.png`
-- `frontend/public/favicon-32x32.png`
-- `frontend/public/favicon.png`
-- `frontend/public/icons/icon-48x48.png`
-- `frontend/public/icons/icon-192x192.png`
-- `frontend/public/icons/icon-512x512.png`
-- `frontend/public/site.webmanifest`
+| Role | Source | Runtime |
+|------|--------|---------|
+| Complete stacked logo | `frontend/assets/logo2.png` | `src/assets/brand-logo-full.png` (bg removed) |
+| Symbol | `frontend/assets/logo.png` | `src/assets/brand-logo-icon.png` (bg removed) |
 
-Export module: `frontend/src/assets/index.ts`
+Auth form header uses **symbol + HTML wordmark** (not the raster tagline) so spelling stays correct.
+The right-hand auth visual panel no longer shows a brand image.
 
 ## Where each mark is used
 

@@ -7,9 +7,9 @@ export type BrandLogoSize = "xs" | "sm" | "md" | "lg" | "xl";
 const ICON_SIZE: Record<BrandLogoSize, string> = {
   xs: "h-6 w-6",
   sm: "h-8 w-8",
-  md: "h-10 w-10",
-  lg: "h-14 w-14",
-  xl: "h-20 w-20",
+  md: "h-12 w-12",
+  lg: "h-16 w-16",
+  xl: "h-24 w-24",
 };
 
 const FULL_WIDTH: Record<BrandLogoSize, string> = {

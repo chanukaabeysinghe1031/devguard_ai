@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { test } from "@playwright/test";
 
-import { registerViaUi, uniqueUser } from "./helpers/auth";
+import { registerViaUi, skipBrandSplash, uniqueUser } from "./helpers/auth";
 import { createProjectViaUi } from "./helpers/project";
 
 /**
@@ -41,6 +41,7 @@ test.describe("visual capture — key pages", () => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
 
       // Unauthenticated login screen, captured before any session exists.
+      await skipBrandSplash(page);
       await page.goto("/login");
       await page.screenshot({
         path: path.join(SCREENSHOTS_DIR, `login-${viewport.label}.png`),

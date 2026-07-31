@@ -133,3 +133,44 @@
     background-position: 140% 0;
   }
 }
+
+@keyframes brand-splash-logo {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes brand-splash-text {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brand-splash-exit {
+  to {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+.brand-splash-logo {
+  animation: brand-splash-logo 900ms ease-out both;
+}
+
+.brand-splash-text-in {
+  animation: brand-splash-text 700ms ease-out both;
+}
+
+.brand-splash-exit {
+  animation: brand-splash-exit 550ms ease-in forwards;
+}

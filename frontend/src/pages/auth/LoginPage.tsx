@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { z } from "zod";
 
 import { ApiError } from "../../api/client";
@@ -82,11 +82,19 @@ export function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-text-muted">
         No account?{" "}
-        <Link to="/register" className="font-medium text-primary hover:underline">
+        <Link
+          to="/register"
+          state={{ fromSplash: true }}
+          className="font-medium text-primary hover:underline"
+        >
           Create your organization
         </Link>
         {" · "}
-        <Link to="/invitations/accept" className="font-medium text-primary hover:underline">
+        <Link
+          to="/invitations/accept"
+          state={{ fromSplash: true }}
+          className="font-medium text-primary hover:underline"
+        >
           Join with invite
         </Link>
       </p>
