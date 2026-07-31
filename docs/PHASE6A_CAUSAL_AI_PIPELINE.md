@@ -13,7 +13,9 @@ Phase 6A extends the existing analysis spine with artifact acquisition, deep par
 | 6A.4 | Done | Competing causal hypothesis generation (candidates only) |
 | 6A.5 Part 1A | Done | Retrieval architecture audit |
 | 6A.5 Part 1B | Done | Hypothesis-directed retrieval infrastructure (flags OFF; no ranking) |
-| 6A.5 Part 2+ / 6A.6+ | Not started | Adaptive retrieval, causal ranking, remediations, verifiers, Causal UI |
+| 6A.5 Part 2 | Done | Adaptive retrieval intelligence (flags OFF; no migration 016) |
+| 6A.5 Part 3 | Done | Evidence assessment / ranking / candidate selection (flags OFF; candidates only; no migration 016) |
+| 6A.6+ | Not started | Remediations, verifiers, Causal UI |
 
 ## Pipeline (flags OFF = unchanged production path)
 
@@ -28,13 +30,15 @@ flowchart TB
   G --> C[Consistency 6A.2]
   O --> H[Hierarchical classification 6A.3]
   H --> Y[Causal hypotheses 6A.4]
-  Y --> R5[Hypothesis-directed retrieval 6A.5 Part 1B]
+  Y --> R5[Hypothesis-directed retrieval 6A.5]
+  R5 --> E5[Evidence assessment / ranking 6A.5 Part 3]
   O --> D[Diagnosis + RAG + recommendations]
   Y -.-> D
   R5 -.-> D
+  E5 -.-> D
 ```
 
-6A.2–6A.5 Part 1B stages soft-fail. Hypotheses are **competing candidates**, not verified causes. Part 1B retrieval items are evidence **candidates** only (`SUPPORT_CANDIDATE` ≠ proven support).
+6A.2–6A.5 stages soft-fail. Hypotheses are **competing candidates**, not verified causes. Part 1B retrieval items are evidence **candidates** only (`SUPPORT_CANDIDATE` ≠ proven support). Part 3 `RankingScore` ≠ root-cause confidence; selected candidates ≠ final diagnosis.
 
 ## Important
 
@@ -45,3 +49,4 @@ flowchart TB
 - Hypothesis `generation_prior_score` is not final ranking or verification.
 - Phase 6A.5 Part 1B retrieval is hypothesis-scoped infrastructure; empty retrieval does not disprove a hypothesis.
 - Phase 6A.5 Part 2 adds adaptive intents/routing/validation/relevance/follow-up behind OFF-by-default flags; `retrieval_relevance_score` is not causal support; no migration 016.
+- Phase 6A.5 Part 3 assesses sufficiency/support/contradiction candidates and ranks hypotheses behind OFF-by-default flags; no migration 016; no PROVEN/VERIFIED language.

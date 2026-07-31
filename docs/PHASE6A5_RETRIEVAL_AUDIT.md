@@ -30,8 +30,13 @@ Delivered: domain contracts, context/plan builders, adapters wrapping `HybridRet
 
 **Status:** Adaptive retrieval intelligence delivered (flags OFF by default)  
 **Migration 016:** **Not created** — Part 2 persists in existing JSONB (`plan_snapshot`, `session.metrics`, `item_metadata`, `configuration_snapshot`)  
-**Audit:** [`PHASE6A5_PART2_RETRIEVAL_INTELLIGENCE_AUDIT.md`](PHASE6A5_PART2_RETRIEVAL_INTELLIGENCE_AUDIT.md)  
-**Design docs:** [`PHASE6A5_ADAPTIVE_RETRIEVAL.md`](PHASE6A5_ADAPTIVE_RETRIEVAL.md) and related `PHASE6A5_*` Part 2 docs  
+**Audit:** [`PHASE6A5_PART2_RETRIEVAL_INTELLIGENCE_AUDIT.md`](PHASE6A5_PART2_RETRIEVAL_INTELLIGENCE_AUDIT.md)
+**Design docs:** [`PHASE6A5_ADAPTIVE_RETRIEVAL.md`](PHASE6A5_ADAPTIVE_RETRIEVAL.md) and related `PHASE6A5_*` Part 2 docs
+
+### Part 3 — Evidence assessment / ranking / candidate selection (delivered)
+
+**Audit:** [`PHASE6A5_PART3_EVIDENCE_ASSESSMENT_AUDIT.md`](PHASE6A5_PART3_EVIDENCE_ASSESSMENT_AUDIT.md)  
+**Docs:** [`PHASE6A5_EVIDENCE_ASSESSMENT.md`](PHASE6A5_EVIDENCE_ASSESSMENT.md) — flags OFF by default; no migration 016; candidates only (`RankingScore` ≠ root-cause confidence).
 
 When `ADAPTIVE_HYPOTHESIS_RETRIEVAL_ENABLED=false`, Part 1B behavior is unchanged. Ranking remains deferred (`CAUSAL_RANKING_ENABLED` unused).
 
