@@ -14,6 +14,7 @@ from app.application.services.analysis_execution_service import AnalysisExecutio
 from app.application.services.analysis_run_service import AnalysisRunService
 from app.application.services.analysis_task import schedule_analysis_execution
 from app.application.services.phase6a2_service import Phase6A2ArtifactsService
+from app.application.services.phase6a3_service import Phase6A3ClassificationService
 from app.core.config import Settings
 from app.infrastructure.storage import build_file_storage
 from app.schemas.analysis import (
@@ -35,6 +36,14 @@ from app.schemas.phase6a2 import (
     GraphConsistencyResponse,
     TemporalEventListResponse,
     TemporalLocalisationResponse,
+)
+from app.schemas.phase6a3 import (
+    ClassificationCandidateListResponse,
+    ClassificationConfidenceResponse,
+    ClassificationDisagreementResponse,
+    FailureTaxonomyResponse,
+    HierarchicalClassificationResponse,
+    OpenSetAssessmentResponse,
 )
 
 router = APIRouter(tags=["Analysis Runs"])
@@ -162,6 +171,10 @@ def _artifacts(session: AsyncSession = Depends(get_session)) -> AnalysisArtifact
 
 def _phase6a2(session: AsyncSession = Depends(get_session)) -> Phase6A2ArtifactsService:
     return Phase6A2ArtifactsService(AnalysisRunService(session))
+
+
+def _phase6a3(session: AsyncSession = Depends(get_session)) -> Phase6A3ClassificationService:
+    return Phase6A3ClassificationService(AnalysisRunService(session))
 
 
 @router.get("/analyses/{analysis_run_id}/status", response_model=AnalysisStatusResponse)
@@ -376,6 +389,112 @@ async def get_graph_consistency(
     return await service.get_graph_consistency(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hierarchical-classification",
+    response_model=HierarchicalClassificationResponse,
+)
+async def get_hierarchical_classification(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A3ClassificationService = Depends(_phase6a3),
+) -> HierarchicalClassificationResponse:
+    """Debug endpoint for Phase 6A.3 hierarchical classification."""
+    _, organization_id, _ = ctx
+    return await service.get_hierarchical_classification(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/classification-candidates",
+    response_model=ClassificationCandidateListResponse,
+)
+async def list_classification_candidates(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A3ClassificationService = Depends(_phase6a3),
+    source_classifier: str | None = None,
+    level_1: str | None = None,
+    level_2: str | None = None,
+    level_3: str | None = None,
+) -> ClassificationCandidateListResponse:
+    _, organization_id, _ = ctx
+    return await service.list_classification_candidates(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        source_classifier=source_classifier,
+        level_1=level_1,
+        level_2=level_2,
+        level_3=level_3,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/open-set-assessment",
+    response_model=OpenSetAssessmentResponse,
+)
+async def get_open_set_assessment(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A3ClassificationService = Depends(_phase6a3),
+) -> OpenSetAssessmentResponse:
+    _, organization_id, _ = ctx
+    return await service.get_open_set_assessment(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/classification-disagreement",
+    response_model=ClassificationDisagreementResponse,
+)
+async def get_classification_disagreement(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A3ClassificationService = Depends(_phase6a3),
+) -> ClassificationDisagreementResponse:
+    _, organization_id, _ = ctx
+    return await service.get_classification_disagreement(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/classification-confidence",
+    response_model=ClassificationConfidenceResponse,
+)
+async def get_classification_confidence(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A3ClassificationService = Depends(_phase6a3),
+) -> ClassificationConfidenceResponse:
+    _, organization_id, _ = ctx
+    return await service.get_classification_confidence(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get("/failure-taxonomy", response_model=FailureTaxonomyResponse)
+async def get_failure_taxonomy(
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A3ClassificationService = Depends(_phase6a3),
+    level_1: str | None = None,
+    level_2: str | None = None,
+    level_3: str | None = None,
+) -> FailureTaxonomyResponse:
+    """Organization-scoped read of the frozen-category hierarchy mapping."""
+    _ = ctx  # auth/org gate only — taxonomy is global and non-secret
+    return service.get_failure_taxonomy(
+        level_1=level_1,
+        level_2=level_2,
+        level_3=level_3,
     )
 
 

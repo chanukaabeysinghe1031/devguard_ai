@@ -111,6 +111,7 @@ class AnalysisExecutionService:
 
             context = await orchestrator.run(context, on_progress=on_progress)
             await self._maybe_persist_artifact_bundle(run, context)
+            await self._maybe_run_phase6a3(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -490,6 +491,7 @@ class AnalysisExecutionService:
             "artifact_bundle": context.options.get("artifact_bundle"),
             "temporal_localisation": context.options.get("temporal_localisation"),
             "evidence_graph": context.options.get("evidence_graph"),
+            "hierarchical_classification": context.options.get("hierarchical_classification"),
             "model_versions": {
                 "classifier": f"{context.model_name}-{context.model_version}",
                 "reasoning": context.reasoning_provider_name
@@ -799,6 +801,133 @@ class AnalysisExecutionService:
                 title="Graph construction failed",
                 description=type(exc).__name__,
                 event_type="graph_construction_failed",
+                metadata={"analysis_run_id": str(run.id)},
+            )
+
+    async def _maybe_run_phase6a3(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Hierarchical classification / open-set / disagreement. Soft-fail additive stage."""
+        if not self._settings.hierarchical_classification_enabled:
+            return
+        if context.organization_id is None:
+            return
+        try:
+            from app.ai.classification.hierarchical_orchestrator import (
+                HierarchicalClassificationOrchestrator,
+            )
+            from app.ai.classification.open_set_detector import (
+                OpenSetThresholds,
+                parse_category_thresholds_json,
+            )
+            from app.ai.classification.persist_hierarchical import (
+                HierarchicalClassificationPersistService,
+            )
+
+            thresholds = OpenSetThresholds(
+                confidence_threshold=self._settings.open_set_default_confidence_threshold,
+                margin_threshold=self._settings.open_set_default_margin_threshold,
+                distance_threshold=self._settings.open_set_default_distance_threshold,
+                min_evidence_coverage=self._settings.open_set_min_evidence_coverage,
+                category_thresholds=parse_category_thresholds_json(
+                    self._settings.open_set_category_thresholds_json
+                ),
+            )
+            orchestrator = HierarchicalClassificationOrchestrator(
+                open_set_thresholds=thresholds,
+                hierarchical_enabled=True,
+                open_set_enabled=bool(self._settings.open_set_detection_enabled),
+                disagreement_enabled=bool(self._settings.classification_disagreement_enabled),
+                confidence_breakdown_enabled=bool(
+                    self._settings.classification_confidence_breakdown_enabled
+                ),
+                llm_classification_enabled=bool(
+                    self._settings.enable_llm and context.enable_llm
+                ),
+            )
+            logger.info(
+                "hierarchical_classification_started",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+                incident_id=str(run.incident_id),
+                mapping_version="v1",
+            )
+            result = orchestrator.run(context)
+            persist = HierarchicalClassificationPersistService(self._session)
+            await persist.ensure_taxonomy_mappings_seeded()
+            await persist.persist(result)
+            context.options["hierarchical_classification"] = {
+                "status": result.classification_status.value,
+                "final_legacy_category_code": result.final_legacy_category_code,
+                "level_1_code": result.level_1_code,
+                "level_2_code": result.level_2_code,
+                "level_3_code": result.level_3_code,
+                "final_confidence": result.final_confidence,
+                "open_set_status": (
+                    result.open_set_result.status.value if result.open_set_result else None
+                ),
+                "disagreement_level": (
+                    result.disagreement_result.agreement_level.value
+                    if result.disagreement_result
+                    else None
+                ),
+                "mapping_version": result.mapping_version,
+                "duration_ms": result.duration_ms,
+                "warnings": list(result.warnings),
+            }
+            logger.info(
+                "hierarchical_classification_completed",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+                project_id=str(context.options.get("project_id") or ""),
+                incident_id=str(run.incident_id),
+                status=result.classification_status.value,
+                open_set_status=(
+                    result.open_set_result.status.value if result.open_set_result else None
+                ),
+                disagreement_level=(
+                    result.disagreement_result.agreement_level.value
+                    if result.disagreement_result
+                    else None
+                ),
+                mapping_version=result.mapping_version,
+                duration_ms=result.duration_ms,
+            )
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Hierarchical classification completed",
+                description=(
+                    f"{result.classification_status.value}: "
+                    f"{result.level_1_code}/{result.level_2_code}/{result.level_3_code}"
+                ),
+                event_type="hierarchical_classification_completed",
+                metadata={
+                    "analysis_run_id": str(run.id),
+                    "status": result.classification_status.value,
+                    "legacy_category": result.final_legacy_category_code,
+                    "open_set_status": (
+                        result.open_set_result.status.value if result.open_set_result else None
+                    ),
+                },
+            )
+        except Exception as exc:  # noqa: BLE001 - never block legacy classification path
+            logger.warning(
+                "phase6a3_pipeline_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(f"phase6a3_failed:{type(exc).__name__}")
+            context.options["hierarchical_classification"] = {
+                "status": "FAILED",
+                "error": type(exc).__name__,
+            }
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Hierarchical classification failed",
+                description=type(exc).__name__,
+                event_type="hierarchical_classification_failed",
                 metadata={"analysis_run_id": str(run.id)},
             )
 

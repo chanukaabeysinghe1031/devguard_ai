@@ -255,6 +255,44 @@ class Settings(BaseSettings):
     evidence_graph_max_edges: int = Field(default=5000, alias="EVIDENCE_GRAPH_MAX_EDGES")
     temporal_max_events: int = Field(default=5000, alias="TEMPORAL_MAX_EVENTS")
 
+    # Phase 6A.3 — hierarchical classification + open-set. All OFF by default.
+    hierarchical_classification_enabled: bool = Field(
+        default=False,
+        alias="HIERARCHICAL_CLASSIFICATION_ENABLED",
+    )
+    open_set_detection_enabled: bool = Field(
+        default=False,
+        alias="OPEN_SET_DETECTION_ENABLED",
+    )
+    classification_disagreement_enabled: bool = Field(
+        default=False,
+        alias="CLASSIFICATION_DISAGREEMENT_ENABLED",
+    )
+    classification_confidence_breakdown_enabled: bool = Field(
+        default=False,
+        alias="CLASSIFICATION_CONFIDENCE_BREAKDOWN_ENABLED",
+    )
+    open_set_default_confidence_threshold: float = Field(
+        default=0.55,
+        alias="OPEN_SET_DEFAULT_CONFIDENCE_THRESHOLD",
+    )
+    open_set_default_margin_threshold: float = Field(
+        default=0.08,
+        alias="OPEN_SET_DEFAULT_MARGIN_THRESHOLD",
+    )
+    open_set_default_distance_threshold: float = Field(
+        default=0.65,
+        alias="OPEN_SET_DEFAULT_DISTANCE_THRESHOLD",
+    )
+    open_set_min_evidence_coverage: float = Field(
+        default=0.25,
+        alias="OPEN_SET_MIN_EVIDENCE_COVERAGE",
+    )
+    open_set_category_thresholds_json: str = Field(
+        default="{}",
+        alias="OPEN_SET_CATEGORY_THRESHOLDS_JSON",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
@@ -362,6 +400,27 @@ class Settings(BaseSettings):
         if value <= 0:
             raise ValueError("must be greater than zero")
         return value
+
+    @field_validator(
+        "open_set_default_confidence_threshold",
+        "open_set_default_margin_threshold",
+        "open_set_default_distance_threshold",
+        "open_set_min_evidence_coverage",
+        mode="after",
+    )
+    @classmethod
+    def open_set_threshold_range(cls, value: float) -> float:
+        if not 0.0 <= float(value) <= 1.0:
+            raise ValueError("open-set thresholds must be in [0, 1]")
+        return float(value)
+
+    @field_validator("open_set_category_thresholds_json", mode="after")
+    @classmethod
+    def validate_open_set_category_thresholds_json(cls, value: str) -> str:
+        from app.ai.classification.open_set_detector import parse_category_thresholds_json
+
+        parse_category_thresholds_json(value or "{}")
+        return value or "{}"
 
     @field_validator("embedding_model", mode="after")
     @classmethod
