@@ -7,7 +7,11 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.hypothesis_retrieval.models import HypothesisRetrievalRun, HypothesisRetrievedItem
+from app.domain.hypothesis_retrieval.models import (
+    HypothesisRetrievalRun,
+    HypothesisRetrievalSession,
+    HypothesisRetrievedItem,
+)
 from app.infrastructure.database.models.hypothesis_retrieval import (
     HypothesisRetrievalQueryExecutionRow,
     HypothesisRetrievalRunRow,
@@ -136,7 +140,7 @@ class HypothesisRetrievalPersistService:
                 source_types_succeeded=list(sess.source_types_succeeded),
                 source_types_unavailable=list(sess.source_types_unavailable),
                 context_snapshot=sess.context.to_dict() if sess.context else {},
-                plan_snapshot=sess.plan.to_dict() if sess.plan else {},
+                plan_snapshot=_plan_snapshot(sess),
                 metrics=dict(sess.metrics),
                 started_at=sess.started_at,
                 completed_at=sess.completed_at,
@@ -245,3 +249,15 @@ class HypothesisRetrievalPersistService:
 
         await self._session.flush()
         return row
+
+
+def _plan_snapshot(sess: HypothesisRetrievalSession) -> dict:
+    snapshot = sess.plan.to_dict() if sess.plan is not None else {}
+    adaptive = (sess.metrics or {}).get("adaptive_plan")
+    if isinstance(adaptive, dict):
+        snapshot = dict(snapshot)
+        snapshot["adaptive_plan"] = adaptive
+        basic = adaptive.get("basic_plan_snapshot")
+        if isinstance(basic, dict):
+            snapshot["basic_plan_snapshot"] = basic
+    return snapshot
