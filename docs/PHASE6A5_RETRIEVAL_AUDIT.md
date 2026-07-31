@@ -9,6 +9,23 @@
 
 ---
 
+## Part 1B status (append)
+
+**Status:** Complete (infrastructure delivered; causal ranking deferred)  
+**Migration:** `015_phase6a5_hyp_retrieval`  
+**Insertion point (wired):** after `_maybe_run_phase6a4` → `_maybe_run_phase6a5_hypothesis_retrieval` (soft-fail; master flag OFF = no-op)
+
+Delivered: domain contracts, context/plan builders, adapters wrapping `HybridRetrievalPipeline`, orchestrator, persistence, debug APIs, unit tests, and docs:
+
+- [`PHASE6A5_HYPOTHESIS_RETRIEVAL_CONTRACTS.md`](PHASE6A5_HYPOTHESIS_RETRIEVAL_CONTRACTS.md)
+- [`PHASE6A5_RETRIEVAL_CONTEXT.md`](PHASE6A5_RETRIEVAL_CONTEXT.md)
+- [`PHASE6A5_RETRIEVAL_ORCHESTRATOR.md`](PHASE6A5_RETRIEVAL_ORCHESTRATOR.md)
+- [`PHASE6A5_RETRIEVAL_PERSISTENCE.md`](PHASE6A5_RETRIEVAL_PERSISTENCE.md)
+
+**Not in Part 1B:** causal ranking, proven support/contradiction engines, remediations, verifiers, Part 2 adaptive query generation.
+
+---
+
 ## 1. Verdict
 
 Baseline Module 7–9 RAG is a mature **single-query** hybrid engine. Phase 6A.2–6A.4 outputs (temporal, graph, hierarchical classification, competing hypotheses) **do not feed** that engine today, because RAG runs **inside** `AnalysisOrchestrator` **before** those stages.
@@ -34,11 +51,11 @@ AnalysisExecutionService.execute
 
 Ideal causal pipeline diagrams that place hypotheses before RAG are **aspirational**. As-built wiring is the opposite for Modules 6–9.
 
-**Future Part 1B insertion point (document only):**
+**Part 1B insertion point (implemented):**
 
 ```text
   → _maybe_run_phase6a4
-  → _maybe_run_phase6a5_hypothesis_retrieval   # NEW — soft-fail; flag OFF = no-op
+  → _maybe_run_phase6a5_hypothesis_retrieval   # soft-fail; flag OFF = no-op
   → _persist_results
 ```
 

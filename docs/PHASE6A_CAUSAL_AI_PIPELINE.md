@@ -11,7 +11,9 @@ Phase 6A extends the existing analysis spine with artifact acquisition, deep par
 | 6A.2 | Done | Temporal localisation + evidence graph + consistency |
 | 6A.3 | Done | Hierarchical classification + open-set + disagreement |
 | 6A.4 | Done | Competing causal hypothesis generation (candidates only) |
-| 6A.5+ | Not started | Hypothesis-directed RAG, ranking, remediations, verifiers, Causal UI |
+| 6A.5 Part 1A | Done | Retrieval architecture audit |
+| 6A.5 Part 1B | Done | Hypothesis-directed retrieval infrastructure (flags OFF; no ranking) |
+| 6A.5 Part 2+ / 6A.6+ | Not started | Adaptive retrieval, causal ranking, remediations, verifiers, Causal UI |
 
 ## Pipeline (flags OFF = unchanged production path)
 
@@ -26,11 +28,13 @@ flowchart TB
   G --> C[Consistency 6A.2]
   O --> H[Hierarchical classification 6A.3]
   H --> Y[Causal hypotheses 6A.4]
+  Y --> R5[Hypothesis-directed retrieval 6A.5 Part 1B]
   O --> D[Diagnosis + RAG + recommendations]
   Y -.-> D
+  R5 -.-> D
 ```
 
-6A.2–6A.4 stages soft-fail. Hypotheses are **competing candidates**, not verified causes.
+6A.2–6A.5 Part 1B stages soft-fail. Hypotheses are **competing candidates**, not verified causes. Part 1B retrieval items are evidence **candidates** only (`SUPPORT_CANDIDATE` ≠ proven support).
 
 ## Important
 
@@ -39,3 +43,4 @@ flowchart TB
 - Missing artifacts → partial graph, never fabricated evidence.
 - Open-set may return UNKNOWN; disagreement is an uncertainty signal only.
 - Hypothesis `generation_prior_score` is not final ranking or verification.
+- Phase 6A.5 Part 1B retrieval is hypothesis-scoped infrastructure; empty retrieval does not disprove a hypothesis.

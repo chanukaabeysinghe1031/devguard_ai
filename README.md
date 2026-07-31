@@ -25,6 +25,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Phase 6A.2 — Temporal + Evidence Graph** | ✅ Localisation + typed graph + consistency (flags OFF by default) |
 | **Phase 6A.3 — Hierarchical Classification** | ✅ Hierarchy + open-set + disagreement (flags OFF by default) |
 | **Phase 6A.4 — Causal Hypotheses** | ✅ Competing candidates only (flags OFF by default) |
+| **Phase 6A.5 Part 1B — Hypothesis retrieval** | ✅ Infrastructure only (flag OFF; no causal ranking) |
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
@@ -68,6 +69,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 - Decimal budget enforcement, null-safe external cost, latency stage tracking, controlled diagnosis fusion
 - Safe orchestration summaries on analysis detail responses; Module 8 metadata in `output_summary` JSON (no schema migration)
 - Hybrid retrieval modes: `embedding_only` (Module 7 baseline), `hybrid_static`, `hybrid_with_history` (org-scoped; off by default)
+- Phase 6A.5 Part 1B hypothesis-directed retrieval (experimental): `HYPOTHESIS_DIRECTED_RAG_ENABLED` defaults **false**; when off, Modules 6–9 RAG/diagnosis are unchanged. Part 1B is infrastructure only — not causal ranking; `SUPPORT_CANDIDATE` ≠ proven support. See `docs/PHASE6A5_HYPOTHESIS_RETRIEVAL_CONTRACTS.md`.
 - Deterministic diagnostic signals, lexical exact-match, versioned hybrid weight profiles, dedupe/diversity reranking
 - Organization membership resolution and role-based authorization dependencies
 - Default organization + owner membership created on user registration

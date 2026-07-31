@@ -405,7 +405,9 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 
 > **Update:** Phase 6A.4 delivered. Next approval ask is **Phase 6A.5** (hypothesis-directed RAG / ranking) only.
 
-**Still deferred:** 6A.5–6A.8 ranking/remediation/verifier stages, 6A.9 Causal UI.
+> **Update:** Phase 6A.5 Part 1A (audit) and **Part 1B** (hypothesis-directed retrieval infrastructure) delivered. Master flag `HYPOTHESIS_DIRECTED_RAG_ENABLED` defaults OFF. Causal ranking / Part 2+ still deferred.
+
+**Still deferred:** 6A.5 Part 2+ adaptive retrieval, 6A.6–6A.8 ranking/remediation/verifier stages, 6A.9 Causal UI.
 
 ---
 
@@ -413,7 +415,7 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 
 > Approve Phase 6A.0 audit and authorise Phase 6A.1: IncidentArtifactBundle model, acquisition extensions (GitHub workflow YAML where permitted + manual bundle manifest), and artifact-specific parser interfaces — feature-flagged off by default — with migration `011_*` only if relational persistence is required in 6A.1 (otherwise JSON snapshot first).
 
-> **Update:** Phase 6A.1–6A.4 delivered. Next approval ask is **Phase 6A.5** only.
+> **Update:** Phase 6A.1–6A.4 and 6A.5 Part 1B delivered. Next approval ask is **Phase 6A.5 Part 2** (or ranking) only — do not start without separate approval.
 ## 18. References
 
 - `docs/MASTER_ARCHITECTURE.md` § Phase 6 / Modules 8–10  
