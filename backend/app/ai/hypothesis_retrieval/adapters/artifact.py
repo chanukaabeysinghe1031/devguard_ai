@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import time
 from typing import Any
 
@@ -65,6 +66,11 @@ class ArtifactEvidenceRetrievalAdapter:
 
         needle = (query_spec.normalized_query or "").lower()
         candidates: list[HypothesisRetrievedItem] = []
+        max_items = self._max_items
+        constraints = (query_spec.metadata or {}).get("artifact_constraints")
+        if isinstance(constraints, dict) and constraints.get("maximum_results"):
+            with contextlib.suppress(TypeError, ValueError):
+                max_items = max(1, min(self._max_items, int(constraints["maximum_results"])))
 
         # Affected artifact / path — always include when present (structured evidence).
         if context.affected_artifact_id or context.affected_path:
@@ -93,7 +99,7 @@ class ArtifactEvidenceRetrievalAdapter:
                 )
             )
 
-        for idx, path in enumerate(sorted(context.changed_files)[: self._max_items], start=1):
+        for idx, path in enumerate(sorted(context.changed_files)[:max_items], start=1):
             if needle and needle not in path.lower() and not _tokens_overlap(needle, path):
                 continue
             candidates.append(
@@ -109,7 +115,7 @@ class ArtifactEvidenceRetrievalAdapter:
                 )
             )
 
-        related_artifacts = sorted(context.related_artifacts)[: self._max_items]
+        related_artifacts = sorted(context.related_artifacts)[:max_items]
         for idx, related in enumerate(related_artifacts, start=1):
             if needle and needle not in related.lower() and not _tokens_overlap(needle, related):
                 continue
@@ -125,7 +131,7 @@ class ArtifactEvidenceRetrievalAdapter:
                 )
             )
 
-        for idx, evidence in enumerate(context.parser_evidence[: self._max_items], start=1):
+        for idx, evidence in enumerate(context.parser_evidence[:max_items], start=1):
             if not isinstance(evidence, dict):
                 continue
             excerpt = str(

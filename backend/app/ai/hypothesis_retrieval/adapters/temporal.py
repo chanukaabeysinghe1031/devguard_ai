@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import time
 from typing import Any
 
@@ -66,6 +67,16 @@ class TemporalEvidenceRetrievalAdapter:
         needle = (query_spec.normalized_query or "").lower()
         items: list[HypothesisRetrievedItem] = []
         rank = 0
+        constraints = (query_spec.metadata or {}).get("temporal_constraints")
+        max_events = self._max_items
+        include_upstream = True
+        include_downstream = True
+        if isinstance(constraints, dict):
+            if constraints.get("maximum_events"):
+                with contextlib.suppress(TypeError, ValueError):
+                    max_events = max(1, min(self._max_items, int(constraints["maximum_events"])))
+            include_upstream = bool(constraints.get("include_upstream", True))
+            include_downstream = bool(constraints.get("include_downstream_symptoms", True))
 
         if context.temporal_primary_summary:
             text = context.temporal_primary_summary
@@ -82,7 +93,9 @@ class TemporalEvidenceRetrievalAdapter:
                 )
             )
 
-        for summary in context.upstream_event_summaries[: self._max_items]:
+        for summary in context.upstream_event_summaries[:max_events]:
+            if not include_upstream:
+                break
             if needle and needle not in summary.lower() and not _tokens_overlap(needle, summary):
                 continue
             rank += 1
@@ -97,7 +110,9 @@ class TemporalEvidenceRetrievalAdapter:
                 )
             )
 
-        for summary in context.downstream_symptom_summaries[: self._max_items]:
+        for summary in context.downstream_symptom_summaries[:max_events]:
+            if not include_downstream:
+                break
             if needle and needle not in summary.lower() and not _tokens_overlap(needle, summary):
                 continue
             rank += 1
@@ -126,7 +141,7 @@ class TemporalEvidenceRetrievalAdapter:
                 )
             )
 
-        limited = items[: query_spec.top_k]
+        limited = items[: min(query_spec.top_k, max_events)]
         return HypothesisRetrievalAdapterResult(
             adapter_name=self.adapter_name,
             adapter_version=self.adapter_version,

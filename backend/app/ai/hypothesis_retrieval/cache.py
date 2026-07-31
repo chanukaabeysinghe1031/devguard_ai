@@ -23,6 +23,9 @@ def build_retrieval_cache_key(
     artifact_constraints: dict[str, Any] | None,
     top_k: int,
     plan_version: str,
+    intent_fingerprint: str | None = None,
+    routing_fingerprint: str | None = None,
+    filter_fingerprint: str | None = None,
 ) -> str:
     """Build a stable SHA-256 cache key. Never include secret values."""
     payload = {
@@ -38,6 +41,9 @@ def build_retrieval_cache_key(
         "artifact_constraints": artifact_constraints or {},
         "top_k": int(top_k),
         "plan_version": plan_version,
+        "intent_fingerprint": intent_fingerprint or "",
+        "routing_fingerprint": routing_fingerprint or "",
+        "filter_fingerprint": filter_fingerprint or "",
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()

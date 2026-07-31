@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import time
 from typing import Any
 
@@ -65,6 +66,19 @@ class GraphEvidenceRetrievalAdapter:
 
         needle = (query_spec.normalized_query or "").lower()
         target_nodes = set(query_spec.graph_node_ids or [])
+        constraints = (query_spec.metadata or {}).get("graph_constraints")
+        max_nodes = self._max_items
+        max_edges = self._max_items
+        if isinstance(constraints, dict):
+            start_ids = constraints.get("start_node_ids")
+            if isinstance(start_ids, list):
+                target_nodes.update(str(x) for x in start_ids if x)
+            if constraints.get("max_nodes"):
+                with contextlib.suppress(TypeError, ValueError):
+                    max_nodes = max(1, min(self._max_items, int(constraints["max_nodes"])))
+            if constraints.get("max_edges"):
+                with contextlib.suppress(TypeError, ValueError):
+                    max_edges = max(1, min(self._max_items, int(constraints["max_edges"])))
         if context.root_cause_node_id:
             target_nodes.add(context.root_cause_node_id)
         if context.observed_failure_node_id:
@@ -74,7 +88,7 @@ class GraphEvidenceRetrievalAdapter:
         items: list[HypothesisRetrievedItem] = []
         rank = 0
 
-        for node in context.graph_neighborhood_nodes[: self._max_items]:
+        for node in context.graph_neighborhood_nodes[:max_nodes]:
             if not isinstance(node, dict):
                 continue
             node_id = str(node.get("stable_key") or node.get("node_id") or node.get("id") or "")
@@ -122,7 +136,7 @@ class GraphEvidenceRetrievalAdapter:
                 )
             )
 
-        for edge in context.graph_neighborhood_edges[: self._max_items]:
+        for edge in context.graph_neighborhood_edges[:max_edges]:
             if not isinstance(edge, dict):
                 continue
             edge_id = str(edge.get("stable_key") or edge.get("edge_id") or edge.get("id") or "")

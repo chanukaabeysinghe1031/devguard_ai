@@ -61,6 +61,36 @@ class HybridDiagnosticQueryBuilder:
             project_id=project_id,
             incident_id=context.incident_id,
         )
+
+        # Phase 6A.5 Part 2: hypothesis-scoped structured DiagnosticQuery fields.
+        # When present with a directed override, do not rely on rank-1 classifications.
+        structured = context.options.get("hypothesis_directed_structured")
+        if (
+            isinstance(override, str)
+            and override.strip()
+            and isinstance(structured, dict)
+        ):
+            if structured.get("failure_category"):
+                query.failure_category = str(structured["failure_category"])
+            if isinstance(structured.get("error_codes"), list):
+                query.error_codes = [str(x) for x in structured["error_codes"] if x][:12]
+            if isinstance(structured.get("exception_names"), list):
+                query.exception_names = [
+                    str(x) for x in structured["exception_names"] if x
+                ][:8]
+            if isinstance(structured.get("keywords"), list):
+                query.keywords = [str(x) for x in structured["keywords"] if x][:20]
+            if isinstance(structured.get("aws_services"), list):
+                query.aws_services = [str(x) for x in structured["aws_services"] if x][:8]
+            if isinstance(structured.get("resource_types"), list):
+                query.resource_types = [
+                    str(x) for x in structured["resource_types"] if x
+                ][:8]
+            if isinstance(structured.get("technologies"), list):
+                query.technologies = [str(x) for x in structured["technologies"] if x][:8]
+            if structured.get("pipeline_stage"):
+                query.pipeline_stage = str(structured["pipeline_stage"])
+
         context.retrieval_query = query.sanitised_text
         context.options["diagnostic_query_summary"] = query.signal_summary()
         return query

@@ -4,6 +4,7 @@ from app.ai.hypothesis_retrieval.adapters.artifact import ArtifactEvidenceRetrie
 from app.ai.hypothesis_retrieval.adapters.base import HypothesisRetrievalAdapter
 from app.ai.hypothesis_retrieval.adapters.graph import GraphEvidenceRetrievalAdapter
 from app.ai.hypothesis_retrieval.adapters.hybrid import HybridPipelineHypothesisAdapter
+from app.ai.hypothesis_retrieval.adapters.repository import RepositoryChangeRetrievalAdapter
 from app.ai.hypothesis_retrieval.adapters.temporal import TemporalEvidenceRetrievalAdapter
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "GraphEvidenceRetrievalAdapter",
     "HybridPipelineHypothesisAdapter",
     "HypothesisRetrievalAdapter",
+    "RepositoryChangeRetrievalAdapter",
     "TemporalEvidenceRetrievalAdapter",
 ]

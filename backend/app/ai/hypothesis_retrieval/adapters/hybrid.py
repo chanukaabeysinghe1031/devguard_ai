@@ -141,6 +141,8 @@ class HybridPipelineHypothesisAdapter:
         embedding_model_version: str | None = None,
         historical_enabled: bool = True,
         static_kb_enabled: bool = True,
+        metadata_filtering_enabled: bool = False,
+        exact_identifier_boost_enabled: bool = False,
     ) -> None:
         self._pipeline = pipeline
         self._analysis_context = analysis_context
@@ -150,6 +152,8 @@ class HybridPipelineHypothesisAdapter:
         self._embedding_version = embedding_model_version
         self._historical_enabled = historical_enabled
         self._static_kb_enabled = static_kb_enabled
+        self._metadata_filtering_enabled = metadata_filtering_enabled
+        self._exact_identifier_boost_enabled = exact_identifier_boost_enabled
 
     def is_available(self) -> bool:
         return self._pipeline is not None and self._analysis_context is not None and (
@@ -201,6 +205,18 @@ class HybridPipelineHypothesisAdapter:
 
         cache_key = None
         if self._cache_enabled and self._cache is not None:
+            meta = query_spec.metadata or {}
+            intent_fp = str(meta.get("intent_id") or meta.get("intent_type") or "")
+            routing_raw = meta.get("routing")
+            routing: dict[str, Any] = (
+                routing_raw if isinstance(routing_raw, dict) else {}
+            )
+            routing_fp = ",".join(
+                sorted(str(x) for x in (routing.get("selected_sources") or []))
+            )
+            filter_fp = ""
+            if self._metadata_filtering_enabled:
+                filter_fp = str(meta.get("identifiers") or meta.get("identifiers_used") or "")
             cache_key = build_retrieval_cache_key(
                 organization_id=context.organization_id,
                 project_id=context.project_id,
@@ -214,6 +230,9 @@ class HybridPipelineHypothesisAdapter:
                 artifact_constraints={"affected_artifact_id": context.affected_artifact_id},
                 top_k=query_spec.top_k,
                 plan_version=PLAN_VERSION,
+                intent_fingerprint=intent_fp,
+                routing_fingerprint=routing_fp,
+                filter_fingerprint=filter_fp,
             )
             cached = self._cache.get(cache_key)
             if isinstance(cached, list):
@@ -242,6 +261,22 @@ class HybridPipelineHypothesisAdapter:
             # Isolate mutable retrieval state — never mutate caller's chunks.
             ctx_copy.retrieved_chunks = []
             ctx_copy.warnings = list(self._analysis_context.warnings or [])
+
+            if self._metadata_filtering_enabled or self._exact_identifier_boost_enabled:
+                structured = _build_structured_options(context, query_spec)
+                ctx_copy.options["hypothesis_directed_structured"] = structured
+                if self._exact_identifier_boost_enabled:
+                    ctx_copy.options["hypothesis_exact_identifier_boost"] = True
+                    ctx_copy.options["hypothesis_exact_identifiers"] = list(
+                        structured.get("keywords") or []
+                    )[:16]
+                if self._metadata_filtering_enabled:
+                    # Soft filters only — never remove org scope.
+                    ctx_copy.options["hypothesis_soft_metadata_filters"] = {
+                        "category": context.category_code,
+                        "resource_types": list(query_spec.target_resource_identifiers[:8]),
+                        "actions": list(query_spec.target_actions[:8]),
+                    }
 
             result = self._pipeline.retrieve(ctx_copy)
             selected = list(result.candidates_selected or [])[: query_spec.top_k]
@@ -334,3 +369,48 @@ def _clone_cached_item(
         contributing_adapters=list(item.contributing_adapters) or [ADAPTER_NAME],
     )
     return cloned
+
+
+def _build_structured_options(
+    context: HypothesisRetrievalContext,
+    query_spec: HypothesisRetrievalQuerySpec,
+) -> dict[str, Any]:
+    meta = query_spec.metadata or {}
+    identifiers = meta.get("identifiers") if isinstance(meta.get("identifiers"), dict) else {}
+    keywords: list[str] = []
+    for key in (
+        "aws_actions",
+        "aws_error_codes",
+        "terraform_resources",
+        "exception_names",
+        "all_identifiers",
+    ):
+        values = identifiers.get(key) if isinstance(identifiers, dict) else None
+        if isinstance(values, list):
+            keywords.extend(str(v) for v in values if v)
+    keywords.extend(str(x) for x in (query_spec.target_resource_identifiers or []) if x)
+    keywords.extend(str(x) for x in (query_spec.target_actions or []) if x)
+    # Deduplicate while preserving order.
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for kw in keywords:
+        if kw not in seen:
+            seen.add(kw)
+            ordered.append(kw)
+    return {
+        "failure_category": context.category_code,
+        "error_codes": list(identifiers.get("aws_error_codes") or [])[:8]
+        if isinstance(identifiers, dict)
+        else [],
+        "exception_names": list(identifiers.get("exception_names") or [])[:8]
+        if isinstance(identifiers, dict)
+        else [],
+        "keywords": ordered[:20],
+        "aws_services": list(identifiers.get("aws_services") or [])[:8]
+        if isinstance(identifiers, dict)
+        else [],
+        "resource_types": list(identifiers.get("terraform_resource_types") or [])[:8]
+        if isinstance(identifiers, dict)
+        else [],
+        "technologies": [],
+    }
