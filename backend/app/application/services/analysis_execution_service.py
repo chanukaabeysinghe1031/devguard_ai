@@ -112,6 +112,7 @@ class AnalysisExecutionService:
             context = await orchestrator.run(context, on_progress=on_progress)
             await self._maybe_persist_artifact_bundle(run, context)
             await self._maybe_run_phase6a3(run, context)
+            await self._maybe_run_phase6a4(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -492,6 +493,7 @@ class AnalysisExecutionService:
             "temporal_localisation": context.options.get("temporal_localisation"),
             "evidence_graph": context.options.get("evidence_graph"),
             "hierarchical_classification": context.options.get("hierarchical_classification"),
+            "causal_hypotheses": context.options.get("causal_hypotheses"),
             "model_versions": {
                 "classifier": f"{context.model_name}-{context.model_version}",
                 "reasoning": context.reasoning_provider_name
@@ -928,6 +930,111 @@ class AnalysisExecutionService:
                 title="Hierarchical classification failed",
                 description=type(exc).__name__,
                 event_type="hierarchical_classification_failed",
+                metadata={"analysis_run_id": str(run.id)},
+            )
+
+    async def _maybe_run_phase6a4(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Competing causal hypotheses. Soft-fail; does not alter diagnosis/recs."""
+        if not self._settings.causal_hypothesis_generation_enabled:
+            return
+        if context.organization_id is None:
+            return
+        try:
+            from app.ai.hypotheses.orchestrator import CausalHypothesisOrchestrator
+            from app.ai.hypotheses.persist import CausalHypothesisPersistService
+
+            llm_complete = None
+            if (
+                self._settings.llm_hypothesis_generation_enabled
+                and self._settings.enable_llm
+                and bool(context.options.get("enable_llm", False))
+            ):
+                # Optional: reuse local structured stub when no external provider path.
+                # Full OpenAI wiring can be added later; schema tests cover parse path.
+                llm_complete = None
+
+            orchestrator = CausalHypothesisOrchestrator(
+                enabled=True,
+                rule_enabled=bool(self._settings.rule_hypothesis_generation_enabled),
+                llm_enabled=bool(
+                    self._settings.llm_hypothesis_generation_enabled
+                    and self._settings.enable_llm
+                    and bool(context.options.get("enable_llm", False))
+                ),
+                critic_enabled=bool(self._settings.hypothesis_critic_enabled),
+                max_hypotheses=self._settings.max_causal_hypotheses,
+                min_hypotheses=self._settings.min_causal_hypotheses,
+                graph_max_depth=self._settings.hypothesis_graph_max_depth,
+                graph_max_nodes=self._settings.hypothesis_graph_max_nodes,
+                graph_max_edges=self._settings.hypothesis_graph_max_edges,
+                max_evidence_items=self._settings.hypothesis_max_evidence_items,
+                duplicate_similarity_threshold=(
+                    self._settings.hypothesis_duplicate_similarity_threshold
+                ),
+                llm_complete_json=llm_complete,
+            )
+            logger.info(
+                "hypothesis_generation_started",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+                incident_id=str(run.incident_id),
+            )
+            # Graph nodes/edges are not always loaded in-memory; pass empty and rely on
+            # context.options summaries + evidence/text. Debug APIs can enrich later.
+            result = orchestrator.run(context, graph_nodes=[], graph_edges=[])
+            await CausalHypothesisPersistService(self._session).persist(result)
+            context.options["causal_hypotheses"] = {
+                "status": result.status.value,
+                "count": len(result.hypotheses),
+                "deterministic_count": result.deterministic_count,
+                "llm_count": result.llm_count,
+                "invalid_reference_count": result.invalid_reference_count,
+                "duplicate_removed_count": result.duplicate_removed_count,
+                "duration_ms": result.duration_ms,
+                "warnings": list(result.warnings),
+                "run_id": result.id,
+            }
+            logger.info(
+                "hypothesis_generation_completed",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+                project_id=str(context.options.get("project_id") or ""),
+                incident_id=str(run.incident_id),
+                status=result.status.value,
+                hypothesis_count=len(result.hypotheses),
+                duration_ms=result.duration_ms,
+            )
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Causal hypotheses generated",
+                description=f"{result.status.value}: {len(result.hypotheses)} hypotheses",
+                event_type="hypothesis_generation_completed",
+                metadata={
+                    "analysis_run_id": str(run.id),
+                    "status": result.status.value,
+                    "count": len(result.hypotheses),
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "phase6a4_pipeline_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(f"phase6a4_failed:{type(exc).__name__}")
+            context.options["causal_hypotheses"] = {
+                "status": "FAILED",
+                "error": type(exc).__name__,
+            }
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Causal hypothesis generation failed",
+                description=type(exc).__name__,
+                event_type="hypothesis_generation_failed",
                 metadata={"analysis_run_id": str(run.id)},
             )
 

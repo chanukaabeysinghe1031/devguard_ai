@@ -293,6 +293,37 @@ class Settings(BaseSettings):
         alias="OPEN_SET_CATEGORY_THRESHOLDS_JSON",
     )
 
+    # Phase 6A.4 — competing causal hypotheses. All OFF by default.
+    causal_hypothesis_generation_enabled: bool = Field(
+        default=False,
+        alias="CAUSAL_HYPOTHESIS_GENERATION_ENABLED",
+    )
+    rule_hypothesis_generation_enabled: bool = Field(
+        default=False,
+        alias="RULE_HYPOTHESIS_GENERATION_ENABLED",
+    )
+    llm_hypothesis_generation_enabled: bool = Field(
+        default=False,
+        alias="LLM_HYPOTHESIS_GENERATION_ENABLED",
+    )
+    hypothesis_critic_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_CRITIC_ENABLED",
+    )
+    max_causal_hypotheses: int = Field(default=5, alias="MAX_CAUSAL_HYPOTHESES")
+    min_causal_hypotheses: int = Field(default=1, alias="MIN_CAUSAL_HYPOTHESES")
+    hypothesis_graph_max_depth: int = Field(default=4, alias="HYPOTHESIS_GRAPH_MAX_DEPTH")
+    hypothesis_graph_max_nodes: int = Field(default=100, alias="HYPOTHESIS_GRAPH_MAX_NODES")
+    hypothesis_graph_max_edges: int = Field(default=200, alias="HYPOTHESIS_GRAPH_MAX_EDGES")
+    hypothesis_max_evidence_items: int = Field(
+        default=40,
+        alias="HYPOTHESIS_MAX_EVIDENCE_ITEMS",
+    )
+    hypothesis_duplicate_similarity_threshold: float = Field(
+        default=0.92,
+        alias="HYPOTHESIS_DUPLICATE_SIMILARITY_THRESHOLD",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
@@ -421,6 +452,28 @@ class Settings(BaseSettings):
 
         parse_category_thresholds_json(value or "{}")
         return value or "{}"
+
+    @field_validator(
+        "max_causal_hypotheses",
+        "min_causal_hypotheses",
+        "hypothesis_graph_max_depth",
+        "hypothesis_graph_max_nodes",
+        "hypothesis_graph_max_edges",
+        "hypothesis_max_evidence_items",
+        mode="after",
+    )
+    @classmethod
+    def positive_hypothesis_limits(cls, value: int) -> int:
+        if int(value) <= 0:
+            raise ValueError("hypothesis limits must be greater than zero")
+        return int(value)
+
+    @field_validator("hypothesis_duplicate_similarity_threshold", mode="after")
+    @classmethod
+    def hypothesis_similarity_range(cls, value: float) -> float:
+        if not 0.0 <= float(value) <= 1.0:
+            raise ValueError("HYPOTHESIS_DUPLICATE_SIMILARITY_THRESHOLD must be in [0, 1]")
+        return float(value)
 
     @field_validator("embedding_model", mode="after")
     @classmethod

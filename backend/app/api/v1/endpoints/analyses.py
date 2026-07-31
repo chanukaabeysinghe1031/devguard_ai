@@ -15,6 +15,7 @@ from app.application.services.analysis_run_service import AnalysisRunService
 from app.application.services.analysis_task import schedule_analysis_execution
 from app.application.services.phase6a2_service import Phase6A2ArtifactsService
 from app.application.services.phase6a3_service import Phase6A3ClassificationService
+from app.application.services.phase6a4_service import Phase6A4HypothesisService
 from app.core.config import Settings
 from app.infrastructure.storage import build_file_storage
 from app.schemas.analysis import (
@@ -44,6 +45,14 @@ from app.schemas.phase6a3 import (
     FailureTaxonomyResponse,
     HierarchicalClassificationResponse,
     OpenSetAssessmentResponse,
+)
+from app.schemas.phase6a4 import (
+    CausalHypothesisDetailResponse,
+    CausalHypothesisListResponse,
+    CausalHypothesisRunResponse,
+    HypothesisCausalPathResponse,
+    HypothesisCriticResponse,
+    HypothesisEvidenceListResponse,
 )
 
 router = APIRouter(tags=["Analysis Runs"])
@@ -175,6 +184,10 @@ def _phase6a2(session: AsyncSession = Depends(get_session)) -> Phase6A2Artifacts
 
 def _phase6a3(session: AsyncSession = Depends(get_session)) -> Phase6A3ClassificationService:
     return Phase6A3ClassificationService(AnalysisRunService(session))
+
+
+def _phase6a4(session: AsyncSession = Depends(get_session)) -> Phase6A4HypothesisService:
+    return Phase6A4HypothesisService(AnalysisRunService(session))
 
 
 @router.get("/analyses/{analysis_run_id}/status", response_model=AnalysisStatusResponse)
@@ -495,6 +508,119 @@ async def get_failure_taxonomy(
         level_1=level_1,
         level_2=level_2,
         level_3=level_3,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-generation-run",
+    response_model=CausalHypothesisRunResponse,
+)
+async def get_hypothesis_generation_run(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A4HypothesisService = Depends(_phase6a4),
+) -> CausalHypothesisRunResponse:
+    _, organization_id, _ = ctx
+    return await service.get_run(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/causal-hypotheses",
+    response_model=CausalHypothesisListResponse,
+)
+async def list_causal_hypotheses(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A4HypothesisService = Depends(_phase6a4),
+    category: str | None = None,
+    status: str | None = None,
+    generator_type: str | None = None,
+    affected_artifact: str | None = None,
+) -> CausalHypothesisListResponse:
+    """Experimental competing hypotheses — not verified root causes."""
+    _, organization_id, _ = ctx
+    return await service.list_hypotheses(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        category=category,
+        status=status,
+        generator_type=generator_type,
+        affected_artifact=affected_artifact,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/causal-hypotheses/{hypothesis_id}",
+    response_model=CausalHypothesisDetailResponse,
+)
+async def get_causal_hypothesis(
+    analysis_run_id: UUID,
+    hypothesis_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A4HypothesisService = Depends(_phase6a4),
+) -> CausalHypothesisDetailResponse:
+    _, organization_id, _ = ctx
+    return await service.get_hypothesis(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        hypothesis_id=hypothesis_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/causal-hypotheses/{hypothesis_id}/evidence",
+    response_model=HypothesisEvidenceListResponse,
+)
+async def list_hypothesis_evidence(
+    analysis_run_id: UUID,
+    hypothesis_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A4HypothesisService = Depends(_phase6a4),
+) -> HypothesisEvidenceListResponse:
+    _, organization_id, _ = ctx
+    return await service.list_evidence(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        hypothesis_id=hypothesis_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/causal-hypotheses/{hypothesis_id}/causal-path",
+    response_model=HypothesisCausalPathResponse,
+)
+async def get_hypothesis_causal_path(
+    analysis_run_id: UUID,
+    hypothesis_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A4HypothesisService = Depends(_phase6a4),
+) -> HypothesisCausalPathResponse:
+    _, organization_id, _ = ctx
+    return await service.get_causal_path(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        hypothesis_id=hypothesis_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/causal-hypotheses/{hypothesis_id}/critic",
+    response_model=HypothesisCriticResponse,
+)
+async def get_hypothesis_critic(
+    analysis_run_id: UUID,
+    hypothesis_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A4HypothesisService = Depends(_phase6a4),
+) -> HypothesisCriticResponse:
+    _, organization_id, _ = ctx
+    return await service.get_critic(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        hypothesis_id=hypothesis_id,
     )
 
 
