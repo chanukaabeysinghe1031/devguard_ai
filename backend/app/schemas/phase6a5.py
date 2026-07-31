@@ -153,3 +153,10 @@ class HypothesisRetrievedItemListResponse(BaseModel):
     total_items: int
     page: int
     page_size: int
+
+
+class HypothesisRetrievalIntelligenceListResponse(BaseModel):
+    session_id: UUID
+    items: list[dict[str, Any]] = Field(default_factory=list)
+    total_items: int = 0
+    source: str = "session.metrics"

@@ -57,6 +57,7 @@ from app.schemas.phase6a4 import (
 )
 from app.schemas.phase6a5 import (
     HypothesisRetrievalContextResponse,
+    HypothesisRetrievalIntelligenceListResponse,
     HypothesisRetrievalPlanResponse,
     HypothesisRetrievalQueryListResponse,
     HypothesisRetrievalRunResponse,
@@ -779,6 +780,78 @@ async def list_hypothesis_retrieval_items(
         graph_node_id=graph_node_id,
         historical_incident_id=historical_incident_id,
         min_retrieval_score=min_retrieval_score,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/intents",
+    response_model=HypothesisRetrievalIntelligenceListResponse,
+)
+async def get_hypothesis_retrieval_intents(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> HypothesisRetrievalIntelligenceListResponse:
+    _, organization_id, _ = ctx
+    return await service.get_intents(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/source-routing",
+    response_model=HypothesisRetrievalIntelligenceListResponse,
+)
+async def get_hypothesis_retrieval_source_routing(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> HypothesisRetrievalIntelligenceListResponse:
+    _, organization_id, _ = ctx
+    return await service.get_source_routing(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/validation-results",
+    response_model=HypothesisRetrievalIntelligenceListResponse,
+)
+async def get_hypothesis_retrieval_validation_results(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> HypothesisRetrievalIntelligenceListResponse:
+    _, organization_id, _ = ctx
+    return await service.get_validation_results(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-retrieval-sessions/{session_id}/follow-ups",
+    response_model=HypothesisRetrievalIntelligenceListResponse,
+)
+async def get_hypothesis_retrieval_follow_ups(
+    analysis_run_id: UUID,
+    session_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> HypothesisRetrievalIntelligenceListResponse:
+    _, organization_id, _ = ctx
+    return await service.get_follow_ups(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        session_id=session_id,
     )
 
 

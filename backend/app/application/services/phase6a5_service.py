@@ -17,6 +17,7 @@ from app.infrastructure.database.models.hypothesis_retrieval import (
 )
 from app.schemas.phase6a5 import (
     HypothesisRetrievalContextResponse,
+    HypothesisRetrievalIntelligenceListResponse,
     HypothesisRetrievalPlanResponse,
     HypothesisRetrievalQueryItem,
     HypothesisRetrievalQueryListResponse,
@@ -350,6 +351,103 @@ class Phase6A5HypothesisRetrievalService:
             total_items=total,
             page=page,
             page_size=page_size,
+        )
+
+    async def get_intents(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        session_id: UUID,
+    ) -> HypothesisRetrievalIntelligenceListResponse:
+        row = await self._load_session(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            session_id=session_id,
+        )
+        intelligence = dict((row.metrics or {}).get("intelligence") or {})
+        items = list(intelligence.get("intents") or [])
+        if not items:
+            adaptive = dict((row.metrics or {}).get("adaptive_plan") or {})
+            items = list(adaptive.get("intents") or [])
+            if not items:
+                plan = dict(row.plan_snapshot or {})
+                adaptive = dict(plan.get("adaptive_plan") or {})
+                items = list(adaptive.get("intents") or [])
+        return HypothesisRetrievalIntelligenceListResponse(
+            session_id=row.id,
+            items=[dict(x) for x in items if isinstance(x, dict)],
+            total_items=len(items),
+            source="session.metrics.intelligence.intents",
+        )
+
+    async def get_source_routing(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        session_id: UUID,
+    ) -> HypothesisRetrievalIntelligenceListResponse:
+        row = await self._load_session(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            session_id=session_id,
+        )
+        intelligence = dict((row.metrics or {}).get("intelligence") or {})
+        items = [x for x in (intelligence.get("routing") or []) if isinstance(x, dict)]
+        return HypothesisRetrievalIntelligenceListResponse(
+            session_id=row.id,
+            items=items,
+            total_items=len(items),
+            source="session.metrics.intelligence.routing",
+        )
+
+    async def get_validation_results(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        session_id: UUID,
+    ) -> HypothesisRetrievalIntelligenceListResponse:
+        row = await self._load_session(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            session_id=session_id,
+        )
+        intelligence = dict((row.metrics or {}).get("intelligence") or {})
+        summary = intelligence.get("validation_summary") or {}
+        items = (
+            [{"status": k, "count": v} for k, v in sorted(summary.items())]
+            if isinstance(summary, dict)
+            else []
+        )
+        return HypothesisRetrievalIntelligenceListResponse(
+            session_id=row.id,
+            items=items,
+            total_items=len(items),
+            source="session.metrics.intelligence.validation_summary",
+        )
+
+    async def get_follow_ups(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        session_id: UUID,
+    ) -> HypothesisRetrievalIntelligenceListResponse:
+        row = await self._load_session(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            session_id=session_id,
+        )
+        intelligence = dict((row.metrics or {}).get("intelligence") or {})
+        follow = intelligence.get("follow_up")
+        items = [dict(follow)] if isinstance(follow, dict) else []
+        return HypothesisRetrievalIntelligenceListResponse(
+            session_id=row.id,
+            items=items,
+            total_items=len(items),
+            source="session.metrics.intelligence.follow_up",
         )
 
     async def _load_session(
