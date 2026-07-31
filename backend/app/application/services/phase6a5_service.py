@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -16,6 +17,7 @@ from app.infrastructure.database.models.hypothesis_retrieval import (
     HypothesisRetrievedItemRow,
 )
 from app.schemas.phase6a5 import (
+    EvidenceAssessmentPayloadResponse,
     HypothesisRetrievalContextResponse,
     HypothesisRetrievalIntelligenceListResponse,
     HypothesisRetrievalPlanResponse,
@@ -449,6 +451,139 @@ class Phase6A5HypothesisRetrievalService:
             total_items=len(items),
             source="session.metrics.intelligence.follow_up",
         )
+
+    async def get_evidence_assessment(
+        self, *, organization_id: UUID, analysis_run_id: UUID
+    ) -> EvidenceAssessmentPayloadResponse:
+        row = await self._load_retrieval_run(organization_id, analysis_run_id)
+        payload = dict((row.configuration_snapshot or {}).get("evidence_assessment") or {})
+        if not payload:
+            raise ResourceNotFoundError("Evidence assessment not found.")
+        return EvidenceAssessmentPayloadResponse(
+            analysis_run_id=analysis_run_id,
+            retrieval_run_id=row.id,
+            payload=payload,
+            source="hypothesis_retrieval_runs.configuration_snapshot.evidence_assessment",
+        )
+
+    async def get_hypothesis_ranking(
+        self, *, organization_id: UUID, analysis_run_id: UUID
+    ) -> EvidenceAssessmentPayloadResponse:
+        row = await self._load_retrieval_run(organization_id, analysis_run_id)
+        ea = dict((row.configuration_snapshot or {}).get("evidence_assessment") or {})
+        ranking = ea.get("ranking")
+        if not isinstance(ranking, dict) or not ranking:
+            raise ResourceNotFoundError("Hypothesis ranking not found.")
+        return EvidenceAssessmentPayloadResponse(
+            analysis_run_id=analysis_run_id,
+            retrieval_run_id=row.id,
+            payload=ranking,
+            source="configuration_snapshot.evidence_assessment.ranking",
+        )
+
+    async def get_candidate_hypotheses(
+        self, *, organization_id: UUID, analysis_run_id: UUID
+    ) -> EvidenceAssessmentPayloadResponse:
+        row = await self._load_retrieval_run(organization_id, analysis_run_id)
+        ea = dict((row.configuration_snapshot or {}).get("evidence_assessment") or {})
+        selection = ea.get("candidate_selection")
+        if not isinstance(selection, dict) or not selection:
+            raise ResourceNotFoundError("Candidate hypotheses not found.")
+        return EvidenceAssessmentPayloadResponse(
+            analysis_run_id=analysis_run_id,
+            retrieval_run_id=row.id,
+            payload=selection,
+            source="configuration_snapshot.evidence_assessment.candidate_selection",
+        )
+
+    async def get_support_analysis(
+        self, *, organization_id: UUID, analysis_run_id: UUID
+    ) -> EvidenceAssessmentPayloadResponse:
+        items = await self._collect_session_evidence_field(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            field="support",
+        )
+        return EvidenceAssessmentPayloadResponse(
+            analysis_run_id=analysis_run_id,
+            retrieval_run_id=items.get("retrieval_run_id"),
+            payload={"items": items["entries"], "total_items": len(items["entries"])},
+            source="session.metrics.evidence_assessment.support",
+        )
+
+    async def get_contradictions(
+        self, *, organization_id: UUID, analysis_run_id: UUID
+    ) -> EvidenceAssessmentPayloadResponse:
+        items = await self._collect_session_evidence_field(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            field="contradiction",
+        )
+        return EvidenceAssessmentPayloadResponse(
+            analysis_run_id=analysis_run_id,
+            retrieval_run_id=items.get("retrieval_run_id"),
+            payload={"items": items["entries"], "total_items": len(items["entries"])},
+            source="session.metrics.evidence_assessment.contradiction",
+        )
+
+    async def get_evidence_sufficiency(
+        self, *, organization_id: UUID, analysis_run_id: UUID
+    ) -> EvidenceAssessmentPayloadResponse:
+        items = await self._collect_session_evidence_field(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            field="sufficiency",
+        )
+        return EvidenceAssessmentPayloadResponse(
+            analysis_run_id=analysis_run_id,
+            retrieval_run_id=items.get("retrieval_run_id"),
+            payload={"items": items["entries"], "total_items": len(items["entries"])},
+            source="session.metrics.evidence_assessment.sufficiency",
+        )
+
+    async def _collect_session_evidence_field(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        field: str,
+    ) -> dict[str, Any]:
+        run = await self._load_retrieval_run(organization_id, analysis_run_id)
+        rows = list(
+            (
+                await self._session.scalars(
+                    select(HypothesisRetrievalSessionRow)
+                    .where(
+                        HypothesisRetrievalSessionRow.organization_id == organization_id,
+                        HypothesisRetrievalSessionRow.analysis_run_id == analysis_run_id,
+                    )
+                    .order_by(HypothesisRetrievalSessionRow.created_at.asc())
+                )
+            ).all()
+        )
+        entries: list[dict[str, Any]] = []
+        for sess in rows:
+            ea = dict((sess.metrics or {}).get("evidence_assessment") or {})
+            value = ea.get(field)
+            if isinstance(value, dict) and value:
+                entries.append(value)
+        if not entries:
+            raise ResourceNotFoundError(f"Evidence assessment field '{field}' not found.")
+        return {"retrieval_run_id": run.id, "entries": entries}
+
+    async def _load_retrieval_run(
+        self, organization_id: UUID, analysis_run_id: UUID
+    ) -> HypothesisRetrievalRunRow:
+        await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
+        row = await self._session.scalar(
+            select(HypothesisRetrievalRunRow).where(
+                HypothesisRetrievalRunRow.organization_id == organization_id,
+                HypothesisRetrievalRunRow.analysis_run_id == analysis_run_id,
+            )
+        )
+        if row is None:
+            raise ResourceNotFoundError("Hypothesis retrieval run not found.")
+        return row
 
     async def _load_session(
         self,

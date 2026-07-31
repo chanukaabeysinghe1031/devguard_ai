@@ -56,6 +56,7 @@ from app.schemas.phase6a4 import (
     HypothesisEvidenceListResponse,
 )
 from app.schemas.phase6a5 import (
+    EvidenceAssessmentPayloadResponse,
     HypothesisRetrievalContextResponse,
     HypothesisRetrievalIntelligenceListResponse,
     HypothesisRetrievalPlanResponse,
@@ -852,6 +853,108 @@ async def get_hypothesis_retrieval_follow_ups(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
         session_id=session_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/evidence-assessment",
+    response_model=EvidenceAssessmentPayloadResponse,
+)
+async def get_evidence_assessment(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> EvidenceAssessmentPayloadResponse:
+    """Part 3 evidence assessment snapshot — candidates only, not proven causes."""
+    _, organization_id, _ = ctx
+    return await service.get_evidence_assessment(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/hypothesis-ranking",
+    response_model=EvidenceAssessmentPayloadResponse,
+)
+async def get_hypothesis_ranking(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> EvidenceAssessmentPayloadResponse:
+    """RankingScore is not RootCauseConfidence; highest ranked ≠ verified root cause."""
+    _, organization_id, _ = ctx
+    return await service.get_hypothesis_ranking(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/candidate-hypotheses",
+    response_model=EvidenceAssessmentPayloadResponse,
+)
+async def get_candidate_hypotheses(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> EvidenceAssessmentPayloadResponse:
+    """Selected candidate hypotheses only — not final diagnosis."""
+    _, organization_id, _ = ctx
+    return await service.get_candidate_hypotheses(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/support-analysis",
+    response_model=EvidenceAssessmentPayloadResponse,
+)
+async def get_support_analysis(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> EvidenceAssessmentPayloadResponse:
+    """Support candidates per hypothesis — not proven support."""
+    _, organization_id, _ = ctx
+    return await service.get_support_analysis(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/contradictions",
+    response_model=EvidenceAssessmentPayloadResponse,
+)
+async def get_contradictions(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> EvidenceAssessmentPayloadResponse:
+    """Contradiction candidates — not disproof or falsification."""
+    _, organization_id, _ = ctx
+    return await service.get_contradictions(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/evidence-sufficiency",
+    response_model=EvidenceAssessmentPayloadResponse,
+)
+async def get_evidence_sufficiency(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A5HypothesisRetrievalService = Depends(_phase6a5),
+) -> EvidenceAssessmentPayloadResponse:
+    """Evidence sufficiency levels — insufficient does not disprove a hypothesis."""
+    _, organization_id, _ = ctx
+    return await service.get_evidence_sufficiency(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
     )
 
 

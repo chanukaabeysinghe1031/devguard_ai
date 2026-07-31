@@ -160,3 +160,22 @@ class HypothesisRetrievalIntelligenceListResponse(BaseModel):
     items: list[dict[str, Any]] = Field(default_factory=list)
     total_items: int = 0
     source: str = "session.metrics"
+
+
+# --- Phase 6A.5 Part 3 — evidence assessment (candidates only) ---
+
+
+class EvidenceAssessmentPayloadResponse(BaseModel):
+    """Generic JSONB payload wrapper for Part 3 read APIs."""
+
+    analysis_run_id: UUID
+    retrieval_run_id: UUID | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+    source: str
+    limitations: list[str] = Field(
+        default_factory=lambda: [
+            "candidates_only",
+            "ranking_score_is_not_root_cause_confidence",
+            "no_causal_proof_language_in_outputs",
+        ]
+    )
