@@ -1,7 +1,7 @@
 # Phase 6A.5 Part 1B — Retrieval Context
 
 **Status:** Delivered  
-**Context version:** `retrieval_context_v1`  
+**Context version:** `retrieval_context_v1` (Part 2 reuses v1 fields; no context schema bump)  
 **Truncation rule:** `truncation_v1`
 
 ## Purpose

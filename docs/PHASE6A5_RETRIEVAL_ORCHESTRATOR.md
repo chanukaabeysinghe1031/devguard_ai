@@ -1,8 +1,8 @@
 # Phase 6A.5 Part 1B — Retrieval Orchestrator
 
-**Status:** Delivered  
-**Pipeline version:** `hypothesis_directed_v1`  
-**Plan version:** `retrieval_plan_v1`
+**Status:** Delivered (Part 1B + Part 2 adaptive path behind flags)  
+**Pipeline version:** `hypothesis_directed_v1` (Part 1B) / `hypothesis_directed_v2` when adaptive enabled  
+**Plan version:** `retrieval_plan_v1` (Part 1B) / `retrieval_plan_v2` when adaptive enabled
 
 ## Purpose
 

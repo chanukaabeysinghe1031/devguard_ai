@@ -1,8 +1,10 @@
 # Phase 6A.5 Part 1B — Retrieval Persistence
 
 **Status:** Delivered  
-**Migration:** `015_phase6a5_hyp_retrieval`  
+**Migration:** `015_phase6a5_hyp_retrieval` (Part 2: **no** migration 016)  
 **Flag:** `HYPOTHESIS_RETRIEVAL_PERSISTENCE_ENABLED` (default true; master RAG flag still OFF)
+
+Part 2 intelligence payloads persist in existing JSONB: `plan_snapshot` (includes `adaptive_plan`), `session.metrics.intelligence`, and per-item `item_metadata` (`validation_status`, `retrieval_relevance_score`, `features`, …).
 
 ## Purpose
 

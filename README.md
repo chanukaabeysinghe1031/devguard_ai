@@ -26,6 +26,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Phase 6A.3 — Hierarchical Classification** | ✅ Hierarchy + open-set + disagreement (flags OFF by default) |
 | **Phase 6A.4 — Causal Hypotheses** | ✅ Competing candidates only (flags OFF by default) |
 | **Phase 6A.5 Part 1B — Hypothesis retrieval** | ✅ Infrastructure only (flag OFF; no causal ranking) |
+| **Phase 6A.5 Part 2 — Adaptive retrieval** | ✅ Intelligence path (all Part 2 flags OFF by default; no migration 016) |
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
@@ -70,6 +71,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 - Safe orchestration summaries on analysis detail responses; Module 8 metadata in `output_summary` JSON (no schema migration)
 - Hybrid retrieval modes: `embedding_only` (Module 7 baseline), `hybrid_static`, `hybrid_with_history` (org-scoped; off by default)
 - Phase 6A.5 Part 1B hypothesis-directed retrieval (experimental): `HYPOTHESIS_DIRECTED_RAG_ENABLED` defaults **false**; when off, Modules 6–9 RAG/diagnosis are unchanged. Part 1B is infrastructure only — not causal ranking; `SUPPORT_CANDIDATE` ≠ proven support. See `docs/PHASE6A5_HYPOTHESIS_RETRIEVAL_CONTRACTS.md`.
+- Phase 6A.5 Part 2 adaptive retrieval intelligence: `ADAPTIVE_HYPOTHESIS_RETRIEVAL_ENABLED` and related flags default **false** (Part 1B unchanged when off). No migration 016 — payloads live in existing JSONB. See `docs/PHASE6A5_ADAPTIVE_RETRIEVAL.md`.
 - Deterministic diagnostic signals, lexical exact-match, versioned hybrid weight profiles, dedupe/diversity reranking
 - Organization membership resolution and role-based authorization dependencies
 - Default organization + owner membership created on user registration
@@ -337,7 +339,7 @@ docker compose exec backend alembic upgrade head
 docker compose exec backend alembic current
 ```
 
-Expected head after Phase 6A.5 Part 1B: `015_phase6a5_hyp_retrieval`.
+Expected head after Phase 6A.5 Part 1B/Part 2: `015_phase6a5_hyp_retrieval` (Part 2 adds **no** migration 016).
 
 Safe settings diagnostic (masks nothing itself — print only non-secret parts):
 

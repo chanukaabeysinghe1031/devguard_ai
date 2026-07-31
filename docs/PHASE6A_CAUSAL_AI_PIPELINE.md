@@ -44,3 +44,4 @@ flowchart TB
 - Open-set may return UNKNOWN; disagreement is an uncertainty signal only.
 - Hypothesis `generation_prior_score` is not final ranking or verification.
 - Phase 6A.5 Part 1B retrieval is hypothesis-scoped infrastructure; empty retrieval does not disprove a hypothesis.
+- Phase 6A.5 Part 2 adds adaptive intents/routing/validation/relevance/follow-up behind OFF-by-default flags; `retrieval_relevance_score` is not causal support; no migration 016.

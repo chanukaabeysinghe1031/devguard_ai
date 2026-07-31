@@ -26,6 +26,17 @@ Delivered: domain contracts, context/plan builders, adapters wrapping `HybridRet
 
 ---
 
+## Part 2 status (append)
+
+**Status:** Adaptive retrieval intelligence delivered (flags OFF by default)  
+**Migration 016:** **Not created** — Part 2 persists in existing JSONB (`plan_snapshot`, `session.metrics`, `item_metadata`, `configuration_snapshot`)  
+**Audit:** [`PHASE6A5_PART2_RETRIEVAL_INTELLIGENCE_AUDIT.md`](PHASE6A5_PART2_RETRIEVAL_INTELLIGENCE_AUDIT.md)  
+**Design docs:** [`PHASE6A5_ADAPTIVE_RETRIEVAL.md`](PHASE6A5_ADAPTIVE_RETRIEVAL.md) and related `PHASE6A5_*` Part 2 docs  
+
+When `ADAPTIVE_HYPOTHESIS_RETRIEVAL_ENABLED=false`, Part 1B behavior is unchanged. Ranking remains deferred (`CAUSAL_RANKING_ENABLED` unused).
+
+---
+
 ## 1. Verdict
 
 Baseline Module 7–9 RAG is a mature **single-query** hybrid engine. Phase 6A.2–6A.4 outputs (temporal, graph, hierarchical classification, competing hypotheses) **do not feed** that engine today, because RAG runs **inside** `AnalysisOrchestrator` **before** those stages.
