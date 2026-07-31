@@ -358,7 +358,23 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 | Flags (default off) | `ARTIFACT_BUNDLE_ENABLED`, `ARTIFACT_PARSING_ENABLED`, `GITHUB_ARTIFACT_ACQUISITION_ENABLED`, `CAUSAL_ANALYSIS_ENABLED` in `.env.example` / `Settings` |
 | Debug API | `GET /api/v1/analyses/{analysis_run_id}/artifact-bundle` |
 
-**Still deferred:** 6A.2 evidence graph, 6A.3–6A.8 causal/verifier stages, 6A.9 Causal UI.
+**Still deferred:** 6A.3–6A.8 causal/verifier stages, 6A.9 Causal UI.
+
+### Phase 6A.2 implementation references
+
+| Deliverable | Location |
+|-------------|----------|
+| Migration `012_phase6a2_temporal_graph` | `backend/alembic/versions/012_phase6a2_temporal_graph.py` |
+| Temporal domain | `backend/app/domain/temporal/` |
+| Evidence graph domain | `backend/app/domain/evidence_graph/` |
+| Temporal localizer | `backend/app/ai/temporal/` |
+| Graph builder + consistency | `backend/app/ai/evidence_graph/` |
+| Persist service | `backend/app/ai/evidence_graph/persist_service.py` |
+| Debug APIs | `GET .../temporal-localisation`, `.../temporal-events`, `.../evidence-graph`, `.../graph-consistency` |
+| Docs | `docs/PHASE6A_TEMPORAL_LOCALISATION.md`, `PHASE6A_EVIDENCE_GRAPH.md`, `PHASE6A_GRAPH_CONSISTENCY.md`, `PHASE6A_CAUSAL_AI_PIPELINE.md` |
+| Flags | `TEMPORAL_LOCALISATION_ENABLED`, `EVIDENCE_GRAPH_ENABLED`, `GRAPH_CONSISTENCY_ENABLED` (default false) |
+
+> **Update:** Phase 6A.2 delivered. Next approval ask is **Phase 6A.3** only.
 
 ---
 
