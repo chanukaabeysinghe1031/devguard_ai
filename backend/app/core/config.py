@@ -324,6 +324,91 @@ class Settings(BaseSettings):
         alias="HYPOTHESIS_DUPLICATE_SIMILARITY_THRESHOLD",
     )
 
+    # Phase 6A.5 Part 1B — hypothesis-directed retrieval foundation.
+    # Experimental path OFF by default; supporting source/cache toggles default ON.
+    hypothesis_directed_rag_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_DIRECTED_RAG_ENABLED",
+    )
+    multi_query_retrieval_enabled: bool = Field(
+        default=False,
+        alias="MULTI_QUERY_RETRIEVAL_ENABLED",
+    )
+    hypothesis_graph_context_enabled: bool = Field(
+        default=False,
+        alias="HYPOTHESIS_GRAPH_CONTEXT_ENABLED",
+    )
+    hypothesis_historical_retrieval_enabled: bool = Field(
+        default=True,
+        alias="HYPOTHESIS_HISTORICAL_RETRIEVAL_ENABLED",
+    )
+    hypothesis_static_kb_retrieval_enabled: bool = Field(
+        default=True,
+        alias="HYPOTHESIS_STATIC_KB_RETRIEVAL_ENABLED",
+    )
+    hypothesis_artifact_retrieval_enabled: bool = Field(
+        default=True,
+        alias="HYPOTHESIS_ARTIFACT_RETRIEVAL_ENABLED",
+    )
+    hypothesis_retrieval_persistence_enabled: bool = Field(
+        default=True,
+        alias="HYPOTHESIS_RETRIEVAL_PERSISTENCE_ENABLED",
+    )
+    retrieval_cache_enabled: bool = Field(
+        default=True,
+        alias="RETRIEVAL_CACHE_ENABLED",
+    )
+    # Reserved for Phase 6A.6+ — must remain unused in Part 1B.
+    causal_ranking_enabled: bool = Field(
+        default=False,
+        alias="CAUSAL_RANKING_ENABLED",
+    )
+    max_hypotheses_for_retrieval: int = Field(
+        default=5,
+        alias="MAX_HYPOTHESES_FOR_RETRIEVAL",
+    )
+    max_queries_per_hypothesis: int = Field(
+        default=6,
+        alias="MAX_QUERIES_PER_HYPOTHESIS",
+    )
+    max_results_per_query: int = Field(default=10, alias="MAX_RESULTS_PER_QUERY")
+    max_retrieved_items_per_hypothesis: int = Field(
+        default=40,
+        alias="MAX_RETRIEVED_ITEMS_PER_HYPOTHESIS",
+    )
+    max_retrieval_context_chars: int = Field(
+        default=60_000,
+        alias="MAX_RETRIEVAL_CONTEXT_CHARS",
+    )
+    max_retrieval_query_chars: int = Field(
+        default=2000,
+        alias="MAX_RETRIEVAL_QUERY_CHARS",
+    )
+    max_graph_context_nodes_for_retrieval: int = Field(
+        default=80,
+        alias="MAX_GRAPH_CONTEXT_NODES_FOR_RETRIEVAL",
+    )
+    max_graph_context_edges_for_retrieval: int = Field(
+        default=150,
+        alias="MAX_GRAPH_CONTEXT_EDGES_FOR_RETRIEVAL",
+    )
+    max_artifact_evidence_items_for_retrieval: int = Field(
+        default=40,
+        alias="MAX_ARTIFACT_EVIDENCE_ITEMS_FOR_RETRIEVAL",
+    )
+    max_historical_incidents_per_hypothesis: int = Field(
+        default=10,
+        alias="MAX_HISTORICAL_INCIDENTS_PER_HYPOTHESIS",
+    )
+    hypothesis_retrieval_timeout_seconds: float = Field(
+        default=45.0,
+        alias="HYPOTHESIS_RETRIEVAL_TIMEOUT_SECONDS",
+    )
+    max_concurrent_hypothesis_retrieval_sessions: int = Field(
+        default=2,
+        alias="MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
@@ -475,6 +560,37 @@ class Settings(BaseSettings):
             raise ValueError("HYPOTHESIS_DUPLICATE_SIMILARITY_THRESHOLD must be in [0, 1]")
         return float(value)
 
+    @field_validator(
+        "max_hypotheses_for_retrieval",
+        "max_queries_per_hypothesis",
+        "max_results_per_query",
+        "max_retrieved_items_per_hypothesis",
+        "max_retrieval_context_chars",
+        "max_retrieval_query_chars",
+        "max_graph_context_nodes_for_retrieval",
+        "max_graph_context_edges_for_retrieval",
+        "max_artifact_evidence_items_for_retrieval",
+        "max_historical_incidents_per_hypothesis",
+        "max_concurrent_hypothesis_retrieval_sessions",
+        mode="after",
+    )
+    @classmethod
+    def positive_hypothesis_retrieval_limits(cls, value: int) -> int:
+        if int(value) <= 0:
+            raise ValueError("hypothesis retrieval limits must be greater than zero")
+        if int(value) > 100_000:
+            raise ValueError("hypothesis retrieval limit exceeds safe maximum")
+        return int(value)
+
+    @field_validator("hypothesis_retrieval_timeout_seconds", mode="after")
+    @classmethod
+    def positive_hypothesis_retrieval_timeout(cls, value: float) -> float:
+        if float(value) <= 0:
+            raise ValueError("HYPOTHESIS_RETRIEVAL_TIMEOUT_SECONDS must be greater than zero")
+        if float(value) > 600:
+            raise ValueError("HYPOTHESIS_RETRIEVAL_TIMEOUT_SECONDS exceeds safe maximum")
+        return float(value)
+
     @field_validator("embedding_model", mode="after")
     @classmethod
     def embedding_model_when_sentence_transformers(cls, value: str, info) -> str:
@@ -543,6 +659,14 @@ class Settings(BaseSettings):
             and self.llm_output_cost_usd_per_million_tokens < 0
         ):
             problems.append("OPENAI/LLM output cost must be >= 0")
+        if (
+            self.max_concurrent_hypothesis_retrieval_sessions
+            > self.max_hypotheses_for_retrieval
+        ):
+            problems.append(
+                "MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS cannot exceed "
+                "MAX_HYPOTHESES_FOR_RETRIEVAL"
+            )
         problems.extend(self._github_problems())
         if self.is_production:
             if self.debug:
