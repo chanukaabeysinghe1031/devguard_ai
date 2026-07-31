@@ -13,6 +13,7 @@ from app.application.services.analysis_artifacts_service import AnalysisArtifact
 from app.application.services.analysis_execution_service import AnalysisExecutionService
 from app.application.services.analysis_run_service import AnalysisRunService
 from app.application.services.analysis_task import schedule_analysis_execution
+from app.application.services.phase6a2_service import Phase6A2ArtifactsService
 from app.core.config import Settings
 from app.infrastructure.storage import build_file_storage
 from app.schemas.analysis import (
@@ -26,6 +27,14 @@ from app.schemas.analysis import (
     RecommendationListResponse,
     RetrievedSourceListResponse,
     StartAnalysisRequest,
+)
+from app.schemas.phase6a2 import (
+    EvidenceGraphEdgeListResponse,
+    EvidenceGraphNodeListResponse,
+    EvidenceGraphSummaryResponse,
+    GraphConsistencyResponse,
+    TemporalEventListResponse,
+    TemporalLocalisationResponse,
 )
 
 router = APIRouter(tags=["Analysis Runs"])
@@ -151,6 +160,10 @@ def _artifacts(session: AsyncSession = Depends(get_session)) -> AnalysisArtifact
     return AnalysisArtifactsService(AnalysisRunService(session))
 
 
+def _phase6a2(session: AsyncSession = Depends(get_session)) -> Phase6A2ArtifactsService:
+    return Phase6A2ArtifactsService(AnalysisRunService(session))
+
+
 @router.get("/analyses/{analysis_run_id}/status", response_model=AnalysisStatusResponse)
 async def get_analysis_status(
     analysis_run_id: UUID,
@@ -241,6 +254,126 @@ async def get_analysis_artifact_bundle(
     """Debug/validation endpoint for Phase 6A.1 artifact availability."""
     _, organization_id, _ = ctx
     return await artifacts.get_artifact_bundle(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/temporal-localisation",
+    response_model=TemporalLocalisationResponse,
+)
+async def get_temporal_localisation(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A2ArtifactsService = Depends(_phase6a2),
+) -> TemporalLocalisationResponse:
+    _, organization_id, _ = ctx
+    return await service.get_temporal_localisation(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/temporal-events",
+    response_model=TemporalEventListResponse,
+)
+async def list_temporal_events(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A2ArtifactsService = Depends(_phase6a2),
+    page: int = 1,
+    page_size: int = 100,
+    event_type: str | None = None,
+) -> TemporalEventListResponse:
+    _, organization_id, _ = ctx
+    return await service.list_temporal_events(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        page=page,
+        page_size=page_size,
+        event_type=event_type,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/evidence-graph",
+    response_model=EvidenceGraphSummaryResponse,
+)
+async def get_evidence_graph(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A2ArtifactsService = Depends(_phase6a2),
+) -> EvidenceGraphSummaryResponse:
+    _, organization_id, _ = ctx
+    return await service.get_evidence_graph(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/evidence-graph/nodes",
+    response_model=EvidenceGraphNodeListResponse,
+)
+async def list_evidence_graph_nodes(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A2ArtifactsService = Depends(_phase6a2),
+    page: int = 1,
+    page_size: int = 100,
+    node_type: str | None = None,
+    artifact_id: UUID | None = None,
+    source_path: str | None = None,
+) -> EvidenceGraphNodeListResponse:
+    _, organization_id, _ = ctx
+    return await service.list_graph_nodes(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        page=page,
+        page_size=page_size,
+        node_type=node_type,
+        artifact_id=artifact_id,
+        source_path=source_path,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/evidence-graph/edges",
+    response_model=EvidenceGraphEdgeListResponse,
+)
+async def list_evidence_graph_edges(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A2ArtifactsService = Depends(_phase6a2),
+    page: int = 1,
+    page_size: int = 100,
+    edge_type: str | None = None,
+    derivation_type: str | None = None,
+) -> EvidenceGraphEdgeListResponse:
+    _, organization_id, _ = ctx
+    return await service.list_graph_edges(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        page=page,
+        page_size=page_size,
+        edge_type=edge_type,
+        derivation_type=derivation_type,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/graph-consistency",
+    response_model=GraphConsistencyResponse,
+)
+async def get_graph_consistency(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A2ArtifactsService = Depends(_phase6a2),
+) -> GraphConsistencyResponse:
+    _, organization_id, _ = ctx
+    return await service.get_graph_consistency(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
     )

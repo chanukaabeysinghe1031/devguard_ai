@@ -488,6 +488,8 @@ class AnalysisExecutionService:
             "retrieval_weight_profile": context.options.get("retrieval_weight_profile"),
             "retrieval_result": context.options.get("retrieval_result"),
             "artifact_bundle": context.options.get("artifact_bundle"),
+            "temporal_localisation": context.options.get("temporal_localisation"),
+            "evidence_graph": context.options.get("evidence_graph"),
             "model_versions": {
                 "classifier": f"{context.model_name}-{context.model_version}",
                 "reasoning": context.reasoning_provider_name
@@ -550,7 +552,12 @@ class AnalysisExecutionService:
         context: AnalysisContext,
     ) -> None:
         """Build/persist Phase 6A artifact bundle when enabled. Soft-fail only."""
-        if not self._settings.artifact_bundle_enabled:
+        need_bundle = bool(self._settings.artifact_bundle_enabled)
+        need_6a2 = bool(
+            self._settings.temporal_localisation_enabled
+            or self._settings.evidence_graph_enabled
+        )
+        if not need_bundle and not need_6a2:
             return
         try:
             from app.ai.artifacts.bundle_service import ArtifactBundleService
@@ -595,16 +602,44 @@ class AnalysisExecutionService:
                 file_contents=file_contents,
                 context=bundle_ctx,
             )
-            parse_results = service.parse_bundle(bundle) if service.parsing_enabled() else {}
-            row = await service.persist_bundle(bundle, parse_results)
-            context.options["artifact_bundle"] = {
-                "bundle_id": str(row.id),
-                "available_artifacts": list(bundle.available_artifacts),
-                "missing_artifacts": list(bundle.missing_artifacts),
-                "artifact_count": len(bundle.artifacts),
-                "parse_result_count": sum(len(v) for v in parse_results.values()),
-                "collection_error_count": len(bundle.artifact_collection_errors),
-            }
+            # 6A.2 needs structured parse entities even if ARTIFACT_PARSING_ENABLED is off.
+            parse_results: dict[str, list[Any]] = {}
+            if service.parsing_enabled() or need_6a2:
+                from app.ai.artifacts.parsers.registry import build_default_parser_registry
+
+                registry = build_default_parser_registry()
+                for artifact in bundle.artifacts:
+                    if not artifact.content:
+                        continue
+                    parse_results[artifact.id] = registry.parse_all(
+                        artifact.content,
+                        filename=artifact.filename,
+                        kind=artifact.kind,
+                    )
+
+            row = None
+            if need_bundle:
+                row = await service.persist_bundle(
+                    bundle,
+                    parse_results if service.parsing_enabled() else {},
+                )
+                context.options["artifact_bundle"] = {
+                    "bundle_id": str(row.id),
+                    "available_artifacts": list(bundle.available_artifacts),
+                    "missing_artifacts": list(bundle.missing_artifacts),
+                    "artifact_count": len(bundle.artifacts),
+                    "parse_result_count": sum(len(v) for v in parse_results.values()),
+                    "collection_error_count": len(bundle.artifact_collection_errors),
+                }
+            bundle_id = row.id if row is not None else None
+            await self._maybe_run_phase6a2(
+                run=run,
+                context=context,
+                incident=incident,
+                bundle=bundle,
+                bundle_id=bundle_id,
+                parse_results=parse_results,
+            )
         except Exception as exc:  # noqa: BLE001 - never fail analysis for bundle issues
             logger.warning(
                 "artifact_bundle_persist_failed",
@@ -616,6 +651,156 @@ class AnalysisExecutionService:
                 "error": type(exc).__name__,
                 "enabled": True,
             }
+
+    async def _maybe_run_phase6a2(
+        self,
+        *,
+        run: AnalysisRun,
+        context: AnalysisContext,
+        incident: Incident,
+        bundle: Any,
+        bundle_id: UUID | None,
+        parse_results: dict[str, list[Any]],
+    ) -> None:
+        """Temporal localisation + evidence graph. Soft-fail; does not alter diagnosis."""
+        temporal_on = bool(self._settings.temporal_localisation_enabled)
+        graph_on = bool(self._settings.evidence_graph_enabled)
+        consistency_on = bool(self._settings.graph_consistency_enabled)
+        if not temporal_on and not graph_on:
+            return
+        if context.organization_id is None:
+            return
+
+        try:
+            from app.ai.evidence_graph.builder import CrossArtifactEvidenceGraphBuilder
+            from app.ai.evidence_graph.consistency import GraphConsistencyEngine
+            from app.ai.evidence_graph.persist_service import Phase6A2PersistService
+            from app.ai.temporal.localizer import TemporalRootCauseLocalizer
+
+            persist = Phase6A2PersistService(self._session, self._settings)
+            temporal_result = None
+            bundle_id_str = str(bundle_id) if bundle_id else None
+            if temporal_on:
+                localizer = TemporalRootCauseLocalizer(
+                    max_events=self._settings.temporal_max_events
+                )
+                temporal_result = localizer.localize(
+                    analysis_id=str(run.id),
+                    organization_id=str(context.organization_id),
+                    project_id=str(incident.project_id) if incident.project_id else None,
+                    artifact_bundle_id=bundle_id_str,
+                    parse_by_artifact=parse_results,
+                    workflow_name=getattr(bundle, "workflow_name", None),
+                    enabled=True,
+                )
+                temporal_result.organization_id = str(context.organization_id)
+                temporal_result.incident_id = str(run.incident_id)
+                await persist.persist_temporal(temporal_result)
+                context.options["temporal_localisation"] = {
+                    "status": temporal_result.status.value,
+                    "primary_failure_event_id": temporal_result.primary_failure_event_id,
+                    "primary_failure_type": temporal_result.primary_failure_type,
+                    "confidence": temporal_result.confidence,
+                    "ordering_method": temporal_result.ordering_method.value,
+                    "event_count": len(temporal_result.events),
+                    "warnings": list(temporal_result.warnings),
+                }
+                await self._record_event(
+                    incident_id=run.incident_id,
+                    title="Temporal localisation completed",
+                    description=(
+                        temporal_result.primary_failure_summary
+                        or temporal_result.status.value
+                    ),
+                    event_type="temporal_localisation_completed",
+                    metadata={
+                        "analysis_run_id": str(run.id),
+                        "status": temporal_result.status.value,
+                        "confidence": temporal_result.confidence,
+                    },
+                )
+
+            if graph_on:
+                builder = CrossArtifactEvidenceGraphBuilder(
+                    max_nodes=self._settings.evidence_graph_max_nodes,
+                    max_edges=self._settings.evidence_graph_max_edges,
+                )
+                graph = builder.build(
+                    analysis_id=str(run.id),
+                    organization_id=str(context.organization_id),
+                    project_id=str(incident.project_id) if incident.project_id else None,
+                    incident_id=str(run.incident_id),
+                    artifact_bundle_id=bundle_id_str,
+                    bundle=bundle,
+                    parse_by_artifact=parse_results,
+                    temporal=temporal_result,
+                    enabled=True,
+                )
+                consistency = None
+                if consistency_on:
+                    consistency = GraphConsistencyEngine().validate(
+                        graph,
+                        enabled=True,
+                        expected_organization_id=str(context.organization_id),
+                        expected_project_id=(
+                            str(incident.project_id) if incident.project_id else None
+                        ),
+                    )
+                    graph.consistency = consistency
+                    if graph.metrics:
+                        graph.metrics.consistency_score = consistency.consistency_score
+                    if consistency.status.value in {"INVALID", "FAILED"}:
+                        await self._record_event(
+                            incident_id=run.incident_id,
+                            title="Graph validation warning",
+                            description=consistency.status.value,
+                            event_type="graph_validation_warning",
+                            metadata={
+                                "analysis_run_id": str(run.id),
+                                "status": consistency.status.value,
+                                "score": consistency.consistency_score,
+                            },
+                        )
+                await persist.persist_graph(graph, consistency)
+                context.options["evidence_graph"] = {
+                    "graph_id": graph.id,
+                    "status": graph.status.value,
+                    "node_count": graph.metrics.node_count,
+                    "edge_count": graph.metrics.edge_count,
+                    "consistency_status": (
+                        consistency.status.value if consistency else None
+                    ),
+                    "warnings": list(graph.warnings),
+                }
+                await self._record_event(
+                    incident_id=run.incident_id,
+                    title="Evidence graph created",
+                    description=(
+                        f"{graph.metrics.node_count} nodes, "
+                        f"{graph.metrics.edge_count} edges"
+                    ),
+                    event_type="evidence_graph_created",
+                    metadata={
+                        "analysis_run_id": str(run.id),
+                        "graph_id": graph.id,
+                        "status": graph.status.value,
+                    },
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "phase6a2_pipeline_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(f"phase6a2_failed:{type(exc).__name__}")
+            context.options["phase6a2"] = {"error": type(exc).__name__}
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Graph construction failed",
+                description=type(exc).__name__,
+                event_type="graph_construction_failed",
+                metadata={"analysis_run_id": str(run.id)},
+            )
 
     async def _ensure_model_version(self) -> ModelVersion:
         stmt = select(ModelVersion).where(
