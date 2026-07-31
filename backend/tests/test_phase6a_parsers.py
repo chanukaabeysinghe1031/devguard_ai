@@ -94,12 +94,14 @@ def test_map_failure_category_hierarchy(code: str, level_1: str) -> None:
     assert mapped["level_1"] == level_1
     assert mapped["legacy_code"] == code
     assert mapped["level_2"]
-    assert mapped["level_3"] is None
+    # Phase 6A.3: Level 3 is the frozen legacy category code.
+    assert mapped["level_3"] == code
 
 
 def test_map_failure_category_unknown_preserves_legacy() -> None:
     mapped = map_failure_category("custom_future_code")
     assert mapped["level_1"] == LEVEL1_UNKNOWN
+    assert mapped["level_2"] == "LEGACY_UNMAPPED"
     assert mapped["legacy_code"] == "custom_future_code"
 
 
