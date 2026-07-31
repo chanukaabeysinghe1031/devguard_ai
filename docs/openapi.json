@@ -4866,6 +4866,501 @@
         }
       }
     },
+    "/api/v1/analyses/{analysis_run_id}/hypothesis-generation-run": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Hypothesis Generation Run",
+        "operationId": "get_hypothesis_generation_run_api_v1_analyses__analysis_run_id__hypothesis_generation_run_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CausalHypothesisRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/causal-hypotheses": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Causal Hypotheses",
+        "description": "Experimental competing hypotheses \u2014 not verified root causes.",
+        "operationId": "list_causal_hypotheses_api_v1_analyses__analysis_run_id__causal_hypotheses_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "generator_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Generator Type"
+            }
+          },
+          {
+            "name": "affected_artifact",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Affected Artifact"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CausalHypothesisListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/causal-hypotheses/{hypothesis_id}": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Causal Hypothesis",
+        "operationId": "get_causal_hypothesis_api_v1_analyses__analysis_run_id__causal_hypotheses__hypothesis_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "hypothesis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Hypothesis Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CausalHypothesisDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/causal-hypotheses/{hypothesis_id}/evidence": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Hypothesis Evidence",
+        "operationId": "list_hypothesis_evidence_api_v1_analyses__analysis_run_id__causal_hypotheses__hypothesis_id__evidence_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "hypothesis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Hypothesis Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisEvidenceListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/causal-hypotheses/{hypothesis_id}/causal-path": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Hypothesis Causal Path",
+        "operationId": "get_hypothesis_causal_path_api_v1_analyses__analysis_run_id__causal_hypotheses__hypothesis_id__causal_path_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "hypothesis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Hypothesis Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisCausalPathResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/causal-hypotheses/{hypothesis_id}/critic": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Hypothesis Critic",
+        "operationId": "get_hypothesis_critic_api_v1_analyses__analysis_run_id__causal_hypotheses__hypothesis_id__critic_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "hypothesis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Hypothesis Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisCriticResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/analyses/{analysis_run_id}/cancel": {
       "post": {
         "tags": [
@@ -9351,6 +9846,526 @@
         "type": "object",
         "title": "BranchFilters"
       },
+      "CausalHypothesisDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "hypothesis_key": {
+            "type": "string",
+            "title": "Hypothesis Key"
+          },
+          "rank_placeholder": {
+            "type": "integer",
+            "title": "Rank Placeholder"
+          },
+          "category_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Code"
+          },
+          "level_1_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 1 Code"
+          },
+          "level_2_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 2 Code"
+          },
+          "level_3_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 3 Code"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "causal_claim": {
+            "type": "string",
+            "title": "Causal Claim"
+          },
+          "root_cause_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Cause Node Id"
+          },
+          "observed_failure_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Failure Node Id"
+          },
+          "affected_artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Artifact Id"
+          },
+          "affected_artifact_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Artifact Type"
+          },
+          "affected_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Path"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line End"
+          },
+          "generator_type": {
+            "type": "string",
+            "title": "Generator Type"
+          },
+          "generator_name": {
+            "type": "string",
+            "title": "Generator Name"
+          },
+          "generator_version": {
+            "type": "string",
+            "title": "Generator Version"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "generation_confidence": {
+            "type": "number",
+            "title": "Generation Confidence"
+          },
+          "generation_prior_score": {
+            "type": "number",
+            "title": "Generation Prior Score"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "path_validation_status": {
+            "type": "string",
+            "title": "Path Validation Status"
+          },
+          "path_validation_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Path Validation Warnings"
+          },
+          "causal_path_node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Causal Path Node Ids"
+          },
+          "causal_path_edge_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Causal Path Edge Ids"
+          },
+          "expected_observations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Expected Observations"
+          },
+          "falsifying_observations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Falsifying Observations"
+          },
+          "proposed_verification_steps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Proposed Verification Steps"
+          },
+          "missing_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Evidence"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "analysis_run_id",
+          "hypothesis_key",
+          "rank_placeholder",
+          "title",
+          "causal_claim",
+          "generator_type",
+          "generator_name",
+          "generator_version",
+          "generation_confidence",
+          "generation_prior_score",
+          "status",
+          "path_validation_status",
+          "created_at"
+        ],
+        "title": "CausalHypothesisDetailResponse"
+      },
+      "CausalHypothesisListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "hypothesis_key": {
+            "type": "string",
+            "title": "Hypothesis Key"
+          },
+          "rank_placeholder": {
+            "type": "integer",
+            "title": "Rank Placeholder"
+          },
+          "category_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Code"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "causal_claim": {
+            "type": "string",
+            "title": "Causal Claim"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "generator_type": {
+            "type": "string",
+            "title": "Generator Type"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "generation_prior_score": {
+            "type": "number",
+            "title": "Generation Prior Score"
+          },
+          "generation_confidence": {
+            "type": "number",
+            "title": "Generation Confidence"
+          },
+          "path_validation_status": {
+            "type": "string",
+            "title": "Path Validation Status"
+          },
+          "affected_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Path"
+          },
+          "supporting_evidence_count": {
+            "type": "integer",
+            "title": "Supporting Evidence Count",
+            "default": 0
+          },
+          "contradicting_evidence_count": {
+            "type": "integer",
+            "title": "Contradicting Evidence Count",
+            "default": 0
+          },
+          "missing_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Evidence"
+          },
+          "critic_decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Critic Decision"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "hypothesis_key",
+          "rank_placeholder",
+          "title",
+          "causal_claim",
+          "status",
+          "generator_type",
+          "generation_prior_score",
+          "generation_confidence",
+          "path_validation_status"
+        ],
+        "title": "CausalHypothesisListItem"
+      },
+      "CausalHypothesisListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CausalHypothesisListItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_items"
+        ],
+        "title": "CausalHypothesisListResponse"
+      },
+      "CausalHypothesisRunResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "deterministic_count": {
+            "type": "integer",
+            "title": "Deterministic Count",
+            "default": 0
+          },
+          "llm_count": {
+            "type": "integer",
+            "title": "Llm Count",
+            "default": 0
+          },
+          "invalid_reference_count": {
+            "type": "integer",
+            "title": "Invalid Reference Count",
+            "default": 0
+          },
+          "duplicate_removed_count": {
+            "type": "integer",
+            "title": "Duplicate Removed Count",
+            "default": 0
+          },
+          "generator_version": {
+            "type": "string",
+            "title": "Generator Version"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "truncation_notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Truncation Notes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "analysis_run_id",
+          "status",
+          "generator_version",
+          "created_at"
+        ],
+        "title": "CausalHypothesisRunResponse"
+      },
       "ChangePasswordRequest": {
         "properties": {
           "current_password": {
@@ -11507,6 +12522,303 @@
           "detected_at"
         ],
         "title": "HistoryIncidentItem"
+      },
+      "HypothesisCausalPathResponse": {
+        "properties": {
+          "hypothesis_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Hypothesis Id"
+          },
+          "path_validation_status": {
+            "type": "string",
+            "title": "Path Validation Status"
+          },
+          "path_validation_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Path Validation Warnings"
+          },
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Node Ids"
+          },
+          "edge_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Edge Ids"
+          },
+          "root_cause_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Cause Node Id"
+          },
+          "observed_failure_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Failure Node Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hypothesis_id",
+          "path_validation_status"
+        ],
+        "title": "HypothesisCausalPathResponse"
+      },
+      "HypothesisCriticResponse": {
+        "properties": {
+          "hypothesis_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Hypothesis Id"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "recommended_status": {
+            "type": "string",
+            "title": "Recommended Status"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "contradictions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contradictions"
+          },
+          "missing_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Evidence"
+          },
+          "unsupported_claims": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unsupported Claims"
+          },
+          "graph_conflicts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Graph Conflicts"
+          },
+          "temporal_conflicts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Temporal Conflicts"
+          },
+          "specificity_warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specificity Warning"
+          },
+          "critic_version": {
+            "type": "string",
+            "title": "Critic Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hypothesis_id",
+          "decision",
+          "recommended_status",
+          "critic_version",
+          "created_at"
+        ],
+        "title": "HypothesisCriticResponse"
+      },
+      "HypothesisEvidenceLinkItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "evidence_type": {
+            "type": "string",
+            "title": "Evidence Type"
+          },
+          "relation": {
+            "type": "string",
+            "title": "Relation"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "evidence_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Item Id"
+          },
+          "graph_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Node Id"
+          },
+          "graph_edge_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Edge Id"
+          },
+          "artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Id"
+          },
+          "source_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Path"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Start"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line End"
+          },
+          "extraction_method": {
+            "type": "string",
+            "title": "Extraction Method"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "evidence_type",
+          "relation",
+          "confidence",
+          "extraction_method"
+        ],
+        "title": "HypothesisEvidenceLinkItem"
+      },
+      "HypothesisEvidenceListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HypothesisEvidenceLinkItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_items"
+        ],
+        "title": "HypothesisEvidenceListResponse"
       },
       "IncidentAssignRequest": {
         "properties": {

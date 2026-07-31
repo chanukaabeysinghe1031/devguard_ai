@@ -389,9 +389,23 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 | Docs | `PHASE6A_HIERARCHICAL_CLASSIFICATION.md`, `PHASE6A_OPEN_SET_DETECTION.md`, `PHASE6A_CLASSIFICATION_DISAGREEMENT.md` |
 | Flags | `HIERARCHICAL_CLASSIFICATION_ENABLED`, `OPEN_SET_DETECTION_ENABLED`, `CLASSIFICATION_DISAGREEMENT_ENABLED`, `CLASSIFICATION_CONFIDENCE_BREAKDOWN_ENABLED` (default false) |
 
-> **Update:** Phase 6A.3 delivered. Next approval ask is **Phase 6A.4** (causal hypothesis generation) only. Do not begin without separate approval.
+> **Update:** Phase 6A.3 delivered.
 
-**Still deferred:** 6A.4–6A.8 causal/verifier stages, 6A.9 Causal UI.
+### Phase 6A.4 implementation references
+
+| Deliverable | Location |
+|-------------|----------|
+| Audit | `docs/PHASE6A4_HYPOTHESIS_AUDIT.md` |
+| Migration `014_phase6a4_hypotheses` | `backend/alembic/versions/014_phase6a4_hypotheses.py` |
+| Domain | `backend/app/domain/hypotheses/` |
+| Generators / validators / critic | `backend/app/ai/hypotheses/` |
+| Debug APIs | causal-hypotheses, hypothesis-generation-run, evidence, causal-path, critic |
+| Docs | `PHASE6A_CAUSAL_HYPOTHESES.md`, templates/validation/critic docs |
+| Flags | `CAUSAL_HYPOTHESIS_GENERATION_ENABLED`, `RULE_HYPOTHESIS_GENERATION_ENABLED`, `LLM_HYPOTHESIS_GENERATION_ENABLED`, `HYPOTHESIS_CRITIC_ENABLED` (default false) |
+
+> **Update:** Phase 6A.4 delivered. Next approval ask is **Phase 6A.5** (hypothesis-directed RAG / ranking) only.
+
+**Still deferred:** 6A.5–6A.8 ranking/remediation/verifier stages, 6A.9 Causal UI.
 
 ---
 
@@ -399,9 +413,7 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 
 > Approve Phase 6A.0 audit and authorise Phase 6A.1: IncidentArtifactBundle model, acquisition extensions (GitHub workflow YAML where permitted + manual bundle manifest), and artifact-specific parser interfaces — feature-flagged off by default — with migration `011_*` only if relational persistence is required in 6A.1 (otherwise JSON snapshot first).
 
-> **Update:** Phase 6A.1 approved and delivered. Next approval ask is **Phase 6A.2** (evidence graph from parse results) only.
-
-> **Update:** Phase 6A.2–6A.3 delivered. Next approval ask is **Phase 6A.4** only.
+> **Update:** Phase 6A.1–6A.4 delivered. Next approval ask is **Phase 6A.5** only.
 ## 18. References
 
 - `docs/MASTER_ARCHITECTURE.md` § Phase 6 / Modules 8–10  
