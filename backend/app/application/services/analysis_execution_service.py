@@ -114,6 +114,7 @@ class AnalysisExecutionService:
             await self._maybe_run_phase6a3(run, context)
             await self._maybe_run_phase6a4(run, context)
             await self._maybe_run_phase6a5_hypothesis_retrieval(run, context)
+            await self._maybe_run_phase6a5_evidence_assessment(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -1123,6 +1124,71 @@ class AnalysisExecutionService:
                 title="Hypothesis-directed retrieval failed",
                 description=type(exc).__name__,
                 event_type="hypothesis_retrieval_failed",
+                metadata={"analysis_run_id": str(run.id)},
+            )
+
+    async def _maybe_run_phase6a5_evidence_assessment(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Evidence sufficiency / contradiction / ranking / candidates. Soft-fail."""
+        if not self._settings.hypothesis_evidence_assessment_enabled:
+            return
+        if context.organization_id is None:
+            return
+        try:
+            from app.ai.evidence_assessment.orchestrator import EvidenceAssessmentOrchestrator
+
+            orchestrator = EvidenceAssessmentOrchestrator(self._settings)
+            logger.info(
+                "hypothesis_evidence_assessment_started",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+            )
+            result = await orchestrator.run(self._session, context)
+            if result is None:
+                return
+            # Never overwrite diagnosis / recommendations / retrieved_documents.
+            context.options["hypothesis_evidence_assessment"] = result.summary_dict()
+            logger.info(
+                "hypothesis_evidence_assessment_completed",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+                status=result.status,
+                duration_ms=result.duration_ms,
+            )
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Hypothesis evidence assessment completed",
+                description=f"{result.status}: candidates only",
+                event_type="hypothesis_evidence_assessment_completed",
+                metadata={
+                    "analysis_run_id": str(run.id),
+                    "status": result.status,
+                    "candidate_selection_status": (
+                        result.candidate_selection.status.value
+                        if result.candidate_selection
+                        else None
+                    ),
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "phase6a5_evidence_assessment_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(f"phase6a5_evidence_assessment_failed:{type(exc).__name__}")
+            context.options["hypothesis_evidence_assessment"] = {
+                "status": "FAILED",
+                "error": type(exc).__name__,
+            }
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Hypothesis evidence assessment failed",
+                description=type(exc).__name__,
+                event_type="hypothesis_evidence_assessment_failed",
                 metadata={"analysis_run_id": str(run.id)},
             )
 
