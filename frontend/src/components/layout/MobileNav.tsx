@@ -1,9 +1,10 @@
-import { ShieldCheck, X } from "lucide-react";
+import { X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { useAuth } from "../../hooks/useAuth";
 import { useUiStore } from "../../stores/uiStore";
 import { cn } from "../../utils/cn";
+import { BrandMark } from "../brand/BrandMark";
 import { ORGANIZATION_NAV, PRIMARY_NAV, SYSTEM_NAV } from "./navConfig";
 
 export function MobileNav() {
@@ -21,11 +22,12 @@ export function MobileNav() {
         aria-hidden="true"
       />
       <div className="relative flex h-full w-72 flex-col border-r border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border px-4" style={{ height: "var(--topbar-height)" }}>
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-white">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
+        <div
+          className="flex items-center justify-between border-b border-border px-4"
+          style={{ height: "var(--topbar-height)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <BrandMark size="sm" className="h-9 w-9" />
             <span className="text-lg font-bold text-text-primary">DevGuard AI</span>
           </div>
           <button

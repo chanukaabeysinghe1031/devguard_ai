@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
-import { Spinner } from "../components/ui/Spinner";
+import { InlineBrandSpinner } from "../components/loading/InlineBrandSpinner";
 import { useAuth } from "../hooks/useAuth";
 import type { OrganizationRole } from "../types/auth";
 
@@ -35,7 +35,7 @@ export function RequireRole({
   if (isLoadingUser) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Spinner size="lg" />
+        <InlineBrandSpinner label="Checking access" />
       </div>
     );
   }
@@ -59,7 +59,7 @@ export function RequirePlatformAdmin({ children }: { children: ReactNode }) {
   if (isLoadingUser) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Spinner size="lg" />
+        <InlineBrandSpinner label="Checking access" />
       </div>
     );
   }

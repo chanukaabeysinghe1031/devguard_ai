@@ -54,7 +54,7 @@ export function RegisterPage() {
       });
       setSuccess(true);
       await login({ email: values.email, password: values.password });
-      navigate("/dashboard", { replace: true });
+      navigate("/auth/creating-workspace", { replace: true, state: { fromRegister: true } });
     } catch (error) {
       if (error instanceof ApiError) {
         setFormError(error.message);
@@ -74,7 +74,7 @@ export function RegisterPage() {
     <div>
       <h1 className="text-2xl font-bold text-text-primary">Create your DevGuard AI workspace</h1>
       <p className="mt-1.5 text-sm text-text-secondary">
-        Set up your organization and owner account. You can invite engineers after you sign in.
+        Create an organization and become its owner. Invite engineers after you sign in.
       </p>
 
       {formError && (

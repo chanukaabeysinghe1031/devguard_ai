@@ -1,9 +1,10 @@
-import { ChevronsLeft, ChevronsRight, ShieldCheck } from "lucide-react";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { cn } from "../../utils/cn";
 import { useAuth } from "../../hooks/useAuth";
 import { useUiStore } from "../../stores/uiStore";
+import { BrandMark } from "../brand/BrandMark";
 import { Tooltip } from "../ui/Tooltip";
 import {
   ORGANIZATION_NAV,
@@ -56,6 +57,28 @@ export function Sidebar() {
   const { hasAnyRole, isPlatformAdmin, session } = useAuth();
   const canManageOrg = hasAnyRole(["organization_owner", "organization_admin"]);
 
+  const brandBlock = (
+    <div
+      className={cn(
+        "flex items-center gap-2.5 border-b border-border px-4",
+        sidebarCollapsed && "justify-center px-0",
+      )}
+      style={{ height: "var(--topbar-height)" }}
+    >
+      <BrandMark size="sm" className="h-9 w-9" />
+      {!sidebarCollapsed && (
+        <div className="min-w-0">
+          <span className="block text-lg font-bold text-text-primary">DevGuard AI</span>
+          {session?.role && (
+            <span className="block truncate text-[10px] uppercase tracking-wide text-text-muted">
+              {session.role.replace(/_/g, " ")}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <aside
       className={cn(
@@ -64,27 +87,13 @@ export function Sidebar() {
       style={{ width: sidebarCollapsed ? "var(--sidebar-collapsed)" : "var(--sidebar-expanded)" }}
       aria-label="Primary navigation"
     >
-      <div
-        className={cn(
-          "flex items-center gap-2 border-b border-border px-4",
-          sidebarCollapsed && "justify-center px-0",
-        )}
-        style={{ height: "var(--topbar-height)" }}
-      >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-white">
-          <ShieldCheck className="h-5 w-5" />
-        </div>
-        {!sidebarCollapsed && (
-          <div className="min-w-0">
-            <span className="block text-lg font-bold text-text-primary">DevGuard AI</span>
-            {session?.role && (
-              <span className="block truncate text-[10px] uppercase tracking-wide text-text-muted">
-                {session.role.replace(/_/g, " ")}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      {sidebarCollapsed ? (
+        <Tooltip content="DevGuard AI" side="right">
+          {brandBlock}
+        </Tooltip>
+      ) : (
+        brandBlock
+      )}
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-4">
         {PRIMARY_NAV.map((item) => (

@@ -3,8 +3,11 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { AcceptInvitationPage } from "../pages/auth/AcceptInvitationPage";
+import { CreatingWorkspacePage } from "../pages/auth/CreatingWorkspacePage";
+import { JoiningOrganizationPage } from "../pages/auth/JoiningOrganizationPage";
 import { LoginPage } from "../pages/auth/LoginPage";
 import { RegisterPage } from "../pages/auth/RegisterPage";
+import { SigningInPage } from "../pages/auth/SigningInPage";
 import { DashboardPage } from "../pages/dashboard/DashboardPage";
 import { ForbiddenPage } from "../pages/errors/ForbiddenPage";
 import { NotFoundPage } from "../pages/errors/NotFoundPage";
@@ -51,6 +54,10 @@ export function AppRouter() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/invitations/accept" element={<AcceptInvitationPage />} />
       </Route>
+
+      <Route path="/auth/signing-in" element={<SigningInPage />} />
+      <Route path="/auth/creating-workspace" element={<CreatingWorkspacePage />} />
+      <Route path="/auth/joining-organization" element={<JoiningOrganizationPage />} />
 
       <Route
         element={

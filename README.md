@@ -29,6 +29,8 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Phase 5 — Release candidate validation** | ✅ See `docs/PHASE5_RELEASE_CANDIDATE_VALIDATION.md` |
 | **Phase 5A — Incident business application** | ✅ Core + Module 5A.10 — `docs/PHASE5A_PRODUCTION_READINESS.md` / `v1.0.0-rc2` |
 | **Phase 5B — GitHub Actions ingestion** | ✅ Implemented — `docs/PHASE5B_*` / ADR-005 (real App smoke optional/manual) |
+| **Phase 5C — Multi-tenant org completeness** | ✅ Invites, org profile, System nav — see Phase 5C docs |
+| **Phase 5D — Branding & loading UX** | ✅ Brand marks, auth transitions, project bootstrap — `docs/PHASE5D_BRANDING_AND_LOADING_UX.md` |
 
 ### Phase 5A product UI
 
@@ -36,6 +38,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 - Audit: [`docs/PHASE5A_IMPLEMENTATION_AUDIT.md`](docs/PHASE5A_IMPLEMENTATION_AUDIT.md)
 - E2E: [`docs/PHASE5A_E2E_REPORT.md`](docs/PHASE5A_E2E_REPORT.md)
 - User manual: [`docs/USER_MANUAL.md`](docs/USER_MANUAL.md)
+- Branding / loading UX: [`docs/PHASE5D_BRANDING_AND_LOADING_UX.md`](docs/PHASE5D_BRANDING_AND_LOADING_UX.md)
 
 ### Phase 4 hardening (index)
 

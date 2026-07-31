@@ -57,8 +57,11 @@ export function AcceptInvitationPage() {
         password: values.password,
         full_name: values.fullName,
       });
-      // acceptInvitation already saves session; refresh auth provider by hard navigation
-      window.location.assign("/dashboard");
+      // acceptInvitation already saves session; hard-nav so AuthProvider hydrates from storage.
+      const org = previewQuery.data?.organization_name
+        ? `?org=${encodeURIComponent(previewQuery.data.organization_name)}`
+        : "";
+      window.location.assign(`/auth/joining-organization${org}`);
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : "Unable to accept invitation.");
     }

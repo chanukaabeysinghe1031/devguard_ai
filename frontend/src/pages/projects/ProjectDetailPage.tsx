@@ -8,6 +8,7 @@ import { listIncidents } from "../../api/incidentsApi";
 import { listPipelineRuns } from "../../api/pipelineRunsApi";
 import { queryKeys } from "../../api/queryKeys";
 import { ApiError } from "../../api/client";
+import { ProjectBootstrapLoader } from "../../components/loading/ProjectBootstrapLoader";
 import { ErrorRetryAlert } from "../../components/ui/Alert";
 import { Breadcrumbs } from "../../components/ui/Breadcrumbs";
 import { Button } from "../../components/ui/Button";
@@ -17,9 +18,9 @@ import { DataTable, type DataTableColumn } from "../../components/ui/DataTable";
 import { LinkButton } from "../../components/ui/LinkButton";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { SeverityBadge } from "../../components/ui/SeverityBadge";
-import { Skeleton } from "../../components/ui/Skeleton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { Tabs } from "../../components/ui/Tabs";
+import { useProjectBootstrap } from "../../hooks/useProjectBootstrap";
 import type { IncidentListItem } from "../../types/incident";
 import type { PipelineRun } from "../../types/pipelineRun";
 import { formatDate, formatRelativeTime, titleCase } from "../../utils/formatters";
@@ -30,6 +31,8 @@ export function ProjectDetailPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"incidents" | "pipeline-runs">("incidents");
   const [confirmArchive, setConfirmArchive] = useState(false);
+
+  const bootstrap = useProjectBootstrap(projectId);
 
   const projectQuery = useQuery({
     queryKey: queryKeys.project(projectId ?? ""),
@@ -91,17 +94,29 @@ export function ProjectDetailPage() {
     { key: "started_at", header: "Started", render: (run) => formatRelativeTime(run.started_at) },
   ];
 
-  if (projectQuery.isLoading) {
+  if (bootstrap.isBootstrapping) {
     return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-40 w-full" />
-      </div>
+      <ProjectBootstrapLoader
+        projectName={bootstrap.projectName}
+        steps={bootstrap.steps}
+        progress={bootstrap.progress}
+      />
     );
   }
 
-  if (projectQuery.isError || !projectQuery.data) {
-    return <ErrorRetryAlert message="Failed to load project." onRetry={() => projectQuery.refetch()} />;
+  if (bootstrap.isError || projectQuery.isError || !projectQuery.data) {
+    return (
+      <ProjectBootstrapLoader
+        projectName={bootstrap.projectName}
+        steps={bootstrap.steps}
+        error={bootstrap.errorMessage ?? "Failed to load project."}
+        onRetry={() => {
+          bootstrap.retry();
+          void projectQuery.refetch();
+        }}
+        onBackToProjects={() => navigate("/projects")}
+      />
+    );
   }
 
   const project = projectQuery.data;

@@ -1,0 +1,135 @@
+/**
+ * Phase 5D brand motion primitives.
+ * Global prefers-reduced-motion rules in index.css already collapse durations;
+ * these classes add the keyframes used by brand loaders and the auth visual panel.
+ */
+
+@keyframes brand-logo-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes brand-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes brand-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes brand-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes brand-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes brand-node-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes brand-form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.brand-logo-enter {
+  animation: brand-logo-enter 380ms ease-out both;
+}
+
+.brand-float {
+  animation: brand-float 6s ease-in-out infinite;
+}
+
+.brand-glow-pulse {
+  animation: brand-glow-pulse 3.5s ease-in-out infinite;
+}
+
+.brand-orbit-ring {
+  border: 2px solid rgba(37, 99, 235, 0.2);
+  border-top-color: #06b6d4;
+  border-right-color: #7c3aed;
+  border-radius: 9999px;
+  animation: brand-orbit-spin 1.35s linear infinite;
+}
+
+.brand-orbit-dot {
+  top: -3%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 9999px;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.85);
+  animation: brand-orbit-spin 1.35s linear infinite;
+  transform-origin: 50% calc(100% + 42%);
+}
+
+.brand-form-enter {
+  animation: brand-form-enter 360ms ease-out both;
+}
+
+.brand-auth-ambient {
+  background-size: 200% 200%;
+  animation: brand-gradient-shift 18s ease-in-out infinite;
+}
+
+.brand-circuit-node {
+  animation: brand-node-pulse 3.2s ease-in-out infinite;
+}
+
+.brand-progress-indeterminate {
+  background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.85), rgba(124, 58, 237, 0.85), transparent);
+  background-size: 40% 100%;
+  animation: brand-progress-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes brand-progress-slide {
+  from {
+    background-position: -40% 0;
+  }
+  to {
+    background-position: 140% 0;
+  }
+}

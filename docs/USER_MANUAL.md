@@ -26,12 +26,14 @@ Requires API on `:8000` and UI on `:5173`. See `docs/PHASE5A_E2E_REPORT.md`.
 ## First session
 
 1. Open `/register` (or `/login` if you already have an account).
-2. You land on **Dashboard**.
-3. Create a **Project** (`Projects` → Create Project).
+2. After sign-in or workspace creation you briefly see a **branded transition** (“Signing you in” / “Creating your workspace”), then land on **Dashboard**.
+3. Create a **Project** (`Projects` → Create Project). Opening a project may show a short **Loading project** screen while details, incidents, and integrations initialize.
 4. Create an **Incident** (`Incidents` → Create Incident), upload a log, start analysis.
 5. Watch **Analysis progress**, then review **Evidence**, **Sources**, and **Recommendations**.
 6. Add **Notes**, **Assign**, change **Status**, then **Resolve**.
 7. **Generate Report** from the Report tab; find the case under **History**.
+
+Brand marks and loading UX: `docs/PHASE5D_BRANDING_AND_LOADING_UX.md`.
 
 ## Automated GitHub Actions (Phase 5B)
 

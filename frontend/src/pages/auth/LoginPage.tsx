@@ -34,7 +34,8 @@ export function LoginPage() {
     try {
       await login(values);
       const next = searchParams.get("next");
-      navigate(next && next.startsWith("/") ? next : "/dashboard", { replace: true });
+      const destination = next && next.startsWith("/") ? next : "/dashboard";
+      navigate(`/auth/signing-in?next=${encodeURIComponent(destination)}`, { replace: true });
     } catch (error) {
       if (error instanceof ApiError) {
         setFormError(error.message);
@@ -48,7 +49,7 @@ export function LoginPage() {
     <div>
       <h1 className="text-2xl font-bold text-text-primary">Welcome back</h1>
       <p className="mt-1.5 text-sm text-text-secondary">
-        Sign in to review incidents, evidence, and AI-generated recommendations.
+        Sign in to continue to your organization workspace.
       </p>
 
       {formError && (
@@ -80,9 +81,9 @@ export function LoginPage() {
       </form>
 
       <p className="mt-6 text-center text-sm text-text-muted">
-        Don&apos;t have a workspace?{" "}
+        No account?{" "}
         <Link to="/register" className="font-medium text-primary hover:underline">
-          Create one
+          Create your organization
         </Link>
         {" · "}
         <Link to="/invitations/accept" className="font-medium text-primary hover:underline">

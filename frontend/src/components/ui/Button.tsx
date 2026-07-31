@@ -15,7 +15,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const BUTTON_VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-white hover:bg-primary-hover shadow-card",
+  primary:
+    "bg-gradient-to-r from-info via-primary to-secondary text-white hover:opacity-95 shadow-card",
   secondary: "bg-secondary text-white hover:opacity-90 shadow-card",
   outline: "border border-border-strong text-text-primary hover:bg-surface-hover bg-transparent",
   ghost: "text-text-secondary hover:bg-surface-hover hover:text-text-primary bg-transparent",

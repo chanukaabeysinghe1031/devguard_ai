@@ -4,6 +4,7 @@ export interface TestUser {
   email: string;
   password: string;
   fullName: string;
+  organizationName?: string;
 }
 
 let sequence = 0;
@@ -20,30 +21,29 @@ export function uniqueUser(prefix = "e2e-user"): TestUser {
     email: `${prefix}.${stamp}@example.com`,
     password: "E2eTestPass123!",
     fullName: `E2E Test User ${stamp}`,
+    organizationName: `E2E Org ${stamp}`,
   };
 }
 
 /** Registers a new user via the UI. Registration auto-creates an owned organization and signs in. */
 export async function registerViaUi(page: Page, user: TestUser): Promise<void> {
   await page.goto("/register");
-  await page.getByLabel("Full name").fill(user.fullName);
-  await page.getByLabel("Email").fill(user.email);
-  // Required fields render a trailing "*" inside the <label> (see Input.tsx), so the accessible
-  // name is actually "Password*" — an exact match would never succeed. A "starts with" regex
-  // avoids that while still disambiguating from the separate "Confirm password" field.
+  await page.getByLabel(/^Organization name/).fill(user.organizationName ?? `Org ${user.fullName}`);
+  await page.getByLabel(/^Your name/).fill(user.fullName);
+  await page.getByLabel(/Work email|Email/).fill(user.email);
   await page.getByLabel(/^Password/).fill(user.password);
-  await page.getByLabel("Confirm password").fill(user.password);
-  await page.getByRole("button", { name: "Create account" }).click();
-  await page.waitForURL("**/dashboard", { timeout: 30_000 });
+  await page.getByLabel(/^Confirm password/).fill(user.password);
+  await page.getByRole("button", { name: /Create workspace/i }).click();
+  await page.waitForURL("**/dashboard", { timeout: 45_000 });
 }
 
 /** Logs in an existing user via the UI login form. */
 export async function loginViaUi(page: Page, user: Pick<TestUser, "email" | "password">): Promise<void> {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(user.email);
+  await page.getByLabel(/Email/).fill(user.email);
   await page.getByLabel(/^Password/).fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL("**/dashboard", { timeout: 30_000 });
+  await page.waitForURL("**/dashboard", { timeout: 45_000 });
 }
 
 /** Logs out via the account menu in the top bar. */

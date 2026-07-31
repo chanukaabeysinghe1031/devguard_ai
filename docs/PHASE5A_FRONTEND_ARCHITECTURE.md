@@ -9,19 +9,25 @@
 frontend/src/
 ├── app/           # App, router, providers, queryClient, routeGuards
 ├── api/           # Typed /api/v1 clients + queryKeys
+├── assets/        # Brand logo exports (Phase 5D)
 ├── components/
+│   ├── brand/     # BrandLogo, BrandMark, BrandLoadingMark
+│   ├── loading/   # Full-screen / auth / project loaders
 │   ├── ui/        # Design-system primitives
 │   └── layout/    # AppShell, Sidebar, TopBar, menus
 ├── features/      # (reserved; pages currently host feature UI)
-├── hooks/         # useAuth, useClickOutside
-├── layouts/       # AuthLayout
+├── hooks/         # useAuth, useProjectBootstrap, motion helpers
+├── layouts/       # AuthLayout, AuthVisualPanel
 ├── pages/         # Route-level screens by domain
 ├── stores/        # UI preferences (sidebar collapse)
-├── styles/        # tokens.css
+├── styles/        # tokens.css, brand-animations.css
 ├── types/         # API-aligned TypeScript models
 └── utils/         # cn, formatters, statusMaps, executionModeLabels
 ```
 
+## Branding (Phase 5D)
+
+See `docs/PHASE5D_BRANDING_AND_LOADING_UX.md` for asset paths, auth transitions (`/auth/signing-in`, `/auth/creating-workspace`, `/auth/joining-organization`), and project bootstrap loading.
 ## Data flow
 
 1. Session JWT + refresh token in `sessionStorage` (`devguard.session`)
