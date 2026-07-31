@@ -9,7 +9,8 @@ Phase 6A extends the existing analysis spine with artifact acquisition, deep par
 | 6A.0 | Done | Architecture audit |
 | 6A.1 | Done | Artifact bundle + parsers + GitHub acquisition |
 | 6A.2 | Done | Temporal localisation + evidence graph + consistency |
-| 6A.3+ | Not started | Hypotheses, ranking, verifiers, abstention, Causal UI |
+| 6A.3 | Done | Hierarchical classification + open-set + disagreement |
+| 6A.4+ | Not started | Hypotheses, ranking, verifiers, abstention, Causal UI |
 
 ## Pipeline (flags OFF = unchanged production path)
 
@@ -22,13 +23,16 @@ flowchart TB
   P --> T[Temporal localisation 6A.2]
   T --> G[Evidence graph 6A.2]
   G --> C[Consistency 6A.2]
+  O --> H[Hierarchical classification 6A.3]
   O --> D[Diagnosis + RAG + recommendations]
+  H -.-> D
 ```
 
-6A.2 stages soft-fail and **do not** feed the LLM or alter diagnosis confidence in this phase.
+6A.2–6A.3 stages soft-fail. Hierarchical classification **extends** frozen categories and does **not** generate causal hypotheses.
 
 ## Important
 
 - Temporal / graph relationships support later causal reasoning.
 - Heuristic precedence is **not** confirmed causality.
 - Missing artifacts → partial graph, never fabricated evidence.
+- Open-set may return UNKNOWN; disagreement is an uncertainty signal only.

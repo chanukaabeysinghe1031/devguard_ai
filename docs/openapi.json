@@ -4372,6 +4372,500 @@
         }
       }
     },
+    "/api/v1/analyses/{analysis_run_id}/hierarchical-classification": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Hierarchical Classification",
+        "description": "Debug endpoint for Phase 6A.3 hierarchical classification.",
+        "operationId": "get_hierarchical_classification_api_v1_analyses__analysis_run_id__hierarchical_classification_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HierarchicalClassificationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/classification-candidates": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Classification Candidates",
+        "operationId": "list_classification_candidates_api_v1_analyses__analysis_run_id__classification_candidates_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "source_classifier",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Classifier"
+            }
+          },
+          {
+            "name": "level_1",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level 1"
+            }
+          },
+          {
+            "name": "level_2",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level 2"
+            }
+          },
+          {
+            "name": "level_3",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level 3"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassificationCandidateListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/open-set-assessment": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Open Set Assessment",
+        "operationId": "get_open_set_assessment_api_v1_analyses__analysis_run_id__open_set_assessment_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenSetAssessmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/classification-disagreement": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Classification Disagreement",
+        "operationId": "get_classification_disagreement_api_v1_analyses__analysis_run_id__classification_disagreement_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassificationDisagreementResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/classification-confidence": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Classification Confidence",
+        "operationId": "get_classification_confidence_api_v1_analyses__analysis_run_id__classification_confidence_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassificationConfidenceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/failure-taxonomy": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Failure Taxonomy",
+        "description": "Organization-scoped read of the frozen-category hierarchy mapping.",
+        "operationId": "get_failure_taxonomy_api_v1_failure_taxonomy_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "level_1",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level 1"
+            }
+          },
+          {
+            "name": "level_2",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level 2"
+            }
+          },
+          {
+            "name": "level_3",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level 3"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FailureTaxonomyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/analyses/{analysis_run_id}/cancel": {
       "post": {
         "tags": [
@@ -8879,6 +9373,316 @@
         ],
         "title": "ChangePasswordRequest"
       },
+      "ClassificationCandidateItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "category_code": {
+            "type": "string",
+            "title": "Category Code"
+          },
+          "level_1_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 1 Code"
+          },
+          "level_2_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 2 Code"
+          },
+          "level_3_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 3 Code"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "source_classifier": {
+            "type": "string",
+            "title": "Source Classifier"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "supporting_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supporting Evidence"
+          },
+          "contradicting_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contradicting Evidence"
+          },
+          "matched_rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category_code",
+          "score",
+          "source_classifier",
+          "rank"
+        ],
+        "title": "ClassificationCandidateItem"
+      },
+      "ClassificationCandidateListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ClassificationCandidateItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_items"
+        ],
+        "title": "ClassificationCandidateListResponse"
+      },
+      "ClassificationConfidenceComponentItem": {
+        "properties": {
+          "component_name": {
+            "type": "string",
+            "title": "Component Name"
+          },
+          "raw_value": {
+            "type": "number",
+            "title": "Raw Value"
+          },
+          "normalized_value": {
+            "type": "number",
+            "title": "Normalized Value"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          },
+          "contribution": {
+            "type": "number",
+            "title": "Contribution"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "component_name",
+          "raw_value",
+          "normalized_value",
+          "weight",
+          "contribution",
+          "source"
+        ],
+        "title": "ClassificationConfidenceComponentItem"
+      },
+      "ClassificationConfidenceResponse": {
+        "properties": {
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "final_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Confidence"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ClassificationConfidenceComponentItem"
+            },
+            "type": "array",
+            "title": "Components"
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis_run_id",
+          "components"
+        ],
+        "title": "ClassificationConfidenceResponse"
+      },
+      "ClassificationDisagreementResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "agreement_level": {
+            "type": "string",
+            "title": "Agreement Level"
+          },
+          "agreed_level_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreed Level 1"
+          },
+          "agreed_level_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreed Level 2"
+          },
+          "agreed_level_3": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreed Level 3"
+          },
+          "conflicting_candidates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conflicting Candidates"
+          },
+          "conflict_type": {
+            "type": "string",
+            "title": "Conflict Type"
+          },
+          "evidence_conflict": {
+            "type": "boolean",
+            "title": "Evidence Conflict"
+          },
+          "classifier_conflict": {
+            "type": "boolean",
+            "title": "Classifier Conflict"
+          },
+          "category_distance": {
+            "type": "number",
+            "title": "Category Distance"
+          },
+          "recommended_action": {
+            "type": "string",
+            "title": "Recommended Action"
+          },
+          "additional_evidence_needed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Additional Evidence Needed"
+          },
+          "confidence_penalty": {
+            "type": "number",
+            "title": "Confidence Penalty"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "analysis_run_id",
+          "agreement_level",
+          "conflict_type",
+          "evidence_conflict",
+          "classifier_conflict",
+          "category_distance",
+          "recommended_action",
+          "confidence_penalty",
+          "created_at"
+        ],
+        "title": "ClassificationDisagreementResponse"
+      },
       "ConnectionCreateRequest": {
         "properties": {
           "auto_create_incidents": {
@@ -9865,6 +10669,41 @@
         ],
         "title": "FailureCategoryItem"
       },
+      "FailureTaxonomyResponse": {
+        "properties": {
+          "mapping_version": {
+            "type": "string",
+            "title": "Mapping Version"
+          },
+          "paths": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonomyPathItem"
+            },
+            "type": "array",
+            "title": "Paths"
+          },
+          "aliases": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Aliases"
+          },
+          "frozen_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Frozen Codes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mapping_version",
+          "paths"
+        ],
+        "title": "FailureTaxonomyResponse"
+      },
       "FileDetailResponse": {
         "properties": {
           "id": {
@@ -10383,6 +11222,170 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HierarchicalClassificationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "final_legacy_category_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Legacy Category Code"
+          },
+          "level_1_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 1 Code"
+          },
+          "level_2_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 2 Code"
+          },
+          "level_3_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level 3 Code"
+          },
+          "classification_status": {
+            "type": "string",
+            "title": "Classification Status"
+          },
+          "final_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Confidence"
+          },
+          "mapping_version": {
+            "type": "string",
+            "title": "Mapping Version"
+          },
+          "model_versions": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Model Versions"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Ids"
+          },
+          "missing_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Evidence"
+          },
+          "rule_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Result"
+          },
+          "learned_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Learned Result"
+          },
+          "llm_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Result"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "analysis_run_id",
+          "classification_status",
+          "mapping_version",
+          "created_at"
+        ],
+        "title": "HierarchicalClassificationResponse"
       },
       "HistoryIncidentItem": {
         "properties": {
@@ -11813,6 +12816,107 @@
           "created_at"
         ],
         "title": "NotificationResponse"
+      },
+      "OpenSetAssessmentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "unknown_score": {
+            "type": "number",
+            "title": "Unknown Score"
+          },
+          "maximum_known_score": {
+            "type": "number",
+            "title": "Maximum Known Score"
+          },
+          "top_two_margin": {
+            "type": "number",
+            "title": "Top Two Margin"
+          },
+          "rule_coverage": {
+            "type": "number",
+            "title": "Rule Coverage"
+          },
+          "representation_distance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Representation Distance"
+          },
+          "evidence_coverage": {
+            "type": "number",
+            "title": "Evidence Coverage"
+          },
+          "disagreement_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disagreement Level"
+          },
+          "threshold_version": {
+            "type": "string",
+            "title": "Threshold Version"
+          },
+          "triggered_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Triggered Conditions"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "analysis_run_id",
+          "status",
+          "unknown_score",
+          "maximum_known_score",
+          "top_two_margin",
+          "rule_coverage",
+          "evidence_coverage",
+          "threshold_version",
+          "created_at"
+        ],
+        "title": "OpenSetAssessmentResponse"
       },
       "OrganizationResponse": {
         "properties": {
@@ -14001,6 +15105,64 @@
         },
         "type": "object",
         "title": "StartAnalysisRequest"
+      },
+      "TaxonomyPathItem": {
+        "properties": {
+          "legacy_category_code": {
+            "type": "string",
+            "title": "Legacy Category Code"
+          },
+          "level_1_code": {
+            "type": "string",
+            "title": "Level 1 Code"
+          },
+          "level_1_label": {
+            "type": "string",
+            "title": "Level 1 Label"
+          },
+          "level_2_code": {
+            "type": "string",
+            "title": "Level 2 Code"
+          },
+          "level_2_label": {
+            "type": "string",
+            "title": "Level 2 Label"
+          },
+          "level_3_code": {
+            "type": "string",
+            "title": "Level 3 Code"
+          },
+          "level_3_label": {
+            "type": "string",
+            "title": "Level 3 Label"
+          },
+          "mapping_version": {
+            "type": "string",
+            "title": "Mapping Version"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "legacy_category_code",
+          "level_1_code",
+          "level_1_label",
+          "level_2_code",
+          "level_2_label",
+          "level_3_code",
+          "level_3_label",
+          "mapping_version"
+        ],
+        "title": "TaxonomyPathItem"
       },
       "TemporalEventItem": {
         "properties": {

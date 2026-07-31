@@ -358,7 +358,7 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 | Flags (default off) | `ARTIFACT_BUNDLE_ENABLED`, `ARTIFACT_PARSING_ENABLED`, `GITHUB_ARTIFACT_ACQUISITION_ENABLED`, `CAUSAL_ANALYSIS_ENABLED` in `.env.example` / `Settings` |
 | Debug API | `GET /api/v1/analyses/{analysis_run_id}/artifact-bundle` |
 
-**Still deferred:** 6A.3–6A.8 causal/verifier stages, 6A.9 Causal UI.
+**Still deferred (as of 6A.1):** later causal/verifier stages and Causal UI (see 6A.3 update below).
 
 ### Phase 6A.2 implementation references
 
@@ -374,7 +374,24 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 | Docs | `docs/PHASE6A_TEMPORAL_LOCALISATION.md`, `PHASE6A_EVIDENCE_GRAPH.md`, `PHASE6A_GRAPH_CONSISTENCY.md`, `PHASE6A_CAUSAL_AI_PIPELINE.md` |
 | Flags | `TEMPORAL_LOCALISATION_ENABLED`, `EVIDENCE_GRAPH_ENABLED`, `GRAPH_CONSISTENCY_ENABLED` (default false) |
 
-> **Update:** Phase 6A.2 delivered. Next approval ask is **Phase 6A.3** only.
+> **Update:** Phase 6A.2 delivered.
+
+### Phase 6A.3 implementation references
+
+| Deliverable | Location |
+|-------------|----------|
+| Audit | `docs/PHASE6A3_CLASSIFICATION_AUDIT.md` |
+| Migration `013_phase6a3_hier_class` | `backend/alembic/versions/013_phase6a3_hier_class.py` |
+| Taxonomy registry | `backend/app/domain/classification/` |
+| Hierarchical orchestrator | `backend/app/ai/classification/hierarchical_orchestrator.py` |
+| Open-set / disagreement / confidence | `open_set_detector.py`, `disagreement_analyzer.py`, `confidence_breakdown.py` |
+| Debug APIs | hierarchical-classification, classification-candidates, open-set-assessment, classification-disagreement, classification-confidence, failure-taxonomy |
+| Docs | `PHASE6A_HIERARCHICAL_CLASSIFICATION.md`, `PHASE6A_OPEN_SET_DETECTION.md`, `PHASE6A_CLASSIFICATION_DISAGREEMENT.md` |
+| Flags | `HIERARCHICAL_CLASSIFICATION_ENABLED`, `OPEN_SET_DETECTION_ENABLED`, `CLASSIFICATION_DISAGREEMENT_ENABLED`, `CLASSIFICATION_CONFIDENCE_BREAKDOWN_ENABLED` (default false) |
+
+> **Update:** Phase 6A.3 delivered. Next approval ask is **Phase 6A.4** (causal hypothesis generation) only. Do not begin without separate approval.
+
+**Still deferred:** 6A.4–6A.8 causal/verifier stages, 6A.9 Causal UI.
 
 ---
 
@@ -384,8 +401,7 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 
 > **Update:** Phase 6A.1 approved and delivered. Next approval ask is **Phase 6A.2** (evidence graph from parse results) only.
 
----
-
+> **Update:** Phase 6A.2–6A.3 delivered. Next approval ask is **Phase 6A.4** only.
 ## 18. References
 
 - `docs/MASTER_ARCHITECTURE.md` § Phase 6 / Modules 8–10  

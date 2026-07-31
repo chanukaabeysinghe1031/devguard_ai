@@ -23,6 +23,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Module 9 — Hybrid Retrieval** | ✅ Embedding baseline + hybrid static + org-safe historical retrieval |
 | **Phase 6A.1 — Artifact Bundle** | ✅ Parsers + GitHub acquisition (flags OFF by default) |
 | **Phase 6A.2 — Temporal + Evidence Graph** | ✅ Localisation + typed graph + consistency (flags OFF by default) |
+| **Phase 6A.3 — Hierarchical Classification** | ✅ Hierarchy + open-set + disagreement (flags OFF by default) |
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
