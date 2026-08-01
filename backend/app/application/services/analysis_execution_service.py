@@ -115,6 +115,7 @@ class AnalysisExecutionService:
             await self._maybe_run_phase6a4(run, context)
             await self._maybe_run_phase6a5_hypothesis_retrieval(run, context)
             await self._maybe_run_phase6a5_evidence_assessment(run, context)
+            await self._maybe_run_phase6a6_counterfactual_foundation(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -195,6 +196,22 @@ class AnalysisExecutionService:
             options["retrieval_mode"] = "embedding_only"
         if "retrieval_mode" not in options:
             options["retrieval_mode"] = self._settings.default_retrieval_mode
+
+        # Phase 6A.6 — request options cannot force counterfactual flags ON.
+        if not self._settings.counterfactual_remediation_enabled:
+            options["counterfactual_remediation_enabled"] = False
+        if not self._settings.counterfactual_constraint_extraction_enabled:
+            options["counterfactual_constraint_extraction_enabled"] = False
+        if not self._settings.minimal_change_planning_enabled:
+            options["minimal_change_planning_enabled"] = False
+        if not self._settings.counterfactual_template_registry_enabled:
+            options["counterfactual_template_registry_enabled"] = False
+        if not self._settings.counterfactual_persistence_enabled:
+            options["counterfactual_persistence_enabled"] = False
+        if not self._settings.rule_remediation_generation_enabled:
+            options["rule_remediation_generation_enabled"] = False
+        if not self._settings.llm_remediation_generation_enabled:
+            options["llm_remediation_generation_enabled"] = False
 
         # Clamp latency to server maximum.
         try:
@@ -1189,6 +1206,96 @@ class AnalysisExecutionService:
                 title="Hypothesis evidence assessment failed",
                 description=type(exc).__name__,
                 event_type="hypothesis_evidence_assessment_failed",
+                metadata={"analysis_run_id": str(run.id)},
+            )
+
+    async def _maybe_run_phase6a6_counterfactual_foundation(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Counterfactual remediation foundation (Part 1). Soft-fail. No apply/verifiers."""
+        if not self._settings.counterfactual_remediation_enabled:
+            return
+        if context.organization_id is None:
+            return
+        try:
+            from app.ai.counterfactual_remediation.foundation_service import (
+                CounterfactualRemediationFoundationService,
+            )
+            from app.ai.counterfactual_remediation.persist import (
+                CounterfactualRemediationPersistService,
+            )
+            from app.infrastructure.repositories.counterfactual_remediation_repository import (
+                CounterfactualRemediationRepositoryImpl,
+            )
+
+            persist_service: CounterfactualRemediationPersistService | None = None
+            if self._settings.counterfactual_persistence_enabled:
+                persist_service = CounterfactualRemediationPersistService(
+                    enabled=True,
+                    repository=CounterfactualRemediationRepositoryImpl(self._session),
+                )
+
+            foundation = CounterfactualRemediationFoundationService(
+                self._settings,
+                persist_service=persist_service,
+            )
+            logger.info(
+                "counterfactual_remediation_foundation_started",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+            )
+            result = await foundation.run_async(
+                organization_id=str(context.organization_id),
+                analysis_id=str(run.id),
+                options=dict(context.options),
+                project_id=str(context.project_id) if context.project_id else None,
+                incident_id=str(run.incident_id) if run.incident_id else None,
+            )
+            # Never overwrite diagnosis / recommendations / retrieved / evidence assessment.
+            context.options["counterfactual_remediation"] = result.to_dict()
+            status_value = (
+                result.status.value if hasattr(result.status, "value") else str(result.status)
+            )
+            logger.info(
+                "counterfactual_remediation_foundation_completed",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+                status=status_value,
+                duration_ms=result.duration_ms,
+                candidate_count=result.candidate_count,
+            )
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Counterfactual remediation foundation completed",
+                description=f"{status_value}: candidates only, unverified",
+                event_type="counterfactual_remediation_foundation_completed",
+                metadata={
+                    "analysis_run_id": str(run.id),
+                    "status": status_value,
+                    "candidate_count": result.candidate_count,
+                    "selected_hypothesis_count": result.selected_hypothesis_count,
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "phase6a6_counterfactual_foundation_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(
+                f"phase6a6_counterfactual_foundation_failed:{type(exc).__name__}"
+            )
+            context.options["counterfactual_remediation"] = {
+                "status": "FAILED",
+                "error": type(exc).__name__,
+            }
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Counterfactual remediation foundation failed",
+                description=type(exc).__name__,
+                event_type="counterfactual_remediation_foundation_failed",
                 metadata={"analysis_run_id": str(run.id)},
             )
 

@@ -116,6 +116,7 @@ class CounterfactualRemediationFoundationService:
     ) -> None:
         self._settings = settings
         self._bounds = bounds
+        self._last_persist_payload: dict[str, Any] = {}
         self._persist = persist_service or CounterfactualRemediationPersistService(
             enabled=_flag(settings, "counterfactual_persistence_enabled", False)
             or bool(bounds.get("persistence_enabled", False))
@@ -179,7 +180,7 @@ class CounterfactualRemediationFoundationService:
         incident_id = incident_id or ""
 
         if not self._master_enabled():
-            return CounterfactualRemediationRun(
+            disabled = CounterfactualRemediationRun(
                 id=str(uuid4()),
                 organization_id=organization_id,
                 project_id=project_id,
@@ -192,6 +193,13 @@ class CounterfactualRemediationFoundationService:
                 planner_version=MINIMAL_CHANGE_PLANNER_VERSION,
                 template_registry_version=REMEDIATION_TEMPLATES_VERSION,
             )
+            self._last_persist_payload = {
+                "run": disabled,
+                "candidates": [],
+                "constraints": [],
+                "preconditions": [],
+            }
+            return disabled
 
         run = CounterfactualRemediationRun(
             id=str(uuid4()),
@@ -223,10 +231,17 @@ class CounterfactualRemediationFoundationService:
             if not eligible:
                 run.status = CounterfactualRemediationRunStatus.NO_ELIGIBLE_HYPOTHESES
                 run.warnings.append("no_eligible_hypotheses")
+                self._last_persist_payload = {
+                    "run": run,
+                    "candidates": [],
+                    "constraints": [],
+                    "preconditions": [],
+                }
                 return self._finalize(run, started)
 
             candidates: list[CounterfactualRemediationCandidate] = []
             all_constraints: list[Any] = []
+            all_preconditions: list[Any] = []
 
             for hypothesis in eligible:
                 hyp_result = self._process_hypothesis(
@@ -240,6 +255,7 @@ class CounterfactualRemediationFoundationService:
                 )
                 candidates.extend(hyp_result.get("candidates") or [])
                 all_constraints.extend(hyp_result.get("constraints") or [])
+                all_preconditions.extend(hyp_result.get("preconditions") or [])
                 run.warnings.extend(hyp_result.get("warnings") or [])
 
             run.candidate_count = len(candidates)
@@ -276,6 +292,13 @@ class CounterfactualRemediationFoundationService:
             run.configuration_snapshot["candidate_summaries"] = [c.to_dict() for c in candidates]
             run.configuration_snapshot["constraint_count"] = len(all_constraints)
             run.configuration_snapshot["persist_pending"] = self._persist.enabled
+            # Transient payload for run_async persistence (not serialised to options).
+            self._last_persist_payload = {
+                "run": run,
+                "candidates": candidates,
+                "constraints": all_constraints,
+                "preconditions": all_preconditions,
+            }
             return self._finalize(run, started)
         except Exception as exc:  # noqa: BLE001 — soft-fail stage
             logger.warning(
@@ -285,6 +308,12 @@ class CounterfactualRemediationFoundationService:
             )
             run.status = CounterfactualRemediationRunStatus.FAILED
             run.errors.append(f"foundation_failed:{type(exc).__name__}")
+            self._last_persist_payload = {
+                "run": run,
+                "candidates": [],
+                "constraints": [],
+                "preconditions": [],
+            }
             return self._finalize(run, started)
 
     async def run_async(
@@ -297,6 +326,7 @@ class CounterfactualRemediationFoundationService:
         incident_id: str | None = None,
         eligibility_results: list[HypothesisEligibilityResult] | dict[str, Any] | None = None,
     ) -> CounterfactualRemediationRun:
+        self._last_persist_payload = {}
         run = self.run(
             organization_id=organization_id,
             analysis_id=analysis_id,
@@ -306,7 +336,9 @@ class CounterfactualRemediationFoundationService:
             eligibility_results=eligibility_results,
         )
         try:
-            await self._persist.create_run(run)
+            payload = dict(self._last_persist_payload or {})
+            payload.setdefault("run", run)
+            await self._persist.persist_foundation_result(payload)
         except Exception as exc:  # noqa: BLE001
             logger.warning("counterfactual_persist_failed error=%s", type(exc).__name__)
             run.warnings.append("persist_failed")
@@ -588,6 +620,7 @@ class CounterfactualRemediationFoundationService:
         return {
             "candidates": candidates,
             "constraints": list(constraint_set.constraints),
+            "preconditions": list(preconditions),
             "warnings": warnings,
             "plan_status": plan.status.value,
         }

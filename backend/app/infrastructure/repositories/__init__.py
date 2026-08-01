@@ -1,5 +1,8 @@
 """SQLAlchemy repository implementations."""
 
+from app.infrastructure.repositories.counterfactual_remediation_repository import (
+    CounterfactualRemediationRepositoryImpl,
+)
 from app.infrastructure.repositories.failure_category_repository import (
     SQLAlchemyFailureCategoryRepository,
 )
@@ -9,6 +12,7 @@ from app.infrastructure.repositories.pipeline_run_repository import (
 from app.infrastructure.repositories.user_repository import SQLAlchemyUserRepository
 
 __all__ = [
+    "CounterfactualRemediationRepositoryImpl",
     "SQLAlchemyFailureCategoryRepository",
     "SQLAlchemyPipelineRunRepository",
     "SQLAlchemyUserRepository",
