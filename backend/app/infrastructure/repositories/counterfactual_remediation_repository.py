@@ -385,6 +385,97 @@ class CounterfactualRemediationRepositoryImpl:
             )
             return None
 
+    async def list_constraints_by_analysis(
+        self,
+        *,
+        organization_id: str | UUID,
+        analysis_run_id: str | UUID,
+        candidate_id: str | UUID | None = None,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list[RemediationConstraintRow]:
+        try:
+            org_id = _require_uuid(organization_id, field="organization_id")
+            analysis_id = _require_uuid(analysis_run_id, field="analysis_run_id")
+            stmt = select(RemediationConstraintRow).where(
+                RemediationConstraintRow.organization_id == org_id,
+                RemediationConstraintRow.analysis_run_id == analysis_id,
+            )
+            if candidate_id is not None:
+                cand = _as_uuid(candidate_id)
+                if cand is not None:
+                    stmt = stmt.where(RemediationConstraintRow.candidate_id == cand)
+            stmt = stmt.offset(max(0, offset)).limit(max(1, min(limit, 500)))
+            return list((await self._session.scalars(stmt)).all())
+        except (SQLAlchemyError, ValueError) as exc:
+            logger.warning(
+                "cf_remediation_list_constraints_failed error=%s",
+                type(exc).__name__,
+            )
+            return []
+
+    async def list_preconditions_by_candidate(
+        self,
+        *,
+        organization_id: str | UUID,
+        analysis_run_id: str | UUID,
+        candidate_id: str | UUID,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list[RemediationPreconditionRow]:
+        try:
+            org_id = _require_uuid(organization_id, field="organization_id")
+            analysis_id = _require_uuid(analysis_run_id, field="analysis_run_id")
+            cand = _require_uuid(candidate_id, field="candidate_id")
+            stmt = (
+                select(RemediationPreconditionRow)
+                .where(
+                    RemediationPreconditionRow.organization_id == org_id,
+                    RemediationPreconditionRow.analysis_run_id == analysis_id,
+                    RemediationPreconditionRow.candidate_id == cand,
+                )
+                .offset(max(0, offset))
+                .limit(max(1, min(limit, 500)))
+            )
+            return list((await self._session.scalars(stmt)).all())
+        except (SQLAlchemyError, ValueError) as exc:
+            logger.warning(
+                "cf_remediation_list_preconditions_failed error=%s",
+                type(exc).__name__,
+            )
+            return []
+
+    async def list_verification_requirements_by_candidate(
+        self,
+        *,
+        organization_id: str | UUID,
+        analysis_run_id: str | UUID,
+        candidate_id: str | UUID,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list[RemediationVerificationRequirementRow]:
+        try:
+            org_id = _require_uuid(organization_id, field="organization_id")
+            analysis_id = _require_uuid(analysis_run_id, field="analysis_run_id")
+            cand = _require_uuid(candidate_id, field="candidate_id")
+            stmt = (
+                select(RemediationVerificationRequirementRow)
+                .where(
+                    RemediationVerificationRequirementRow.organization_id == org_id,
+                    RemediationVerificationRequirementRow.analysis_run_id == analysis_id,
+                    RemediationVerificationRequirementRow.candidate_id == cand,
+                )
+                .offset(max(0, offset))
+                .limit(max(1, min(limit, 500)))
+            )
+            return list((await self._session.scalars(stmt)).all())
+        except (SQLAlchemyError, ValueError) as exc:
+            logger.warning(
+                "cf_remediation_list_verification_reqs_failed error=%s",
+                type(exc).__name__,
+            )
+            return []
+
     # --------------------------------------------------------------- changes
 
     async def create_changes_batch(

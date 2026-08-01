@@ -17,6 +17,7 @@ from app.application.services.phase6a2_service import Phase6A2ArtifactsService
 from app.application.services.phase6a3_service import Phase6A3ClassificationService
 from app.application.services.phase6a4_service import Phase6A4HypothesisService
 from app.application.services.phase6a5_service import Phase6A5HypothesisRetrievalService
+from app.application.services.phase6a6_service import Phase6A6CounterfactualService
 from app.core.config import Settings
 from app.infrastructure.storage import build_file_storage
 from app.schemas.analysis import (
@@ -65,6 +66,15 @@ from app.schemas.phase6a5 import (
     HypothesisRetrievalSessionDetailResponse,
     HypothesisRetrievalSessionListResponse,
     HypothesisRetrievedItemListResponse,
+)
+from app.schemas.phase6a6 import (
+    CounterfactualRemediationCandidateDetailResponse,
+    CounterfactualRemediationCandidateListResponse,
+    CounterfactualRemediationRunResponse,
+    CounterfactualStateSnapshotResponse,
+    RemediationConstraintListResponse,
+    RemediationPreconditionListResponse,
+    RemediationVerificationRequirementListResponse,
 )
 
 router = APIRouter(tags=["Analysis Runs"])
@@ -205,6 +215,12 @@ def _phase6a4(session: AsyncSession = Depends(get_session)) -> Phase6A4Hypothesi
 def _phase6a5(session: AsyncSession = Depends(get_session)) -> Phase6A5HypothesisRetrievalService:
     return Phase6A5HypothesisRetrievalService(AnalysisRunService(session))
 
+
+def _phase6a6(
+    session: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings_dep),
+) -> Phase6A6CounterfactualService:
+    return Phase6A6CounterfactualService(AnalysisRunService(session), settings)
 
 @router.get("/analyses/{analysis_run_id}/status", response_model=AnalysisStatusResponse)
 async def get_analysis_status(
@@ -955,6 +971,158 @@ async def get_evidence_sufficiency(
     return await service.get_evidence_sufficiency(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-run",
+    response_model=CounterfactualRemediationRunResponse,
+)
+async def get_counterfactual_remediation_run(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualRemediationRunResponse:
+    """Phase 6A.6 Part 1 foundation run — candidates only, unverified."""
+    _, organization_id, _ = ctx
+    return await service.get_run(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates",
+    response_model=CounterfactualRemediationCandidateListResponse,
+)
+async def list_counterfactual_remediation_candidates(
+    analysis_run_id: UUID,
+    page: int = 1,
+    page_size: int = 50,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualRemediationCandidateListResponse:
+    """List counterfactual remediation candidate skeletons for an analysis."""
+    _, organization_id, _ = ctx
+    return await service.list_candidates(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}",
+    response_model=CounterfactualRemediationCandidateDetailResponse,
+)
+async def get_counterfactual_remediation_candidate(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualRemediationCandidateDetailResponse:
+    """Candidate detail — skeleton only; not verified or applied."""
+    _, organization_id, _ = ctx
+    return await service.get_candidate(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/current-state",
+    response_model=CounterfactualStateSnapshotResponse,
+)
+async def get_counterfactual_candidate_current_state(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualStateSnapshotResponse:
+    """Redacted current-state snapshot for a remediation candidate."""
+    _, organization_id, _ = ctx
+    return await service.get_current_state(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/counterfactual-state",
+    response_model=CounterfactualStateSnapshotResponse,
+)
+async def get_counterfactual_candidate_counterfactual_state(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualStateSnapshotResponse:
+    """Redacted counterfactual-state snapshot for a remediation candidate."""
+    _, organization_id, _ = ctx
+    return await service.get_counterfactual_state(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/constraints",
+    response_model=RemediationConstraintListResponse,
+)
+async def list_counterfactual_candidate_constraints(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> RemediationConstraintListResponse:
+    """Extracted remediation constraints for a candidate (debug)."""
+    _, organization_id, _ = ctx
+    return await service.list_constraints(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/preconditions",
+    response_model=RemediationPreconditionListResponse,
+)
+async def list_counterfactual_candidate_preconditions(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> RemediationPreconditionListResponse:
+    """Counterfactual preconditions for a candidate (debug)."""
+    _, organization_id, _ = ctx
+    return await service.list_preconditions(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/verification-requirements",
+    response_model=RemediationVerificationRequirementListResponse,
+)
+async def list_counterfactual_candidate_verification_requirements(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> RemediationVerificationRequirementListResponse:
+    """Reserved verification requirements — NOT_RUN in Part 1."""
+    _, organization_id, _ = ctx
+    return await service.list_verification_requirements(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
     )
 
 
