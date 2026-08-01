@@ -18,6 +18,7 @@ from app.application.services.phase6a3_service import Phase6A3ClassificationServ
 from app.application.services.phase6a4_service import Phase6A4HypothesisService
 from app.application.services.phase6a5_service import Phase6A5HypothesisRetrievalService
 from app.application.services.phase6a6_service import Phase6A6CounterfactualService
+from app.application.services.phase6a7_service import Phase6A7FinalDiagnosisService
 from app.core.config import Settings
 from app.infrastructure.storage import build_file_storage
 from app.schemas.analysis import (
@@ -87,6 +88,13 @@ from app.schemas.phase6a6 import (
     VerificationRunDetailResponse,
     VerificationRunListResponse,
     VerifierLogsResponse,
+)
+from app.schemas.phase6a7 import (
+    AbstentionDecisionResponse,
+    FinalConfidenceResponse,
+    FinalDiagnosisResponse,
+    FinalExplanationResponse,
+    FinalVerifierSummaryResponse,
 )
 
 router = APIRouter(tags=["Analysis Runs"])
@@ -233,6 +241,14 @@ def _phase6a6(
     settings: Settings = Depends(get_settings_dep),
 ) -> Phase6A6CounterfactualService:
     return Phase6A6CounterfactualService(AnalysisRunService(session), settings)
+
+
+def _phase6a7(
+    session: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings_dep),
+) -> Phase6A7FinalDiagnosisService:
+    return Phase6A7FinalDiagnosisService(session, settings)
+
 
 @router.get("/analyses/{analysis_run_id}/status", response_model=AnalysisStatusResponse)
 async def get_analysis_status(
@@ -1377,6 +1393,91 @@ async def get_counterfactual_verifier_logs(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
         candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/final-diagnosis",
+    response_model=FinalDiagnosisResponse,
+)
+async def get_final_diagnosis(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A7FinalDiagnosisService = Depends(_phase6a7),
+) -> FinalDiagnosisResponse:
+    """Evidence-based final diagnosis — not applied remediation, not mathematical proof."""
+    _, organization_id, _ = ctx
+    return await service.get_final_diagnosis(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/final-confidence",
+    response_model=FinalConfidenceResponse,
+)
+async def get_final_confidence(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A7FinalDiagnosisService = Depends(_phase6a7),
+) -> FinalConfidenceResponse:
+    """Heuristic confidence decomposition — not calibrated probability."""
+    _, organization_id, _ = ctx
+    return await service.get_final_confidence(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/abstention-decision",
+    response_model=AbstentionDecisionResponse,
+)
+async def get_abstention_decision(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A7FinalDiagnosisService = Depends(_phase6a7),
+) -> AbstentionDecisionResponse:
+    """Abstention is intentional safe behavior when evidence/verifiers are insufficient."""
+    _, organization_id, _ = ctx
+    return await service.get_abstention_decision(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/final-explanation",
+    response_model=FinalExplanationResponse,
+)
+async def get_final_explanation(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A7FinalDiagnosisService = Depends(_phase6a7),
+) -> FinalExplanationResponse:
+    """Structured explanation only — no prompts, secrets, or hidden reasoning."""
+    _, organization_id, _ = ctx
+    return await service.get_final_explanation(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/final-verifier-summary",
+    response_model=FinalVerifierSummaryResponse,
+)
+async def get_final_verifier_summary(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A7FinalDiagnosisService = Depends(_phase6a7),
+) -> FinalVerifierSummaryResponse:
+    """Aggregated verifier support for the selected remediation candidate."""
+    _, organization_id, _ = ctx
+    return await service.get_final_verifier_summary(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
     )
 
 

@@ -118,6 +118,7 @@ class AnalysisExecutionService:
             await self._maybe_run_phase6a6_counterfactual_foundation(run, context)
             await self._maybe_run_phase6a6_counterfactual_generation(run, context)
             await self._maybe_run_phase6a6_verifier_engine(run, context)
+            await self._maybe_run_phase6a7_final_decision(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -548,6 +549,7 @@ class AnalysisExecutionService:
             "evidence_graph": context.options.get("evidence_graph"),
             "hierarchical_classification": context.options.get("hierarchical_classification"),
             "causal_hypotheses": context.options.get("causal_hypotheses"),
+            "final_diagnosis": context.options.get("final_diagnosis"),
             "model_versions": {
                 "classifier": f"{context.model_name}-{context.model_version}",
                 "reasoning": context.reasoning_provider_name
@@ -1203,6 +1205,8 @@ class AnalysisExecutionService:
                 return
             # Never overwrite diagnosis / recommendations / retrieved_documents.
             context.options["hypothesis_evidence_assessment"] = result.summary_dict()
+            # Richer snapshot for Phase 6A.7 decision inputs only (not a public API contract).
+            context.options["hypothesis_evidence_assessment_detail"] = result.to_dict()
             logger.info(
                 "hypothesis_evidence_assessment_completed",
                 analysis_run_id=str(run.id),
@@ -1518,6 +1522,54 @@ class AnalysisExecutionService:
             )
             # Never overwrite diagnosis / recommendations.
             context.options["counterfactual_verification"] = build_summary(report)
+            runs_by_candidate = {str(r.candidate_id): r for r in report.runs}
+            decision_candidates: list[dict] = []
+            for c in candidates:
+                cid = str(getattr(c, "id", ""))
+                vrun = runs_by_candidate.get(cid)
+                results = list(getattr(vrun, "results", None) or []) if vrun else []
+                decision_candidates.append(
+                    {
+                        "candidate_id": cid,
+                        "hypothesis_id": str(getattr(c, "hypothesis_id", "") or "") or None,
+                        "risk_level": str(getattr(c, "risk_level", "UNKNOWN") or "UNKNOWN"),
+                        "risk_score": float(getattr(c, "risk_score", 0.0) or 0.0),
+                        "priority_status": str(getattr(c, "priority_status", "") or ""),
+                        "priority_score": float(getattr(c, "priority_score", 0.0) or 0.0),
+                        "consensus_status": (
+                            str(getattr(c, "validation_status", "") or "")
+                            or (
+                                str(vrun.consensus.status.value)
+                                if vrun and vrun.consensus is not None
+                                else None
+                            )
+                        ),
+                        "constraint_status": str(getattr(c, "constraint_status", "") or "")
+                        or None,
+                        "title": str(getattr(c, "title", "") or ""),
+                        "summary": str(getattr(c, "summary", "") or ""),
+                        "artifact_type": str(getattr(c, "artifact_type", "") or ""),
+                        "verifier_results": [
+                            {
+                                "verifier_name": str(
+                                    getattr(r, "verifier_name", None)
+                                    or getattr(r, "tool", None)
+                                    or ""
+                                ),
+                                "status": (
+                                    r.status.value
+                                    if hasattr(getattr(r, "status", None), "value")
+                                    else str(getattr(r, "status", "") or "")
+                                ),
+                            }
+                            for r in results
+                        ],
+                        "required_verifiers": list(
+                            getattr(vrun, "selected_verifiers", None) or []
+                        ),
+                    }
+                )
+            context.options["_remediation_candidates_for_decision"] = decision_candidates
             status_value = (
                 report.status.value
                 if hasattr(report.status, "value")
@@ -1553,6 +1605,82 @@ class AnalysisExecutionService:
                 "error": type(exc).__name__,
             }
             context.options.pop("_counterfactual_candidates_for_verification", None)
+
+    async def _maybe_run_phase6a7_final_decision(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Final diagnosis / confidence / abstention. Soft-fail. Never apply remediation."""
+        if not self._settings.final_diagnosis_enabled:
+            return
+        if context.organization_id is None:
+            return
+        try:
+            from app.ai.final_diagnosis import (
+                FinalDiagnosisDecisionEngine,
+                build_inputs_from_context,
+            )
+
+            inputs = build_inputs_from_context(
+                settings=self._settings,
+                analysis_id=run.id,
+                organization_id=context.organization_id,
+                incident_id=run.incident_id,
+                project_id=context.project_id,
+                options=dict(context.options),
+            )
+            engine = FinalDiagnosisDecisionEngine()
+            logger.info(
+                "final_diagnosis_started",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+            )
+            decision = engine.decide(inputs)
+            payload = decision.to_dict()
+            # Never overwrite Module 6 diagnosis / recommendations / incident status.
+            context.options["final_diagnosis"] = payload
+            status_value = (
+                decision.status.value
+                if hasattr(decision.status, "value")
+                else str(decision.status)
+            )
+            logger.info(
+                "final_diagnosis_completed",
+                analysis_run_id=str(run.id),
+                status=status_value,
+                abstain=bool(decision.abstention and decision.abstention.should_abstain),
+            )
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Final diagnosis decision completed",
+                description=(
+                    f"{status_value}: evidence-based decision only; "
+                    "remediation not applied; not mathematical proof"
+                ),
+                event_type="final_diagnosis_completed",
+                metadata={
+                    "analysis_run_id": str(run.id),
+                    "status": status_value,
+                    "confidence": decision.confidence,
+                    "abstention_reasons": list(decision.abstention_reason_codes),
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "phase6a7_final_decision_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(f"phase6a7_final_decision_failed:{type(exc).__name__}")
+            context.options["final_diagnosis"] = {
+                "status": "FAILED",
+                "error": type(exc).__name__,
+                "limitations": [
+                    "final_diagnosis_is_evidence_based_not_mathematical_proof",
+                    "verified_remediation_is_not_applied_remediation",
+                ],
+            }
 
     async def _ensure_model_version(self) -> ModelVersion:
         stmt = select(ModelVersion).where(
