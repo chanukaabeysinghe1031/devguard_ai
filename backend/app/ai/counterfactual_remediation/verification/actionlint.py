@@ -82,9 +82,7 @@ class ActionlintVerifier(BaseVerifier):
                 tool_path=self._tool_path,
             )
         targets = [
-            p
-            for p in root.rglob("*")
-            if p.is_file() and p.suffix.lower() in {".yml", ".yaml"}
+            p for p in root.rglob("*") if p.is_file() and p.suffix.lower() in {".yml", ".yaml"}
         ]
         if not targets:
             return self._result(

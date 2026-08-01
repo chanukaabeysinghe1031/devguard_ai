@@ -13,12 +13,16 @@ from app.ai.counterfactual_remediation.verification._helpers import (
 from app.ai.counterfactual_remediation.verification.base import BaseVerifier
 from app.domain.counterfactual_remediation.verification_enums import VerifierResultStatus
 from app.domain.counterfactual_remediation.verification_models import VerifierResult
-from app.domain.counterfactual_remediation.verification_versions import HCL_FRAGMENT_VERIFIER_VERSION
+from app.domain.counterfactual_remediation.verification_versions import (
+    HCL_FRAGMENT_VERIFIER_VERSION,
+)
 
 _BLOCK_START = re.compile(
     r"^\s*(resource|data|module|variable|output|provider|terraform|locals)\s+",
     re.MULTILINE,
 )
+
+
 class HclFragmentVerifier(BaseVerifier):
     """Lightweight HCL fragment checks without requiring the terraform CLI."""
 
@@ -64,11 +68,7 @@ class HclFragmentVerifier(BaseVerifier):
                 message="hcl_unbalanced_quotes",
                 findings=findings,
             )
-        status = (
-            VerifierResultStatus.WARNING
-            if findings
-            else VerifierResultStatus.PASS
-        )
+        status = VerifierResultStatus.WARNING if findings else VerifierResultStatus.PASS
         return self._result(
             status=status,
             candidate=candidate,

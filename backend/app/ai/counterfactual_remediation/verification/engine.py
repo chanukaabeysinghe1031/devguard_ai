@@ -5,8 +5,9 @@ from __future__ import annotations
 import json
 import logging
 import time
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Any, Sequence
+from typing import Any
 
 from app.ai.counterfactual_remediation.verification._helpers import (
     bound_float,
@@ -161,8 +162,7 @@ class IndependentVerifierEngine:
             project_id=getattr(candidate, "project_id", None),
             incident_id=getattr(candidate, "incident_id", None),
             analysis_id=getattr(candidate, "analysis_id", None),
-            remediation_run_id=remediation_run_id
-            or getattr(candidate, "remediation_run_id", None),
+            remediation_run_id=remediation_run_id or getattr(candidate, "remediation_run_id", None),
         )
         if self._verify_rollback:
             run.rollback_parse_status = self._check_rollback_parse(candidate)
@@ -219,9 +219,7 @@ class IndependentVerifierEngine:
             report.completed_at = datetime.now(UTC)
             return report
 
-        stage_timeout = bound_float(
-            self._settings, "max_verifier_stage_timeout_seconds", 180.0
-        )
+        stage_timeout = bound_float(self._settings, "max_verifier_stage_timeout_seconds", 180.0)
         selected = self.select_candidates(candidates)
         report.candidate_ids_selected = [
             str(getattr(c, "id", "")) for c in selected if getattr(c, "id", None)
@@ -259,9 +257,7 @@ class IndependentVerifierEngine:
             report.status = VerificationRunStatus.TIMED_OUT
         elif not report.runs:
             report.status = VerificationRunStatus.FAILED
-        elif any(
-            enum_str(r.status) == VerificationRunStatus.FAILED.value for r in report.runs
-        ):
+        elif any(enum_str(r.status) == VerificationRunStatus.FAILED.value for r in report.runs):
             report.status = VerificationRunStatus.PARTIAL
         else:
             report.status = VerificationRunStatus.COMPLETE
@@ -310,11 +306,11 @@ class IndependentVerifierEngine:
         consensus = run.consensus
         if consensus is None:
             return
+        import contextlib
+
         status = enum_str(consensus.status)
-        try:
+        with contextlib.suppress(Exception):
             candidate.validation_status = status
-        except Exception:  # noqa: BLE001
-            pass
         current = enum_str(getattr(candidate, "status", None))
         if current == CounterfactualCandidateStatus.READY_FOR_VERIFICATION.value:
             pass
@@ -347,9 +343,8 @@ class IndependentVerifierEngine:
             if not isinstance(step, dict):
                 continue
             frag = step.get("original_fragment") or step.get("content") or step.get("fragment")
-            if isinstance(frag, str) and frag.strip():
-                if self._parse_fragment(frag) == "FAIL":
-                    return "FAIL"
+            if isinstance(frag, str) and frag.strip() and self._parse_fragment(frag) == "FAIL":
+                return "FAIL"
         return "PASS"
 
     @staticmethod

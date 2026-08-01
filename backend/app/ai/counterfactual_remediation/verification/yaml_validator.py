@@ -69,14 +69,14 @@ class YamlValidatorVerifier(BaseVerifier):
                 message="yaml_empty_document",
             )
         findings: list[str] = []
-        if is_workflow_family(artifact_type_str(candidate)) and isinstance(parsed, dict):
-            if "jobs" not in parsed and "on" not in parsed:
-                findings.append("workflow_missing_jobs_or_on")
-        status = (
-            VerifierResultStatus.WARNING
-            if findings
-            else VerifierResultStatus.PASS
-        )
+        if (
+            is_workflow_family(artifact_type_str(candidate))
+            and isinstance(parsed, dict)
+            and "jobs" not in parsed
+            and "on" not in parsed
+        ):
+            findings.append("workflow_missing_jobs_or_on")
+        status = VerifierResultStatus.WARNING if findings else VerifierResultStatus.PASS
         return self._result(
             status=status,
             candidate=candidate,

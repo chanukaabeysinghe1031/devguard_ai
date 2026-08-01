@@ -64,8 +64,7 @@ class VerifierRunner:
             project_id=project_id or getattr(candidate, "project_id", "") or "",
             incident_id=incident_id or getattr(candidate, "incident_id", "") or "",
             analysis_id=analysis_id or getattr(candidate, "analysis_id", "") or "",
-            remediation_run_id=remediation_run_id
-            or getattr(candidate, "remediation_run_id", None),
+            remediation_run_id=remediation_run_id or getattr(candidate, "remediation_run_id", None),
             candidate_id=getattr(candidate, "id", None),
             hypothesis_id=getattr(candidate, "hypothesis_id", None),
             status=VerificationRunStatus.RUNNING,
@@ -141,11 +140,11 @@ class VerifierRunner:
             run.error_message = type(exc).__name__
             run.results = results
         finally:
+            import contextlib
+
             for verifier in selected:
-                try:
+                with contextlib.suppress(Exception):
                     verifier.cleanup()
-                except Exception:  # noqa: BLE001
-                    pass
             workspace.cleanup()
             # Never leave a live temp path reference after cleanup.
             run.workspace_root = None

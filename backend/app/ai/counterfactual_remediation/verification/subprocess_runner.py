@@ -5,9 +5,9 @@ from __future__ import annotations
 import logging
 import subprocess
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
 
 from app.ai.counterfactual_remediation.verification._helpers import redact_and_truncate
 
@@ -26,6 +26,8 @@ _FORBIDDEN_BINARIES = frozenset(
         "ansible-playbook",
     }
 )
+
+
 @dataclass(slots=True)
 class SubprocessResult:
     returncode: int
@@ -92,11 +94,15 @@ def run_tool(
     except subprocess.TimeoutExpired as exc:
         duration_ms = (time.perf_counter() - started) * 1000.0
         stdout = redact_and_truncate(
-            exc.stdout.decode("utf-8", errors="replace") if isinstance(exc.stdout, bytes) else exc.stdout,
+            exc.stdout.decode("utf-8", errors="replace")
+            if isinstance(exc.stdout, bytes)
+            else exc.stdout,
             max_chars=max_stdout_chars,
         )
         stderr = redact_and_truncate(
-            exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else exc.stderr,
+            exc.stderr.decode("utf-8", errors="replace")
+            if isinstance(exc.stderr, bytes)
+            else exc.stderr,
             max_chars=max_stdout_chars,
         )
         logger.warning("verifier tool timed out: %s", argv[0])

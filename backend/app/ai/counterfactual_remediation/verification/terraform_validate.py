@@ -176,9 +176,7 @@ class TerraformValidateVerifier(BaseVerifier):
                 duration_ms=result.duration_ms,
                 tool_path=self._tool_path,
             )
-        status = (
-            VerifierResultStatus.WARNING if findings else VerifierResultStatus.PASS
-        )
+        status = VerifierResultStatus.WARNING if findings else VerifierResultStatus.PASS
         return self._result(
             status=status,
             candidate=candidate,

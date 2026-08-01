@@ -55,9 +55,7 @@ class VerifierConsensusEngine:
             r.verifier_name for r in results if _status(r) == VerifierResultStatus.WARNING.value
         ]
         unavailable = [
-            r.verifier_name
-            for r in results
-            if _status(r) == VerifierResultStatus.UNAVAILABLE.value
+            r.verifier_name for r in results if _status(r) == VerifierResultStatus.UNAVAILABLE.value
         ]
 
         # Security FAIL always blocks VERIFIED.
@@ -77,9 +75,13 @@ class VerifierConsensusEngine:
             )
 
         if family == "terraform":
-            return self._terraform(by_name, candidate_id, family, passed, failed, warnings, unavailable)
+            return self._terraform(
+                by_name, candidate_id, family, passed, failed, warnings, unavailable
+            )
         if family == "workflow":
-            return self._workflow(by_name, candidate_id, family, passed, failed, warnings, unavailable)
+            return self._workflow(
+                by_name, candidate_id, family, passed, failed, warnings, unavailable
+            )
         if family == "iam":
             return self._iam(by_name, candidate_id, family, passed, failed, warnings, unavailable)
         if family == "dependency":
@@ -155,7 +157,13 @@ class VerifierConsensusEngine:
                     "terraform_validate_not_run",
                 )
             return self._partial(
-                candidate_id, family, required, passed, failed, warnings, unavailable,
+                candidate_id,
+                family,
+                required,
+                passed,
+                failed,
+                warnings,
+                unavailable,
                 "terraform_validate_not_pass",
             )
 
@@ -209,7 +217,14 @@ class VerifierConsensusEngine:
                 VerifierResultStatus.WARNING.value,
             }:
                 return self._failed(
-                    candidate_id, family, required, passed, failed, warnings, unavailable, ["checkov"]
+                    candidate_id,
+                    family,
+                    required,
+                    passed,
+                    failed,
+                    warnings,
+                    unavailable,
+                    ["checkov"],
                 )
 
         hcl_ok = hcl is None or _status(hcl) in {

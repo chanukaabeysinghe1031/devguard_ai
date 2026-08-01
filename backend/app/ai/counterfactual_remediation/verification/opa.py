@@ -68,11 +68,7 @@ class OpaVerifier(BaseVerifier):
         )
 
     def is_available(self) -> bool:
-        return bool(
-            self._enabled
-            and self._tool_path
-            and (self._policy_path or self._policy_text)
-        )
+        return bool(self._enabled and self._tool_path and (self._policy_path or self._policy_text))
 
     def health(self) -> dict[str, Any]:
         base = super().health()
