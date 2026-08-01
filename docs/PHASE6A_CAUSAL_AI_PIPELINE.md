@@ -18,7 +18,8 @@ Phase 6A extends the existing analysis spine with artifact acquisition, deep par
 | 6A.6 Part 1 | Done | Counterfactual remediation foundation (flags OFF; migration 016; no verifiers/apply) |
 | 6A.6 Part 2 | Complete (flags OFF) | Deterministic/LLM generation, risk, prioritisation; migration `017_phase6a6_cf_generation`; no apply/verifiers |
 | 6A.6 Part 3 | Complete (flags OFF) | Independent verifier engine + consensus; migration `018_phase6a6_verifiers`; temp workspace only; no apply |
-| 6A.7–6A.9 | Not started | Abstention, Causal UI, apply path |
+| 6A.7 | Complete (flags OFF) | Final diagnosis / confidence / abstention / explanation; JSONB on `output_summary`; no apply |
+| 6A.8–6A.9 | Not started | Causal UI, apply path |
 
 ## Pipeline (flags OFF = unchanged production path)
 
@@ -38,6 +39,7 @@ flowchart TB
   E5 --> F6[Counterfactual remediation foundation 6A.6 Part 1]
   F6 --> G6[Candidate generation 6A.6 Part 2]
   G6 --> V6[Independent verifiers 6A.6 Part 3]
+  V6 --> D7[Final diagnosis / abstention 6A.7]
   O --> D[Diagnosis + RAG + recommendations]
   Y -.-> D
   R5 -.-> D
@@ -45,9 +47,10 @@ flowchart TB
   F6 -.-> D
   G6 -.-> D
   V6 -.-> D
+  D7 -.-> D
 ```
 
-6A.2–6A.6 stages soft-fail. Hypotheses are **competing candidates**, not verified causes. Part 1B retrieval items are evidence **candidates** only (`SUPPORT_CANDIDATE` ≠ proven support). Part 3 `RankingScore` ≠ root-cause confidence; selected candidates ≠ final diagnosis. Phase 6A.6 candidates are hypothesis-conditional; Part 3 `VERIFIED` consensus means temporary workspace checks passed — never applied and never proven root cause.
+6A.2–6A.7 stages soft-fail. Hypotheses are **competing candidates**, not verified causes. Part 1B retrieval items are evidence **candidates** only (`SUPPORT_CANDIDATE` ≠ proven support). Part 3 `RankingScore` ≠ root-cause confidence; selected candidates ≠ final diagnosis. Phase 6A.6 candidates are hypothesis-conditional; Part 3 `VERIFIED` consensus means temporary workspace checks passed — never applied and never proven root cause. Phase 6A.7 `DIAGNOSED` is evidence-based decisioning with abstention — still not mathematical proof and never applied remediation.
 
 ## Important
 
@@ -62,3 +65,4 @@ flowchart TB
 - Phase 6A.6 Part 1 adds counterfactual remediation foundation behind OFF-by-default flags; migration `016_phase6a6_cf_foundation`; no verifier execution and no apply path. See `docs/PHASE6A6_COUNTERFACTUAL_REMEDIATION_FOUNDATION.md`.
 - Phase 6A.6 Part 2 adds structured candidate generation, patch rendering, static risk/blast/side-effects, dedupe, and prioritisation behind OFF-by-default flags; migration `017_phase6a6_cf_generation`. Candidates remain unverified and never applied. See `docs/PHASE6A6_RULE_REMEDIATION_GENERATION.md` and related Part 2 docs.
 - Phase 6A.6 Part 3 adds an independent verifier engine over temporary workspaces, deterministic consensus, persistence (`018_phase6a6_verifiers`), and debug APIs behind OFF-by-default flags. Missing tools → `UNAVAILABLE`. No apply path. See `docs/PHASE6A6_VERIFIER_ENGINE.md`.
+- Phase 6A.7 adds final diagnosis, heuristic confidence, abstention, and explanation behind OFF-by-default flags; persisted in `output_summary.final_diagnosis` (no new migration). Abstention is intentional. See `docs/PHASE6A7_FINAL_DIAGNOSIS.md`.

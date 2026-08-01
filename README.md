@@ -31,6 +31,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Phase 6A.6 Part 1 — Counterfactual foundation** | ✅ Constraints + skeletons (all flags OFF; migration 016; no apply/verifiers) |
 | **Phase 6A.6 Part 2 — Candidate generation** | ✅ Rule/LLM generation + risk/priority (all flags OFF; migration 017; no apply/verifiers) |
 | **Phase 6A.6 Part 3 — Independent verifiers** | ✅ Temp-workspace verifiers + consensus (all flags OFF; migration 018; no apply) |
+| **Phase 6A.7 — Final diagnosis MVP** | ✅ Confidence + abstention + explanation (all flags OFF; JSONB; no apply) |
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
@@ -80,6 +81,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 - Phase 6A.6 Part 1 counterfactual remediation foundation: `COUNTERFACTUAL_REMEDIATION_ENABLED` and related flags default **false**. Candidates are hypothesis-conditional and unverified; no apply/verifiers. Migration `016_phase6a6_cf_foundation`. See `docs/PHASE6A6_COUNTERFACTUAL_REMEDIATION_FOUNDATION.md`.
 - Phase 6A.6 Part 2 generation: `RULE_REMEDIATION_GENERATION_ENABLED` / `LLM_REMEDIATION_GENERATION_ENABLED` and nested risk/ranking flags default **false**. Migration `017_phase6a6_cf_generation`. Priority score is not verification confidence. See `docs/PHASE6A6_RULE_REMEDIATION_GENERATION.md`.
 - Phase 6A.6 Part 3 verifiers: `VERIFIER_ENGINE_ENABLED` and related tool/persistence/debug flags default **false**. Temporary workspace only; missing CLIs → `UNAVAILABLE` (never fake PASS). Migration `018_phase6a6_verifiers`. Optional Docker tool installs are best-effort. See `docs/PHASE6A6_VERIFIER_ENGINE.md`.
+- Phase 6A.7 final diagnosis: `FINAL_DIAGNOSIS_ENABLED` / confidence / abstention / explanation flags default **false**. JSONB on `output_summary` (no new migration). Abstention is intentional safe behavior. See `docs/PHASE6A7_FINAL_DIAGNOSIS.md`.
 - Deterministic diagnostic signals, lexical exact-match, versioned hybrid weight profiles, dedupe/diversity reranking
 - Organization membership resolution and role-based authorization dependencies
 - Default organization + owner membership created on user registration
