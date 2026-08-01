@@ -14,6 +14,15 @@ from app.infrastructure.database.models.causal_hypotheses import (
     HypothesisCriticResultRow,
     HypothesisEvidenceLinkRow,
 )
+from app.infrastructure.database.models.counterfactual_remediation import (
+    CounterfactualChangeRow,
+    CounterfactualRemediationCandidateRow,
+    CounterfactualRemediationRunRow,
+    RemediationConstraintRow,
+    RemediationPreconditionRow,
+    RemediationRiskSignalRow,
+    RemediationVerificationRequirementRow,
+)
 from app.infrastructure.database.models.evaluation import Evaluation
 from app.infrastructure.database.models.evidence_item import EvidenceItem
 from app.infrastructure.database.models.failure_category import FailureCategory
@@ -96,6 +105,9 @@ __all__ = [
     "TaxonomyMappingRow",
     "CausalHypothesisRow",
     "CausalHypothesisRunRow",
+    "CounterfactualChangeRow",
+    "CounterfactualRemediationCandidateRow",
+    "CounterfactualRemediationRunRow",
     "HypothesisCriticResultRow",
     "HypothesisEvidenceLinkRow",
     "HypothesisRetrievedItemQueryRow",
@@ -103,6 +115,10 @@ __all__ = [
     "HypothesisRetrievalQueryExecutionRow",
     "HypothesisRetrievalRunRow",
     "HypothesisRetrievalSessionRow",
+    "RemediationConstraintRow",
+    "RemediationPreconditionRow",
+    "RemediationRiskSignalRow",
+    "RemediationVerificationRequirementRow",
     "Incident",
     "IncidentAssignment",
     "IncidentEvent",
