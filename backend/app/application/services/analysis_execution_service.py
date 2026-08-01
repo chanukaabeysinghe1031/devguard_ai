@@ -1456,7 +1456,7 @@ class AnalysisExecutionService:
         run: AnalysisRun,
         context: AnalysisContext,
     ) -> None:
-        """Independent verifier engine (Part 3). Soft-fail. Never apply / overwrite recommendations."""
+        """Independent verifier engine (Part 3). Soft-fail; never apply."""
         if not self._settings.verifier_engine_enabled:
             context.options.pop("_counterfactual_candidates_for_verification", None)
             return
@@ -1627,7 +1627,7 @@ class AnalysisExecutionService:
                 analysis_id=run.id,
                 organization_id=context.organization_id,
                 incident_id=run.incident_id,
-                project_id=context.project_id,
+                project_id=context.options.get("project_id"),
                 options=dict(context.options),
             )
             engine = FinalDiagnosisDecisionEngine()
