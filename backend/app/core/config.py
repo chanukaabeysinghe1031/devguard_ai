@@ -538,6 +538,107 @@ class Settings(BaseSettings):
         alias="RANKING_TIE_EPSILON",
     )
 
+    # Phase 6A.6 Part 1 — counterfactual remediation foundation (all OFF).
+    # Candidates are hypothesis-conditional and unverified. No apply / verifier execution.
+    counterfactual_remediation_enabled: bool = Field(
+        default=False,
+        alias="COUNTERFACTUAL_REMEDIATION_ENABLED",
+    )
+    counterfactual_constraint_extraction_enabled: bool = Field(
+        default=False,
+        alias="COUNTERFACTUAL_CONSTRAINT_EXTRACTION_ENABLED",
+    )
+    minimal_change_planning_enabled: bool = Field(
+        default=False,
+        alias="MINIMAL_CHANGE_PLANNING_ENABLED",
+    )
+    counterfactual_template_registry_enabled: bool = Field(
+        default=False,
+        alias="COUNTERFACTUAL_TEMPLATE_REGISTRY_ENABLED",
+    )
+    counterfactual_persistence_enabled: bool = Field(
+        default=False,
+        alias="COUNTERFACTUAL_PERSISTENCE_ENABLED",
+    )
+    counterfactual_debug_api_enabled: bool = Field(
+        default=False,
+        alias="COUNTERFACTUAL_DEBUG_API_ENABLED",
+    )
+    # Reserved for later Phase 6A.6 parts — do not activate in Part 1.
+    rule_remediation_generation_enabled: bool = Field(
+        default=False,
+        alias="RULE_REMEDIATION_GENERATION_ENABLED",
+    )
+    llm_remediation_generation_enabled: bool = Field(
+        default=False,
+        alias="LLM_REMEDIATION_GENERATION_ENABLED",
+    )
+    remediation_risk_analysis_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_RISK_ANALYSIS_ENABLED",
+    )
+    remediation_side_effect_analysis_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_SIDE_EFFECT_ANALYSIS_ENABLED",
+    )
+    remediation_ranking_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_RANKING_ENABLED",
+    )
+    max_hypotheses_for_remediation: int = Field(
+        default=3,
+        alias="MAX_HYPOTHESES_FOR_REMEDIATION",
+    )
+    max_remediation_candidates_per_hypothesis: int = Field(
+        default=3,
+        alias="MAX_REMEDIATION_CANDIDATES_PER_HYPOTHESIS",
+    )
+    max_total_remediation_candidates: int = Field(
+        default=8,
+        alias="MAX_TOTAL_REMEDIATION_CANDIDATES",
+    )
+    max_constraints_per_hypothesis: int = Field(
+        default=100,
+        alias="MAX_CONSTRAINTS_PER_HYPOTHESIS",
+    )
+    max_counterfactual_context_chars: int = Field(
+        default=80_000,
+        alias="MAX_COUNTERFACTUAL_CONTEXT_CHARS",
+    )
+    max_patch_characters: int = Field(default=30_000, alias="MAX_PATCH_CHARACTERS")
+    max_patch_files_per_candidate: int = Field(
+        default=5,
+        alias="MAX_PATCH_FILES_PER_CANDIDATE",
+    )
+    max_changed_lines_per_candidate: int = Field(
+        default=200,
+        alias="MAX_CHANGED_LINES_PER_CANDIDATE",
+    )
+    max_counterfactual_graph_nodes: int = Field(
+        default=100,
+        alias="MAX_COUNTERFACTUAL_GRAPH_NODES",
+    )
+    max_counterfactual_graph_edges: int = Field(
+        default=200,
+        alias="MAX_COUNTERFACTUAL_GRAPH_EDGES",
+    )
+    max_assumptions_per_candidate: int = Field(
+        default=20,
+        alias="MAX_ASSUMPTIONS_PER_CANDIDATE",
+    )
+    max_expected_effects_per_candidate: int = Field(
+        default=20,
+        alias="MAX_EXPECTED_EFFECTS_PER_CANDIDATE",
+    )
+    max_rollback_steps_per_candidate: int = Field(
+        default=20,
+        alias="MAX_ROLLBACK_STEPS_PER_CANDIDATE",
+    )
+    counterfactual_stage_timeout_seconds: float = Field(
+        default=60.0,
+        alias="COUNTERFACTUAL_STAGE_TIMEOUT_SECONDS",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
@@ -717,6 +818,19 @@ class Settings(BaseSettings):
         "max_official_document_results_per_query",
         "max_evidence_assessments_per_hypothesis",
         "max_candidate_hypotheses",
+        "max_hypotheses_for_remediation",
+        "max_remediation_candidates_per_hypothesis",
+        "max_total_remediation_candidates",
+        "max_constraints_per_hypothesis",
+        "max_counterfactual_context_chars",
+        "max_patch_characters",
+        "max_patch_files_per_candidate",
+        "max_changed_lines_per_candidate",
+        "max_counterfactual_graph_nodes",
+        "max_counterfactual_graph_edges",
+        "max_assumptions_per_candidate",
+        "max_expected_effects_per_candidate",
+        "max_rollback_steps_per_candidate",
         mode="after",
     )
     @classmethod
@@ -734,6 +848,15 @@ class Settings(BaseSettings):
             raise ValueError("HYPOTHESIS_RETRIEVAL_TIMEOUT_SECONDS must be greater than zero")
         if float(value) > 600:
             raise ValueError("HYPOTHESIS_RETRIEVAL_TIMEOUT_SECONDS exceeds safe maximum")
+        return float(value)
+
+    @field_validator("counterfactual_stage_timeout_seconds", mode="after")
+    @classmethod
+    def positive_counterfactual_stage_timeout(cls, value: float) -> float:
+        if float(value) <= 0:
+            raise ValueError("COUNTERFACTUAL_STAGE_TIMEOUT_SECONDS must be greater than zero")
+        if float(value) > 600:
+            raise ValueError("COUNTERFACTUAL_STAGE_TIMEOUT_SECONDS exceeds safe maximum")
         return float(value)
 
     @field_validator("max_retrieval_total_duration_seconds", mode="after")
@@ -847,6 +970,22 @@ class Settings(BaseSettings):
             problems.append(
                 "MAX_TOTAL_QUERIES_PER_HYPOTHESIS must be >= MAX_QUERIES_PER_HYPOTHESIS"
             )
+        if (
+            self.max_total_remediation_candidates
+            < self.max_remediation_candidates_per_hypothesis
+        ):
+            problems.append(
+                "MAX_TOTAL_REMEDIATION_CANDIDATES must be >= "
+                "MAX_REMEDIATION_CANDIDATES_PER_HYPOTHESIS"
+            )
+        if self.max_hypotheses_for_remediation > 20:
+            problems.append("MAX_HYPOTHESES_FOR_REMEDIATION exceeds safe maximum (20)")
+        if self.max_changed_lines_per_candidate > self.max_patch_characters:
+            problems.append(
+                "MAX_CHANGED_LINES_PER_CANDIDATE is inconsistent with MAX_PATCH_CHARACTERS"
+            )
+        if self.max_patch_files_per_candidate > 50:
+            problems.append("MAX_PATCH_FILES_PER_CANDIDATE exceeds safe maximum (50)")
         problems.extend(self._github_problems())
         if self.is_production:
             if self.debug:
