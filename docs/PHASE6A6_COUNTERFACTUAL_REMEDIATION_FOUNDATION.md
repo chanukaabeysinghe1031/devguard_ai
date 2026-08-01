@@ -1,7 +1,7 @@
 # Phase 6A.6 Part 1 — Counterfactual Remediation Foundation
 
-**Status:** Part 1 foundation complete (flags OFF by default)  
-**Not included:** Part 2 generation, verifier execution, apply path, frontend
+**Status:** Part 1 foundation complete; Part 2 generation available behind OFF flags  
+**Not included:** Part 3 verifier execution, apply path, polished Causal UI
 
 ## Scientific position
 
@@ -19,13 +19,18 @@ Every candidate is:
 flowchart LR
   R[6A.5 retrieval] --> E[6A.5 evidence assessment]
   E --> F[6A.6 foundation]
-  F --> P[_persist_results]
+  F --> G[6A.6 Part 2 generation]
+  G --> P[_persist_results]
   E -.-> D[Modules 6-9 diagnosis]
   F -.-> D
+  G -.-> D
 ```
 
-Soft-fail hook: `AnalysisExecutionService._maybe_run_phase6a6_counterfactual_foundation`  
+Soft-fail hooks: foundation then generation surface (generation runs inside foundation when flags ON)  
 after `_maybe_run_phase6a5_evidence_assessment`, before `_persist_results`.
+
+Part 2 persistence: migration `017_phase6a6_cf_generation` adds patch/risk/priority columns.  
+See `docs/PHASE6A6_RULE_REMEDIATION_GENERATION.md` and related Part 2 docs.
 
 ## Flags (all OFF)
 
@@ -35,8 +40,10 @@ after `_maybe_run_phase6a5_evidence_assessment`, before `_persist_results`.
 | `COUNTERFACTUAL_CONSTRAINT_EXTRACTION_ENABLED` | Extractors |
 | `MINIMAL_CHANGE_PLANNING_ENABLED` | Planner skeletons |
 | `COUNTERFACTUAL_TEMPLATE_REGISTRY_ENABLED` | Template resolve |
-| `COUNTERFACTUAL_PERSISTENCE_ENABLED` | Migration 016 writes |
+| `COUNTERFACTUAL_PERSISTENCE_ENABLED` | Migration 016/017 writes |
 | `COUNTERFACTUAL_DEBUG_API_ENABLED` | Org-scoped GET APIs |
+| `RULE_REMEDIATION_GENERATION_ENABLED` | Part 2 rule builders |
+| `LLM_REMEDIATION_GENERATION_ENABLED` | Part 2 structured LLM |
 
 Request options cannot force these ON when server flags are OFF.
 
