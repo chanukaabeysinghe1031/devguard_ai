@@ -242,9 +242,7 @@ class HypothesisRetrievedItemRow(Base, UUIDPrimaryKeyMixin, CreatedAtMixin):
 
 class HypothesisRetrievedItemQueryRow(Base, UUIDPrimaryKeyMixin, CreatedAtMixin):
     __tablename__ = "hypothesis_retrieved_item_queries"
-    __table_args__ = (
-        UniqueConstraint("item_id", "query_id", name="uq_hyp_ret_item_query"),
-    )
+    __table_args__ = (UniqueConstraint("item_id", "query_id", name="uq_hyp_ret_item_query"),)
 
     item_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

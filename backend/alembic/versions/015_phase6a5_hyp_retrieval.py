@@ -42,13 +42,25 @@ def upgrade() -> None:
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("duration_ms", sa.Integer(), nullable=True),
-        sa.Column("configuration_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "configuration_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("embedding_model_version", sa.String(length=128), nullable=True),
         sa.Column("retrieval_pipeline_version", sa.String(length=64), nullable=False),
         sa.Column("error_summary", sa.Text(), nullable=True),
         sa.Column("warnings", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["incident_id"], ["incidents.id"], ondelete="CASCADE"),
@@ -82,7 +94,9 @@ def upgrade() -> None:
         sa.Column("execution_mode", sa.String(length=40), nullable=False),
         sa.Column("retrieval_context_version", sa.String(length=64), nullable=False),
         sa.Column("retrieval_plan_version", sa.String(length=64), nullable=False),
-        sa.Column("hypothesis_prior_score_snapshot", sa.Float(), nullable=False, server_default="0"),
+        sa.Column(
+            "hypothesis_prior_score_snapshot", sa.Float(), nullable=False, server_default="0"
+        ),
         sa.Column("category_code", sa.String(length=64), nullable=True),
         sa.Column("causal_claim_snapshot", sa.Text(), nullable=False),
         sa.Column("affected_artifact_id", sa.String(length=128), nullable=True),
@@ -93,9 +107,15 @@ def upgrade() -> None:
         sa.Column("accepted_result_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("unique_source_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("cache_hit_count", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("source_types_attempted", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("source_types_succeeded", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("source_types_unavailable", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "source_types_attempted", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
+        sa.Column(
+            "source_types_succeeded", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
+        sa.Column(
+            "source_types_unavailable", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("context_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("plan_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("metrics", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
@@ -104,9 +124,21 @@ def upgrade() -> None:
         sa.Column("duration_ms", sa.Integer(), nullable=True),
         sa.Column("warnings", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("errors", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.ForeignKeyConstraint(["retrieval_run_id"], ["hypothesis_retrieval_runs.id"], ondelete="CASCADE"),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["retrieval_run_id"], ["hypothesis_retrieval_runs.id"], ondelete="CASCADE"
+        ),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["incident_id"], ["incidents.id"], ondelete="CASCADE"),
@@ -125,7 +157,9 @@ def upgrade() -> None:
         ["organization_id", "analysis_run_id"],
     )
     op.create_index("ix_hyp_ret_sessions_status", "hypothesis_retrieval_sessions", ["status"])
-    op.create_index("ix_hyp_ret_sessions_hypothesis", "hypothesis_retrieval_sessions", ["hypothesis_id"])
+    op.create_index(
+        "ix_hyp_ret_sessions_hypothesis", "hypothesis_retrieval_sessions", ["hypothesis_id"]
+    )
 
     op.create_table(
         "hypothesis_retrieval_query_executions",
@@ -149,7 +183,12 @@ def upgrade() -> None:
         sa.Column("failure_type", sa.String(length=64), nullable=True),
         sa.Column("warnings", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("error_summary", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["session_id"],
             ["hypothesis_retrieval_sessions.id"],
@@ -206,7 +245,12 @@ def upgrade() -> None:
         sa.Column("global_session_order", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("item_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("redaction_status", sa.String(length=40), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["session_id"],
             ["hypothesis_retrieval_sessions.id"],
@@ -237,7 +281,12 @@ def upgrade() -> None:
         sa.Column("query_id", sa.String(length=64), nullable=False),
         sa.Column("adapter_name", sa.String(length=64), nullable=True),
         sa.Column("retrieval_score", sa.Float(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["item_id"],
             ["hypothesis_retrieved_items.id"],

@@ -152,9 +152,7 @@ class TemporalRootCauseLocalizer:
                         link_type=TemporalLinkType.CANDIDATE_CAUSE_OF,
                         derivation=TemporalLinkDerivation.TEMPORAL_HEURISTIC,
                         confidence=0.65,
-                        explanation=(
-                            "Heuristic candidate cause — not confirmed causality."
-                        ),
+                        explanation=("Heuristic candidate cause — not confirmed causality."),
                         supporting_event_ids=[primary.id, symptom_id],
                         rule_id=RULE_PRIMARY,
                         rule_version=HEURISTIC_VERSION,
@@ -311,11 +309,7 @@ class TemporalRootCauseLocalizer:
         for i, event in enumerate(ordered_events):
             event.sequence_index = i
 
-        method = (
-            TemporalOrderingMethod.MIXED
-            if without_ts
-            else TemporalOrderingMethod.TIMESTAMP
-        )
+        method = TemporalOrderingMethod.MIXED if without_ts else TemporalOrderingMethod.TIMESTAMP
         if conflicting:
             method = TemporalOrderingMethod.PARTIAL
         return ordered_events, method, ts_quality, warnings
@@ -344,7 +338,9 @@ class TemporalRootCauseLocalizer:
                         target_event_id=right.id,
                         link_type=TemporalLinkType.OCCURRED_BEFORE,
                         derivation=derivation,
-                        confidence=0.9 if derivation == TemporalLinkDerivation.TEMPORAL_DETERMINISTIC else 0.6,
+                        confidence=0.9
+                        if derivation == TemporalLinkDerivation.TEMPORAL_DETERMINISTIC
+                        else 0.6,
                         explanation="Ordered within job by timestamp/sequence.",
                         supporting_event_ids=[left.id, right.id],
                         rule_id=RULE_ORDER,
@@ -422,7 +418,9 @@ class TemporalRootCauseLocalizer:
         warnings: list[str] = []
         # Retry handling: if RETRY appears and a later non-failure succeeds in same step,
         # drop earlier transient errors for that step.
-        retry_indices = [e.sequence_index for e in ordered if e.event_type == TemporalEventType.RETRY]
+        retry_indices = [
+            e.sequence_index for e in ordered if e.event_type == TemporalEventType.RETRY
+        ]
         suppressed: set[str] = set()
         for retry_idx in retry_indices:
             retry_event = next(e for e in ordered if e.sequence_index == retry_idx)
@@ -430,14 +428,12 @@ class TemporalRootCauseLocalizer:
             later_failures = [
                 e
                 for e in failures
-                if e.sequence_index > retry_idx
-                and (e.job_name, e.step_name) == step_key
+                if e.sequence_index > retry_idx and (e.job_name, e.step_name) == step_key
             ]
             earlier_failures = [
                 e
                 for e in failures
-                if e.sequence_index < retry_idx
-                and (e.job_name, e.step_name) == step_key
+                if e.sequence_index < retry_idx and (e.job_name, e.step_name) == step_key
             ]
             if not later_failures and earlier_failures:
                 # Retry appears to have cleared the error (no later failure in step).

@@ -44,11 +44,7 @@ def upgrade() -> None:
         sa.Column("timezone", sa.String(length=80), server_default="UTC", nullable=False),
     )
     op.add_column("organizations", sa.Column("logo_url", sa.Text(), nullable=True))
-    op.execute(
-        sa.text(
-            "UPDATE organizations SET company_name = name WHERE company_name IS NULL"
-        )
-    )
+    op.execute(sa.text("UPDATE organizations SET company_name = name WHERE company_name IS NULL"))
 
     # --- organization_members ---
     op.add_column(

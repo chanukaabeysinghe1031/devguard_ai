@@ -239,9 +239,7 @@ class CrossArtifactEvidenceGraphBuilder:
                         truncated = True
                         break
                     ntype = (
-                        GraphNodeType.ERROR_EVENT
-                        if event.is_failure
-                        else GraphNodeType.LOG_EVENT
+                        GraphNodeType.ERROR_EVENT if event.is_failure else GraphNodeType.LOG_EVENT
                     )
                     key = stable_node_key(
                         artifact_id=event.artifact_id,
@@ -459,12 +457,12 @@ def _compute_metrics(
     for edge in edges:
         connected.add(edge.source_node_id)
         connected.add(edge.target_node_id)
-    orphans = [n for n in nodes if n.id not in connected and n.node_type != GraphNodeType.PIPELINE_RUN]
+    orphans = [
+        n for n in nodes if n.id not in connected and n.node_type != GraphNodeType.PIPELINE_RUN
+    ]
     total = max(len(edges), 1)
     artifacts_with_nodes = len({n.artifact_id for n in nodes if n.artifact_id})
-    coverage = (
-        artifacts_with_nodes / artifact_count if artifact_count else (1.0 if nodes else 0.0)
-    )
+    coverage = artifacts_with_nodes / artifact_count if artifact_count else (1.0 if nodes else 0.0)
     return GraphQualityMetrics(
         node_count=len(nodes),
         edge_count=len(edges),

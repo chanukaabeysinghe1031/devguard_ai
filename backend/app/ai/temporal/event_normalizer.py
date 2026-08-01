@@ -21,7 +21,9 @@ _GENERIC_DOWNSTREAM = re.compile(
 )
 _AUTH = re.compile(r"(accessdenied|not authorized|unauthorized|authentication failed)", re.I)
 _PERM = re.compile(r"(permission|AccessDenied|explicit deny|not permitted)", re.I)
-_TF_DIAG = re.compile(r"(Error:|Warning:|terraform|Invalid reference|Reference to undeclared)", re.I)
+_TF_DIAG = re.compile(
+    r"(Error:|Warning:|terraform|Invalid reference|Reference to undeclared)", re.I
+)
 _DEP = re.compile(r"(could not resolve|ENOENT|module not found|package not found)", re.I)
 _TIMEOUT = re.compile(r"(timed? out|timeout exceeded)", re.I)
 _RETRY = re.compile(r"(retrying|retry\s+\d|attempt\s+\d+)", re.I)
@@ -224,15 +226,19 @@ def _entity_to_event(
     event_type = _classify_message(message, etype)
     exit_m = _EXIT_RE.search(message)
     exit_code = int(exit_m.group(1)) if exit_m else None
-    is_failure = event_type not in {
-        TemporalEventType.INFO,
-        TemporalEventType.WARNING,
-        TemporalEventType.JOB_STARTED,
-        TemporalEventType.STEP_STARTED,
-        TemporalEventType.COMMAND_EXECUTED,
-        TemporalEventType.WORKFLOW_STARTED,
-        TemporalEventType.RETRY,
-    } or etype == "ERROR_EVENT"
+    is_failure = (
+        event_type
+        not in {
+            TemporalEventType.INFO,
+            TemporalEventType.WARNING,
+            TemporalEventType.JOB_STARTED,
+            TemporalEventType.STEP_STARTED,
+            TemporalEventType.COMMAND_EXECUTED,
+            TemporalEventType.WORKFLOW_STARTED,
+            TemporalEventType.RETRY,
+        }
+        or etype == "ERROR_EVENT"
+    )
 
     return TemporalEvent(
         id=str(uuid.uuid4()),

@@ -140,9 +140,7 @@ class AdaptiveHypothesisRetrievalPlanner:
                 decision = self._router.route(context, spec, intent)
                 routing_meta.append(decision.to_dict())
                 updated = deepcopy(spec)
-                updated.source_types = list(decision.selected_sources) or list(
-                    spec.source_types
-                )
+                updated.source_types = list(decision.selected_sources) or list(spec.source_types)
                 meta = dict(updated.metadata or {})
                 meta["routing"] = decision.to_dict()
                 updated.metadata = meta
@@ -230,7 +228,5 @@ class AdaptiveHypothesisRetrievalPlanner:
             planner_version=ADAPTIVE_RETRIEVAL_PLANNER_VERSION,
         )
 
-    def extract_identifiers(
-        self, context: HypothesisRetrievalContext
-    ) -> ExtractedIdentifiers:
+    def extract_identifiers(self, context: HypothesisRetrievalContext) -> ExtractedIdentifiers:
         return self._id_extractor.extract(context)

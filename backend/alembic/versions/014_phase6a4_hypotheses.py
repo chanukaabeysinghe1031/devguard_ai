@@ -40,7 +40,12 @@ def upgrade() -> None:
         sa.Column("token_usage", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("cost_usd", sa.Float(), nullable=True),
         sa.Column("context_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["incident_id"], ["incidents.id"], ondelete="CASCADE"),
@@ -86,23 +91,41 @@ def upgrade() -> None:
         sa.Column("generation_prior_score", sa.Float(), nullable=False),
         sa.Column("status", sa.String(length=40), nullable=False),
         sa.Column("path_validation_status", sa.String(length=40), nullable=False),
-        sa.Column("path_validation_warnings", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "path_validation_warnings", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("causal_path_node_ids", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("causal_path_edge_ids", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("expected_observations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("falsifying_observations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("proposed_verification_steps", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "falsifying_observations", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
+        sa.Column(
+            "proposed_verification_steps", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("missing_evidence", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("limitations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("warnings", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("dedupe_fingerprint", sa.String(length=128), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["incident_id"], ["incidents.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["analysis_run_id"], ["analysis_runs.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["hypothesis_run_id"], ["causal_hypothesis_runs.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["hypothesis_run_id"], ["causal_hypothesis_runs.id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
             "hypothesis_run_id",
@@ -115,7 +138,9 @@ def upgrade() -> None:
             name="uq_causal_hypotheses_run_rank",
         ),
     )
-    op.create_index("ix_causal_hyp_analysis", "causal_hypotheses", ["organization_id", "analysis_run_id"])
+    op.create_index(
+        "ix_causal_hyp_analysis", "causal_hypotheses", ["organization_id", "analysis_run_id"]
+    )
     op.create_index("ix_causal_hyp_status", "causal_hypotheses", ["status"])
     op.create_index("ix_causal_hyp_category", "causal_hypotheses", ["category_code"])
     op.create_index("ix_causal_hyp_root_node", "causal_hypotheses", ["root_cause_node_id"])
@@ -144,7 +169,12 @@ def upgrade() -> None:
         sa.Column("confidence", sa.Float(), nullable=False),
         sa.Column("explanation", sa.Text(), nullable=True),
         sa.Column("extraction_method", sa.String(length=64), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["analysis_run_id"], ["analysis_runs.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["hypothesis_id"], ["causal_hypotheses.id"], ondelete="CASCADE"),
@@ -169,7 +199,12 @@ def upgrade() -> None:
         sa.Column("temporal_conflicts", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("specificity_warning", sa.Text(), nullable=True),
         sa.Column("critic_version", sa.String(length=40), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["analysis_run_id"], ["analysis_runs.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["hypothesis_id"], ["causal_hypotheses.id"], ondelete="CASCADE"),

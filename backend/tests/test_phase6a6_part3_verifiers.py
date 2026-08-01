@@ -138,9 +138,7 @@ def test_json_yaml_hcl_iam_structural_pass_fail() -> None:
     )
     assert (
         enum_str(
-            json_v.execute(
-                ws, _candidate(artifact_type="IAM_POLICY", proposed="{not-json")
-            ).status
+            json_v.execute(ws, _candidate(artifact_type="IAM_POLICY", proposed="{not-json")).status
         )
         == "FAIL"
     )
@@ -226,9 +224,7 @@ def test_json_yaml_hcl_iam_structural_pass_fail() -> None:
 def test_security_rejects_wildcard_and_secret() -> None:
     sec = SecurityStaticVerifier(enabled=True)
     ws = SimpleNamespace(files_written=[], root=None)
-    wild = (
-        '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}'
-    )
+    wild = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}'
     result = sec.execute(ws, _candidate(artifact_type="IAM_POLICY", proposed=wild))
     assert enum_str(result.status) == "FAIL"
     assert "wildcard_action" in result.findings or "wildcard_resource" in result.findings

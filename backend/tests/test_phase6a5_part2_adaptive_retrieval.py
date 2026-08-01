@@ -109,8 +109,7 @@ def test_identifier_extraction_action_arn_tf() -> None:
     ids = RetrievalIdentifierExtractor().extract(
         _ctx(
             causal_claim=(
-                "AccessDenied s3:PutObject on arn:aws:s3:::bucket/key "
-                "aws_iam_role.deploy_role"
+                "AccessDenied s3:PutObject on arn:aws:s3:::bucket/key aws_iam_role.deploy_role"
             ),
             permission_actions=["s3:PutObject"],
             resource_identifiers=["arn:aws:iam::123456789012:role/deploy"],
@@ -287,12 +286,12 @@ def test_relevance_exact_match_boost_and_active_weights() -> None:
 
 def test_relevance_without_boost() -> None:
     features = RetrievalCandidateFeatureVector(exact_identifier_overlap=1.0)
-    boosted = HypothesisRetrievalRelevanceScorer(
-        exact_identifier_boost_enabled=True
-    ).score(item_id="a", features=features)
-    plain = HypothesisRetrievalRelevanceScorer(
-        exact_identifier_boost_enabled=False
-    ).score(item_id="a", features=features)
+    boosted = HypothesisRetrievalRelevanceScorer(exact_identifier_boost_enabled=True).score(
+        item_id="a", features=features
+    )
+    plain = HypothesisRetrievalRelevanceScorer(exact_identifier_boost_enabled=False).score(
+        item_id="a", features=features
+    )
     assert boosted.retrieval_relevance_score >= plain.retrieval_relevance_score
 
 
@@ -577,8 +576,7 @@ def test_repository_adapter_from_context_only() -> None:
     result = adapter.retrieve(_ctx(), spec)
     assert result.status in {"COMPLETE", "NO_EVIDENCE"}
     assert all(
-        i.source_type == HypothesisRetrievalSourceType.REPOSITORY_CHANGE
-        for i in result.items
+        i.source_type == HypothesisRetrievalSourceType.REPOSITORY_CHANGE for i in result.items
     )
 
 
@@ -588,9 +586,7 @@ def test_adaptive_planner_caps_total_queries() -> None:
         expansion_enabled=True,
         source_routing_enabled=False,
     )
-    basic = HypothesisRetrievalPlanBuilder(multi_query_enabled=True, max_queries=6).build(
-        _ctx()
-    )
+    basic = HypothesisRetrievalPlanBuilder(multi_query_enabled=True, max_queries=6).build(_ctx())
     plan = planner.plan(_ctx(), basic)
     assert len(plan.query_specs) <= 3
     assert plan.was_downgraded

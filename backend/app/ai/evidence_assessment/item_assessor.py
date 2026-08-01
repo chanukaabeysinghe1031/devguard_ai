@@ -84,9 +84,7 @@ class EvidenceItemAssessor:
             authority_score=authority,
             exact_identifier_overlap=exact_id,
             source_type=str(
-                item.source_type.value
-                if hasattr(item.source_type, "value")
-                else item.source_type
+                item.source_type.value if hasattr(item.source_type, "value") else item.source_type
             ),
             relation_candidate=relation,
             validation_status=str(val_status) if val_status else None,

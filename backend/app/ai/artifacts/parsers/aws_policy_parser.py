@@ -22,9 +22,7 @@ PARSER_VERSION = "1.0.0"
 _ACCESS_DENIED_RE = re.compile(
     r"(?i)(?P<line>.*(?:AccessDenied|not authorized to perform|ExplicitDeny).*)"
 )
-_ACTION_RE = re.compile(
-    r"(?i)(?:perform|action)[:\s]+`?(?P<action>[a-z0-9]+:[A-Za-z0-9*]+)`?"
-)
+_ACTION_RE = re.compile(r"(?i)(?:perform|action)[:\s]+`?(?P<action>[a-z0-9]+:[A-Za-z0-9*]+)`?")
 
 
 class AwsPolicyParser(StructuredArtifactParser):
@@ -234,8 +232,10 @@ class AwsPolicyParser(StructuredArtifactParser):
         )
 
         statements = policy_doc.get("Statement")
-        statement_list = statements if isinstance(statements, list) else (
-            [statements] if isinstance(statements, dict) else []
+        statement_list = (
+            statements
+            if isinstance(statements, list)
+            else ([statements] if isinstance(statements, dict) else [])
         )
 
         for index, statement in enumerate(statement_list):

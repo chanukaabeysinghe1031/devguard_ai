@@ -48,9 +48,7 @@ class Phase6A3ClassificationService:
             )
         )
         if row is None:
-            raise ResourceNotFoundError(
-                "Hierarchical classification not found for this analysis."
-            )
+            raise ResourceNotFoundError("Hierarchical classification not found for this analysis.")
         return HierarchicalClassificationResponse(
             id=row.id,
             analysis_run_id=row.analysis_run_id,
@@ -171,9 +169,7 @@ class Phase6A3ClassificationService:
             )
         )
         if row is None:
-            raise ResourceNotFoundError(
-                "Classification disagreement not found for this analysis."
-            )
+            raise ResourceNotFoundError("Classification disagreement not found for this analysis.")
         return ClassificationDisagreementResponse(
             id=row.id,
             analysis_run_id=row.analysis_run_id,
@@ -187,9 +183,7 @@ class Phase6A3ClassificationService:
             classifier_conflict=row.classifier_conflict,
             category_distance=row.category_distance,
             recommended_action=row.recommended_action,
-            additional_evidence_needed=[
-                str(x) for x in (row.additional_evidence_needed or [])
-            ],
+            additional_evidence_needed=[str(x) for x in (row.additional_evidence_needed or [])],
             confidence_penalty=row.confidence_penalty,
             explanation=row.explanation,
             created_at=row.created_at,
@@ -209,18 +203,14 @@ class Phase6A3ClassificationService:
             )
         )
         if parent is None:
-            raise ResourceNotFoundError(
-                "Classification confidence not found for this analysis."
-            )
+            raise ResourceNotFoundError("Classification confidence not found for this analysis.")
         rows = list(
             (
                 await self._session.scalars(
                     select(ClassificationConfidenceComponentRow)
                     .where(
-                        ClassificationConfidenceComponentRow.organization_id
-                        == organization_id,
-                        ClassificationConfidenceComponentRow.analysis_run_id
-                        == analysis_run_id,
+                        ClassificationConfidenceComponentRow.organization_id == organization_id,
+                        ClassificationConfidenceComponentRow.analysis_run_id == analysis_run_id,
                     )
                     .order_by(ClassificationConfidenceComponentRow.component_name.asc())
                 )

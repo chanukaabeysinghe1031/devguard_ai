@@ -78,9 +78,7 @@ class RemediationVerificationRepositoryImpl:
         try:
             org_id = _require_uuid(run.organization_id, field="organization_id")
             analysis_id = _require_uuid(run.analysis_id, field="analysis_id")
-            candidate_id = _require_uuid(
-                run.candidate_id or "", field="candidate_id"
-            )
+            candidate_id = _require_uuid(run.candidate_id or "", field="candidate_id")
             run_id = _as_uuid(run.id) or uuid.uuid4()
 
             existing = await self._session.scalar(
@@ -92,9 +90,7 @@ class RemediationVerificationRepositoryImpl:
             )
 
             consensus = run.consensus
-            consensus_status = (
-                _enum_str(consensus.status) if consensus is not None else None
-            )
+            consensus_status = _enum_str(consensus.status) if consensus is not None else None
             snapshot = {
                 "selected_verifiers": list(run.selected_verifiers),
                 "hypothesis_id": run.hypothesis_id,
@@ -302,13 +298,9 @@ class RemediationVerificationRepositoryImpl:
                 RemediationVerificationResultRow.analysis_run_id == analysis_run_id,
             )
             if candidate_id is not None:
-                stmt = stmt.where(
-                    RemediationVerificationResultRow.candidate_id == candidate_id
-                )
+                stmt = stmt.where(RemediationVerificationResultRow.candidate_id == candidate_id)
             if verifier_name:
-                stmt = stmt.where(
-                    RemediationVerificationResultRow.verifier_name == verifier_name
-                )
+                stmt = stmt.where(RemediationVerificationResultRow.verifier_name == verifier_name)
             stmt = stmt.order_by(RemediationVerificationResultRow.created_at.desc())
             result = await self._session.scalars(stmt)
             return list(result.all())
@@ -330,8 +322,7 @@ class RemediationVerificationRepositoryImpl:
                 select(RemediationVerificationResultRow)
                 .where(
                     RemediationVerificationResultRow.organization_id == organization_id,
-                    RemediationVerificationResultRow.verification_run_id
-                    == verification_run_id,
+                    RemediationVerificationResultRow.verification_run_id == verification_run_id,
                 )
                 .order_by(RemediationVerificationResultRow.verifier_name.asc())
             )
@@ -351,8 +342,7 @@ def consensus_from_row(row: RemediationVerificationRunRow) -> VerificationConsen
         if row.consensus_status:
             return VerificationConsensus(
                 status=VerificationConsensusStatus(row.consensus_status)
-                if row.consensus_status
-                in {s.value for s in VerificationConsensusStatus}
+                if row.consensus_status in {s.value for s in VerificationConsensusStatus}
                 else row.consensus_status,
                 candidate_id=str(row.candidate_id),
                 version=row.consensus_version or CONSENSUS_ENGINE_VERSION,

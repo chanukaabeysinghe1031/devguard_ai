@@ -53,7 +53,9 @@ def map_relationship_type(raw: str) -> GraphEdgeType:
     return _REL_MAP.get(raw.upper(), GraphEdgeType.REFERENCES)
 
 
-def stable_node_key(*, artifact_id: str | None, parser_entity_id: str, node_type: GraphNodeType) -> str:
+def stable_node_key(
+    *, artifact_id: str | None, parser_entity_id: str, node_type: GraphNodeType
+) -> str:
     art = artifact_id or "none"
     return f"{node_type.value}:{art}:{parser_entity_id}"
 

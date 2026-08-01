@@ -305,9 +305,7 @@ class VerificationRunDetailResponse(BaseModel):
     workspace_version: str | None = None
     created_at: datetime
     completed_at: datetime | None = None
-    disclaimer: str = (
-        "Temporary workspace verification only. No repository or cloud mutation."
-    )
+    disclaimer: str = "Temporary workspace verification only. No repository or cloud mutation."
 
 
 class VerificationResultItem(BaseModel):
@@ -349,6 +347,4 @@ class VerifierLogsResponse(BaseModel):
     analysis_run_id: UUID
     candidate_id: UUID
     items: list[dict[str, Any]] = Field(default_factory=list)
-    disclaimer: str = (
-        "Stdout/stderr are truncated and secret-redacted. No apply endpoints exist."
-    )
+    disclaimer: str = "Stdout/stderr are truncated and secret-redacted. No apply endpoints exist."

@@ -215,9 +215,7 @@ class ArtifactBundleService:
             bundle_snapshot=_dataclass_to_dict(
                 dataclasses.replace(
                     bundle,
-                    artifacts=[
-                        dataclasses.replace(a, content=None) for a in bundle.artifacts
-                    ],
+                    artifacts=[dataclasses.replace(a, content=None) for a in bundle.artifacts],
                 )
             ),
         )

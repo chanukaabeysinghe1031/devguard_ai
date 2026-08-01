@@ -112,9 +112,7 @@ def test_concurrent_sessions_cannot_exceed_max_hypotheses() -> None:
         MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS=5,
     )
     problems = settings.validate_for_runtime()
-    assert any(
-        "MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS cannot exceed" in p for p in problems
-    )
+    assert any("MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS cannot exceed" in p for p in problems)
 
 
 def test_concurrent_sessions_within_max_hypotheses_ok() -> None:

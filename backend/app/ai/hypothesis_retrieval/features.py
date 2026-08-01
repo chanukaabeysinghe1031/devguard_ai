@@ -58,9 +58,7 @@ class RetrievalCandidateFeatureExtractor:
         same_aws_action = None
         actions = identifiers.aws_actions if identifiers else context.permission_actions
         if actions:
-            same_aws_action = (
-                1.0 if any(a.lower() in text for a in actions if a) else 0.0
-            )
+            same_aws_action = 1.0 if any(a.lower() in text for a in actions if a) else 0.0
 
         historical_quality = item.historical_score
         provenance = 1.0 if item.source_system and item.adapter_name else None

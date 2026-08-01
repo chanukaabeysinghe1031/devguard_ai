@@ -38,9 +38,7 @@ class HypothesisReferenceValidator:
             for e in context.relevant_graph_edges
             if e.get("id") or e.get("stable_key")
         }
-        evidence_ids = {
-            str(e.get("id") or "") for e in context.evidence_candidates if e.get("id")
-        }
+        evidence_ids = {str(e.get("id") or "") for e in context.evidence_candidates if e.get("id")}
         artifact_ids = set(context.artifact_availability)
 
         if hypothesis.category_code and not self._registry.is_valid_category(
@@ -51,9 +49,7 @@ class HypothesisReferenceValidator:
         root_id = hypothesis.root_cause_node_id
         if root_id and node_ids and root_id not in node_ids:
             # Allow temporal event IDs even if not in graph node set.
-            temporal_id = (context.temporal_primary_failure or {}).get(
-                "primary_failure_event_id"
-            )
+            temporal_id = (context.temporal_primary_failure or {}).get("primary_failure_event_id")
             if root_id != temporal_id:
                 reasons.append(f"unknown_root_cause_node:{root_id}")
 
@@ -104,9 +100,10 @@ class HypothesisReferenceValidator:
                 label = str(node.get("label") or "").lower()
                 if any(tok in label for tok in DOWNSTREAM_SYMPTOM_TOKENS):
                     temporal = context.temporal_primary_failure or {}
-                    if temporal.get("primary_failure_event_id") and temporal.get(
-                        "primary_failure_event_id"
-                    ) != key:
+                    if (
+                        temporal.get("primary_failure_event_id")
+                        and temporal.get("primary_failure_event_id") != key
+                    ):
                         reasons.append("root_cause_is_downstream_symptom")
 
         if reasons:

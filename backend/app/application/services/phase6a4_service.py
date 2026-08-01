@@ -192,9 +192,7 @@ class Phase6A4HypothesisService:
             causal_path_edge_ids=[str(x) for x in (row.causal_path_edge_ids or [])],
             expected_observations=[str(x) for x in (row.expected_observations or [])],
             falsifying_observations=[str(x) for x in (row.falsifying_observations or [])],
-            proposed_verification_steps=[
-                str(x) for x in (row.proposed_verification_steps or [])
-            ],
+            proposed_verification_steps=[str(x) for x in (row.proposed_verification_steps or [])],
             missing_evidence=[str(x) for x in (row.missing_evidence or [])],
             limitations=[str(x) for x in (row.limitations or [])],
             warnings=[str(x) for x in (row.warnings or [])],

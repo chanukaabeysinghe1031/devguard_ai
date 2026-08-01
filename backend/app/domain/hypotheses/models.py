@@ -100,9 +100,7 @@ class CausalHypothesis:
     template_id: str | None = None
     generation_confidence: float = 0.0
     generation_prior_score: float = 0.0
-    path_validation_status: CausalPathValidationStatus = (
-        CausalPathValidationStatus.NOT_APPLICABLE
-    )
+    path_validation_status: CausalPathValidationStatus = CausalPathValidationStatus.NOT_APPLICABLE
     path_validation_warnings: list[str] = field(default_factory=list)
     status: HypothesisStatus = HypothesisStatus.GENERATED
     rank_placeholder: int = 0

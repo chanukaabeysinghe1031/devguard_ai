@@ -30,7 +30,9 @@ def upgrade() -> None:
         sa.Column("analysis_run_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("hypothesis_ranking_run_id", sa.String(length=128), nullable=True),
         sa.Column("status", sa.String(length=40), nullable=False),
-        sa.Column("selected_hypothesis_ids", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "selected_hypothesis_ids", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("selected_hypothesis_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("candidate_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("safe_candidate_count", sa.Integer(), nullable=False, server_default="0"),
@@ -44,12 +46,24 @@ def upgrade() -> None:
         sa.Column("planner_version", sa.String(length=64), nullable=False),
         sa.Column("template_registry_version", sa.String(length=64), nullable=False),
         sa.Column("snapshot_version", sa.String(length=64), nullable=False),
-        sa.Column("configuration_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "configuration_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("warnings", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("errors", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("limitations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["incident_id"], ["incidents.id"], ondelete="CASCADE"),
@@ -82,11 +96,19 @@ def upgrade() -> None:
         sa.Column("primary_artifact_id", sa.String(length=128), nullable=True),
         sa.Column("target_paths", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("change_types", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("current_state_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("counterfactual_state_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "current_state_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
+        sa.Column(
+            "counterfactual_state_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("expected_effects", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("expected_preserved_behaviors", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("expected_failure_condition", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "expected_preserved_behaviors", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
+        sa.Column(
+            "expected_failure_condition", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("assumptions", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("limitations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("rollback_plan", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
@@ -98,8 +120,18 @@ def upgrade() -> None:
         sa.Column("template_id", sa.String(length=128), nullable=True),
         sa.Column("template_version", sa.String(length=64), nullable=True),
         sa.Column("status", sa.String(length=40), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["remediation_run_id"],
             ["counterfactual_remediation_runs.id"],
@@ -122,7 +154,9 @@ def upgrade() -> None:
         "counterfactual_remediation_candidates",
         ["organization_id", "analysis_run_id"],
     )
-    op.create_index("ix_cf_rem_cand_hypothesis", "counterfactual_remediation_candidates", ["hypothesis_id"])
+    op.create_index(
+        "ix_cf_rem_cand_hypothesis", "counterfactual_remediation_candidates", ["hypothesis_id"]
+    )
     op.create_index("ix_cf_rem_cand_status", "counterfactual_remediation_candidates", ["status"])
     op.create_index(
         "ix_cf_rem_cand_artifact",
@@ -160,7 +194,12 @@ def upgrade() -> None:
         sa.Column("change_order", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("content_hash_before", sa.String(length=128), nullable=True),
         sa.Column("content_hash_after_candidate", sa.String(length=128), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["remediation_run_id"],
             ["counterfactual_remediation_runs.id"],
@@ -212,7 +251,12 @@ def upgrade() -> None:
         sa.Column("is_satisfied", sa.Boolean(), nullable=True),
         sa.Column("satisfaction_status", sa.String(length=40), nullable=False),
         sa.Column("limitations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["remediation_run_id"],
             ["counterfactual_remediation_runs.id"],
@@ -256,7 +300,12 @@ def upgrade() -> None:
         sa.Column("graph_node_ids", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("is_required", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("limitations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["remediation_run_id"],
             ["counterfactual_remediation_runs.id"],
@@ -295,7 +344,12 @@ def upgrade() -> None:
         sa.Column("blocking_on_failure", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("input_artifacts", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("limitations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["remediation_run_id"],
             ["counterfactual_remediation_runs.id"],
@@ -338,7 +392,12 @@ def upgrade() -> None:
         sa.Column("constraint_ids", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("mitigation", sa.Text(), nullable=True),
         sa.Column("limitations", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["remediation_run_id"],
             ["counterfactual_remediation_runs.id"],

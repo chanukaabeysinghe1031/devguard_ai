@@ -101,9 +101,7 @@ class RuleBasedHypothesisGenerator:
             )
         return out
 
-    def _unknown_placeholder(
-        self, context: HypothesisGenerationContext
-    ) -> list[CausalHypothesis]:
+    def _unknown_placeholder(self, context: HypothesisGenerationContext) -> list[CausalHypothesis]:
         path = self._registry.unknown_path()
         return [
             CausalHypothesis(

@@ -85,9 +85,7 @@ class HypothesisRetrievalPersistService:
             incident_id=UUID(run.incident_id) if run.incident_id else None,
             analysis_run_id=analysis_id,
             hypothesis_generation_run_id=(
-                UUID(run.hypothesis_generation_run_id)
-                if run.hypothesis_generation_run_id
-                else None
+                UUID(run.hypothesis_generation_run_id) if run.hypothesis_generation_run_id else None
             ),
             status=run.status.value,
             execution_mode=run.execution_mode.value,

@@ -89,9 +89,7 @@ class RetrievalIdentifierExtractor:
         for match in _TF_TYPE.finditer(text):
             _append_unique(result.terraform_resource_types, match.group(1), self._max)
         for match in _PACKAGE.finditer(text):
-            _append_unique(
-                result.package_coords, f"{match.group(1)}@{match.group(2)}", self._max
-            )
+            _append_unique(result.package_coords, f"{match.group(1)}@{match.group(2)}", self._max)
         for match in _EXCEPTION.finditer(text):
             _append_unique(result.exception_names, match.group(1), self._max)
         for match in _EXIT_CODE.finditer(text):

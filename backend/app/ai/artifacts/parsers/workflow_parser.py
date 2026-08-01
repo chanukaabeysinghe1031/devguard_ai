@@ -88,9 +88,7 @@ class WorkflowParser(StructuredArtifactParser):
         on_triggers = _normalise_triggers(parsed.get("on") or parsed.get(True))
         permissions = parsed.get("permissions")
         concurrency = parsed.get("concurrency")
-        is_reusable = kind == ArtifactKind.REUSABLE_WORKFLOW_YAML or _has_workflow_call(
-            parsed
-        )
+        is_reusable = kind == ArtifactKind.REUSABLE_WORKFLOW_YAML or _has_workflow_call(parsed)
 
         entities.append(
             GraphEntityPreview(
@@ -173,9 +171,7 @@ class WorkflowParser(StructuredArtifactParser):
                                 location=SourceLocation(path=filename),
                                 metadata={
                                     "uses": uses_val,
-                                    "reusable_local": bool(
-                                        _LOCAL_REUSABLE_RE.match(uses_val)
-                                    ),
+                                    "reusable_local": bool(_LOCAL_REUSABLE_RE.match(uses_val)),
                                     "scope": "job",
                                 },
                             )
@@ -326,9 +322,7 @@ class WorkflowParser(StructuredArtifactParser):
                                     location=SourceLocation(path=filename),
                                     metadata={
                                         "uses": uses,
-                                        "reusable_local": bool(
-                                            _LOCAL_REUSABLE_RE.match(uses)
-                                        ),
+                                        "reusable_local": bool(_LOCAL_REUSABLE_RE.match(uses)),
                                         "scope": "step",
                                     },
                                 )

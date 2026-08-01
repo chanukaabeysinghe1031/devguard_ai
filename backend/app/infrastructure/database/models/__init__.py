@@ -23,10 +23,6 @@ from app.infrastructure.database.models.counterfactual_remediation import (
     RemediationRiskSignalRow,
     RemediationVerificationRequirementRow,
 )
-from app.infrastructure.database.models.remediation_verification import (
-    RemediationVerificationResultRow,
-    RemediationVerificationRunRow,
-)
 from app.infrastructure.database.models.evaluation import Evaluation
 from app.infrastructure.database.models.evidence_item import EvidenceItem
 from app.infrastructure.database.models.failure_category import FailureCategory
@@ -70,6 +66,10 @@ from app.infrastructure.database.models.project_integration import ProjectIntegr
 from app.infrastructure.database.models.recommendation import Recommendation
 from app.infrastructure.database.models.recommendation_step import RecommendationStep
 from app.infrastructure.database.models.refresh_token import RefreshToken
+from app.infrastructure.database.models.remediation_verification import (
+    RemediationVerificationResultRow,
+    RemediationVerificationRunRow,
+)
 from app.infrastructure.database.models.retrieved_document import RetrievedDocument
 from app.infrastructure.database.models.temporal_evidence_graph import (
     EvidenceGraphEdgeRow,

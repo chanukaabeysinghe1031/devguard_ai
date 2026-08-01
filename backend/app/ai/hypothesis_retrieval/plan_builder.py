@@ -83,9 +83,7 @@ class HypothesisRetrievalPlanBuilder:
         artifact_sources = (
             [HypothesisRetrievalSourceType.ARTIFACT] if self._artifact_enabled else []
         )
-        graph_sources = (
-            [HypothesisRetrievalSourceType.GRAPH] if self._graph_context_enabled else []
-        )
+        graph_sources = [HypothesisRetrievalSourceType.GRAPH] if self._graph_context_enabled else []
         temporal_sources = [HypothesisRetrievalSourceType.TEMPORAL]
 
         # 1. Causal claim (always if valid)
@@ -308,9 +306,7 @@ class HypothesisRetrievalPlanBuilder:
             warnings.append(f"bounded_queries:{len(accepted)}->{self._max_queries}")
             accepted = accepted[: self._max_queries]
 
-        enabled = _sorted_source_types(
-            [s for spec in accepted for s in spec.source_types]
-        )
+        enabled = _sorted_source_types([s for spec in accepted for s in spec.source_types])
         excluded: list[HypothesisRetrievalSourceType] = [
             s
             for s in HypothesisRetrievalSourceType

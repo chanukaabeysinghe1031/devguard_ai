@@ -34,9 +34,7 @@ class HypothesisSupportAnalyzer:
         assessments: list[EvidenceAssessment],
     ) -> HypothesisSupportAssessment:
         support_items = [
-            a
-            for a in assessments
-            if a.assessment_type == EvidenceAssessmentType.SUPPORT_CANDIDATE
+            a for a in assessments if a.assessment_type == EvidenceAssessmentType.SUPPORT_CANDIDATE
         ]
         warnings: list[str] = []
         if not assessments:

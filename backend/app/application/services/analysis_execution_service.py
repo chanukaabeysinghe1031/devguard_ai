@@ -614,8 +614,7 @@ class AnalysisExecutionService:
         """Build/persist Phase 6A artifact bundle when enabled. Soft-fail only."""
         need_bundle = bool(self._settings.artifact_bundle_enabled)
         need_6a2 = bool(
-            self._settings.temporal_localisation_enabled
-            or self._settings.evidence_graph_enabled
+            self._settings.temporal_localisation_enabled or self._settings.evidence_graph_enabled
         )
         if not need_bundle and not need_6a2:
             return
@@ -769,8 +768,7 @@ class AnalysisExecutionService:
                     incident_id=run.incident_id,
                     title="Temporal localisation completed",
                     description=(
-                        temporal_result.primary_failure_summary
-                        or temporal_result.status.value
+                        temporal_result.primary_failure_summary or temporal_result.status.value
                     ),
                     event_type="temporal_localisation_completed",
                     metadata={
@@ -827,17 +825,14 @@ class AnalysisExecutionService:
                     "status": graph.status.value,
                     "node_count": graph.metrics.node_count,
                     "edge_count": graph.metrics.edge_count,
-                    "consistency_status": (
-                        consistency.status.value if consistency else None
-                    ),
+                    "consistency_status": (consistency.status.value if consistency else None),
                     "warnings": list(graph.warnings),
                 }
                 await self._record_event(
                     incident_id=run.incident_id,
                     title="Evidence graph created",
                     description=(
-                        f"{graph.metrics.node_count} nodes, "
-                        f"{graph.metrics.edge_count} edges"
+                        f"{graph.metrics.node_count} nodes, {graph.metrics.edge_count} edges"
                     ),
                     event_type="evidence_graph_created",
                     metadata={
@@ -901,9 +896,7 @@ class AnalysisExecutionService:
                 confidence_breakdown_enabled=bool(
                     self._settings.classification_confidence_breakdown_enabled
                 ),
-                llm_classification_enabled=bool(
-                    self._settings.enable_llm and context.enable_llm
-                ),
+                llm_classification_enabled=bool(self._settings.enable_llm and context.enable_llm),
             )
             logger.info(
                 "hierarchical_classification_started",
@@ -1289,9 +1282,7 @@ class AnalysisExecutionService:
                 organization_id=str(context.organization_id),
                 analysis_id=str(run.id),
                 options=dict(context.options),
-                project_id=(
-                    str(pid) if (pid := getattr(context, "project_id", None)) else None
-                ),
+                project_id=(str(pid) if (pid := getattr(context, "project_id", None)) else None),
                 incident_id=str(run.incident_id) if run.incident_id else None,
             )
             # Never overwrite diagnosis / recommendations / retrieved / evidence assessment.
@@ -1414,9 +1405,7 @@ class AnalysisExecutionService:
                     candidate_count=int(
                         foundation_payload.get("candidate_count") or len(candidates)
                     ),
-                    safe_candidate_count=int(
-                        foundation_payload.get("safe_candidate_count") or 0
-                    ),
+                    safe_candidate_count=int(foundation_payload.get("safe_candidate_count") or 0),
                     incomplete_candidate_count=int(
                         foundation_payload.get("incomplete_candidate_count") or 0
                     ),
@@ -1428,9 +1417,7 @@ class AnalysisExecutionService:
                     enabled=True,
                     repository=CounterfactualRemediationRepositoryImpl(self._session),
                 )
-                await persist.persist_generated_candidates(
-                    run=rem_run, candidates=candidates
-                )
+                await persist.persist_generated_candidates(run=rem_run, candidates=candidates)
 
             context.options["counterfactual_remediation_generation"] = {
                 "status": gen_meta.get("status") or ("COMPLETE" if gen_meta else "SKIPPED"),
@@ -1477,10 +1464,7 @@ class AnalysisExecutionService:
             candidates = list(
                 context.options.pop("_counterfactual_candidates_for_verification", []) or []
             )
-            if (
-                not candidates
-                and self._settings.counterfactual_persistence_enabled
-            ):
+            if not candidates and self._settings.counterfactual_persistence_enabled:
                 from app.infrastructure.repositories.counterfactual_remediation_repository import (
                     CounterfactualRemediationRepositoryImpl,
                 )
@@ -1541,15 +1525,12 @@ class AnalysisExecutionService:
                         "consensus_status": (
                             str(getattr(c, "validation_status", "") or "")
                             or (
-                                str(
-                                    getattr(vrun.consensus.status, "value", vrun.consensus.status)
-                                )
+                                str(getattr(vrun.consensus.status, "value", vrun.consensus.status))
                                 if vrun and vrun.consensus is not None
                                 else None
                             )
                         ),
-                        "constraint_status": str(getattr(c, "constraint_status", "") or "")
-                        or None,
+                        "constraint_status": str(getattr(c, "constraint_status", "") or "") or None,
                         "title": str(getattr(c, "title", "") or ""),
                         "summary": str(getattr(c, "summary", "") or ""),
                         "artifact_type": str(getattr(c, "artifact_type", "") or ""),
@@ -1568,16 +1549,12 @@ class AnalysisExecutionService:
                             }
                             for r in results
                         ],
-                        "required_verifiers": list(
-                            getattr(vrun, "selected_verifiers", None) or []
-                        ),
+                        "required_verifiers": list(getattr(vrun, "selected_verifiers", None) or []),
                     }
                 )
             context.options["_remediation_candidates_for_decision"] = decision_candidates
             status_value = (
-                report.status.value
-                if hasattr(report.status, "value")
-                else str(report.status)
+                report.status.value if hasattr(report.status, "value") else str(report.status)
             )
             logger.info(
                 "counterfactual_verification_completed",
@@ -1645,9 +1622,7 @@ class AnalysisExecutionService:
             # Never overwrite Module 6 diagnosis / recommendations / incident status.
             context.options["final_diagnosis"] = payload
             status_value = (
-                decision.status.value
-                if hasattr(decision.status, "value")
-                else str(decision.status)
+                decision.status.value if hasattr(decision.status, "value") else str(decision.status)
             )
             logger.info(
                 "final_diagnosis_completed",

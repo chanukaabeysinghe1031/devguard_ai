@@ -255,9 +255,7 @@ def test_consistency_org_mismatch_invalid() -> None:
         enabled=True,
     )
     graph.nodes[0].organization_id = "other-org"
-    report = GraphConsistencyEngine().validate(
-        graph, enabled=True, expected_organization_id="o1"
-    )
+    report = GraphConsistencyEngine().validate(graph, enabled=True, expected_organization_id="o1")
     assert report.status in {
         GraphConsistencyStatus.INVALID,
         GraphConsistencyStatus.VALID_WITH_WARNINGS,

@@ -138,10 +138,7 @@ class InvitationService:
         )
         now = datetime.now(UTC)
         for row in rows:
-            if (
-                row.status == InvitationStatus.PENDING
-                and row.expires_at <= now
-            ):
+            if row.status == InvitationStatus.PENDING and row.expires_at <= now:
                 row.status = InvitationStatus.EXPIRED
         await self._session.flush()
         return [self._to_response(row) for row in rows]
@@ -186,8 +183,14 @@ class InvitationService:
             await self._session.scalar(select(User.id).where(User.email == invite.email))
             is not None
         )
-        expired = invite.expires_at <= datetime.now(UTC) or invite.status == InvitationStatus.EXPIRED
-        status = InvitationStatus.EXPIRED.value if expired and invite.status == InvitationStatus.PENDING else invite.status.value
+        expired = (
+            invite.expires_at <= datetime.now(UTC) or invite.status == InvitationStatus.EXPIRED
+        )
+        status = (
+            InvitationStatus.EXPIRED.value
+            if expired and invite.status == InvitationStatus.PENDING
+            else invite.status.value
+        )
         return InvitationPreviewResponse(
             organization_name=org.name,
             organization_slug=org.slug,

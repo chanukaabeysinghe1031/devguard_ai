@@ -26,9 +26,7 @@ class HypothesisQueryDeduplicator:
     @staticmethod
     def _key(spec: HypothesisRetrievalQuerySpec) -> str:
         intent = str((spec.metadata or {}).get("intent_type") or "")
-        identifiers = tuple(
-            sorted(str(x) for x in (spec.target_resource_identifiers or [])[:8])
-        )
+        identifiers = tuple(sorted(str(x) for x in (spec.target_resource_identifiers or [])[:8]))
         sources = tuple(sorted(s.value for s in spec.source_types))
         relation = spec.expected_relation.value
         paths = tuple(sorted(spec.target_paths or []))

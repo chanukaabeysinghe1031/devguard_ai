@@ -17,7 +17,7 @@ from app.domain.artifacts.models import (
 PARSER_VERSION = "1.0.0"
 
 _BLOCK_RE = re.compile(
-    r'^(?P<kind>resource|module|variable|output|data|provider)\s+'
+    r"^(?P<kind>resource|module|variable|output|data|provider)\s+"
     r'(?:"(?P<type>[^"]+)"\s+)?'
     r'(?:"(?P<name>[^"]+)"|(?P<bare>[A-Za-z0-9_-]+))',
     re.MULTILINE,
@@ -220,9 +220,7 @@ class TerraformParser(StructuredArtifactParser):
                     location=SourceLocation(path=filename),
                     importance=0.6,
                     metadata={
-                        "depends_on_count": sum(
-                            1 for r in relationships if r.type == "DEPENDS_ON"
-                        )
+                        "depends_on_count": sum(1 for r in relationships if r.type == "DEPENDS_ON")
                     },
                 )
             )
@@ -244,12 +242,8 @@ class TerraformParser(StructuredArtifactParser):
                 "addresses": sorted(declared_ids.keys()),
                 "relationship_counts": {
                     "DECLARES": sum(1 for r in relationships if r.type == "DECLARES"),
-                    "DEPENDS_ON": sum(
-                        1 for r in relationships if r.type == "DEPENDS_ON"
-                    ),
-                    "REFERENCES": sum(
-                        1 for r in relationships if r.type == "REFERENCES"
-                    ),
+                    "DEPENDS_ON": sum(1 for r in relationships if r.type == "DEPENDS_ON"),
+                    "REFERENCES": sum(1 for r in relationships if r.type == "REFERENCES"),
                 },
             },
         )

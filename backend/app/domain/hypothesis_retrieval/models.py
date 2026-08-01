@@ -702,11 +702,7 @@ class RetrievalCandidateFeatureVector:
         return asdict(self)
 
     def active_components(self) -> dict[str, float]:
-        return {
-            key: float(value)
-            for key, value in self.to_dict().items()
-            if value is not None
-        }
+        return {key: float(value) for key, value in self.to_dict().items() if value is not None}
 
 
 @dataclass(slots=True)

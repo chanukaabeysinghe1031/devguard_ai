@@ -177,8 +177,10 @@ class TerraformPlanParser(StructuredArtifactParser):
                         )
                     )
 
-        quality = 0.9 if status == ParseStatus.SUCCESS else (
-            0.4 if status == ParseStatus.PARTIAL else 0.0
+        quality = (
+            0.9
+            if status == ParseStatus.SUCCESS
+            else (0.4 if status == ParseStatus.PARTIAL else 0.0)
         )
 
         return StructuredParseResult(

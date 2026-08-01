@@ -205,10 +205,7 @@ def test_ambiguous_support_with_weak_relevance() -> None:
 
 
 def test_max_assessments_cap() -> None:
-    items = [
-        _item(item_id=f"i{i}", order=i, relevance=0.9 - (i * 0.01))
-        for i in range(10)
-    ]
+    items = [_item(item_id=f"i{i}", order=i, relevance=0.9 - (i * 0.01)) for i in range(10)]
     results = EvidenceItemAssessor().assess_many(items, hypothesis_id="h1", max_assessments=3)
     assert len(results) == 3
 
@@ -309,9 +306,7 @@ def test_contradiction_analyzer_applies_penalty() -> None:
             authority_score=0.9,
         )
     ]
-    result = HypothesisContradictionAnalyzer().analyze(
-        hypothesis_id="h1", assessments=assessments
-    )
+    result = HypothesisContradictionAnalyzer().analyze(hypothesis_id="h1", assessments=assessments)
     assert result.contradiction_item_count == 1
     assert result.contradiction_penalty > 0.2
     assert "contradiction_candidates_are_not_disproof" in result.limitations
@@ -400,9 +395,7 @@ def _support(hid: str, score: float) -> HypothesisSupportAssessment:
 
 
 def _contradict(hid: str, penalty: float = 0.0) -> HypothesisContradictionAssessment:
-    return HypothesisContradictionAssessment(
-        hypothesis_id=hid, contradiction_penalty=penalty
-    )
+    return HypothesisContradictionAssessment(hypothesis_id=hid, contradiction_penalty=penalty)
 
 
 def _suff(hid: str, score: float, **kwargs: float) -> EvidenceSufficiencyAssessment:
@@ -520,9 +513,7 @@ def test_candidate_selection_weak_evidence() -> None:
         organization_id="o1",
         scores=[_rank_score("h1", "H1", 0.2, 1)],
     )
-    selection = HypothesisCandidateSelector().select(
-        ranking, min_ranking_score_for_top=0.40
-    )
+    selection = HypothesisCandidateSelector().select(ranking, min_ranking_score_for_top=0.40)
     assert selection.status == CandidateSelectionStatus.WEAK_EVIDENCE
 
 
@@ -567,12 +558,8 @@ def test_no_proven_verified_in_serialized_outputs() -> None:
     assessment = EvidenceItemAssessor().assess(
         _item(relation=RetrievalItemRelation.SUPPORT_CANDIDATE, relevance=0.9)
     )
-    support = HypothesisSupportAnalyzer().analyze(
-        hypothesis_id="h1", assessments=[assessment]
-    )
-    contradict = HypothesisContradictionAnalyzer().analyze(
-        hypothesis_id="h1", assessments=[]
-    )
+    support = HypothesisSupportAnalyzer().analyze(hypothesis_id="h1", assessments=[assessment])
+    contradict = HypothesisContradictionAnalyzer().analyze(hypothesis_id="h1", assessments=[])
     ranking = HypothesisRankingEngine().rank(
         analysis_id="a1",
         organization_id="o1",
@@ -597,7 +584,6 @@ def test_no_proven_verified_in_serialized_outputs() -> None:
     assert "VERIFIED" not in blob
     # Allowed: negation phrases like NOT_ROOT_CAUSE_CONFIDENCE
     assert "IS_NOT_ROOT_CAUSE_CONFIDENCE" in blob or "NOT_ROOT_CAUSE_CONFIDENCE" in blob
-
 
 
 def test_versions_constants() -> None:

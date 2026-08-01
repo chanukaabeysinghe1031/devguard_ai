@@ -62,7 +62,7 @@ class HypothesisSpecificQueryGenerator:
         id_slice = identifiers.all_identifiers[: self._max_identifiers]
         for intent in intents:
             families = self._families_for_intent(context, intent, id_slice)
-            families = families[:1] if not expansion_enabled else families[:self._max_expansions]
+            families = families[:1] if not expansion_enabled else families[: self._max_expansions]
             for fam_idx, (text, relation) in enumerate(families):
                 sanitized = self._sanitizer.sanitize(text)
                 if not sanitized.accepted:
@@ -125,9 +125,7 @@ class HypothesisSpecificQueryGenerator:
             if id_text:
                 families.append((id_text, RetrievalItemRelation.SUPPORT_CANDIDATE))
         elif intent.intent_type == QueryIntentType.FIND_EXACT_FAILURE_SIGNATURE:
-            families.append(
-                (signature or claim[:200], RetrievalItemRelation.SUPPORT_CANDIDATE)
-            )
+            families.append((signature or claim[:200], RetrievalItemRelation.SUPPORT_CANDIDATE))
             if id_text:
                 families.append(
                     (f"{signature} {id_text}".strip(), RetrievalItemRelation.SUPPORT_CANDIDATE)
@@ -208,7 +206,5 @@ class HypothesisSpecificQueryGenerator:
             families.append((intent.objective, RetrievalItemRelation.CONTEXT))
 
         if intent.expected_observation:
-            families.append(
-                (intent.expected_observation, RetrievalItemRelation.SUPPORT_CANDIDATE)
-            )
+            families.append((intent.expected_observation, RetrievalItemRelation.SUPPORT_CANDIDATE))
         return [(t, r) for t, r in families if t and str(t).strip()]

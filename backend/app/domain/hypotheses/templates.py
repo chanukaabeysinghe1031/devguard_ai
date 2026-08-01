@@ -122,9 +122,7 @@ def _wf(
         expected_observations=(
             "Workflow YAML or runner log cites the invalid config/secret/dependency",
         ),
-        falsifying_observations=(
-            "The referenced workflow configuration is valid and present",
-        ),
+        falsifying_observations=("The referenced workflow configuration is valid and present",),
         verification_steps=(
             "Open the workflow file at the cited job/step",
             "Confirm secrets/vars/needs/matrix values against repository settings",

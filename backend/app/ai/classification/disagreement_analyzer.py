@@ -149,8 +149,10 @@ class ClassificationDisagreementAnalyzer:
         # Never majority-vote a severe conflict to a winner.
         agreed_l1 = next(iter(level1s)) if len(level1s) == 1 else None
         agreed_l2 = next(iter(level2s)) if len(level2s) == 1 else None
-        agreed_l3 = None if level in {AgreementLevel.SEVERE, AgreementLevel.LOW} else (
-            next(iter(level3s)) if len(level3s) == 1 else None
+        agreed_l3 = (
+            None
+            if level in {AgreementLevel.SEVERE, AgreementLevel.LOW}
+            else (next(iter(level3s)) if len(level3s) == 1 else None)
         )
 
         needed: list[str] = []

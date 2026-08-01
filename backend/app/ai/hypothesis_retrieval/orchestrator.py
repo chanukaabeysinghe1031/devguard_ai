@@ -388,9 +388,7 @@ class HypothesisDirectedRetrievalOrchestrator:
             plan: HypothesisRetrievalPlan = basic_plan
 
             if self._settings.adaptive_hypothesis_retrieval_enabled:
-                adaptive_plan = self._adaptive_planner.plan(
-                    ctx, basic_plan, session_id=session.id
-                )
+                adaptive_plan = self._adaptive_planner.plan(ctx, basic_plan, session_id=session.id)
                 plan = HypothesisRetrievalPlan(
                     hypothesis_id=ctx.hypothesis_id,
                     session_id=session.id,
@@ -460,9 +458,7 @@ class HypothesisDirectedRetrievalOrchestrator:
                     ),
                     current_round=0,
                     max_relevance=exec_state.get("max_relevance"),
-                    had_exact_identifier_match=bool(
-                        exec_state.get("had_exact_identifier_match")
-                    ),
+                    had_exact_identifier_match=bool(exec_state.get("had_exact_identifier_match")),
                 )
                 follow_payload = follow.to_dict()
                 if follow.should_follow_up and follow.follow_up_specs:
@@ -591,9 +587,7 @@ class HypothesisDirectedRetrievalOrchestrator:
     ) -> dict[str, Any]:
         del session  # session mutated by caller after aggregation
         all_items: list[HypothesisRetrievedItem] = list(seed_items or [])
-        query_executions: list[HypothesisRetrievalQueryExecution] = list(
-            seed_executions or []
-        )
+        query_executions: list[HypothesisRetrievalQueryExecution] = list(seed_executions or [])
         attempted: set[str] = set(seed_attempted or set())
         succeeded: set[str] = set(seed_succeeded or set())
         unavailable: set[str] = set(seed_unavailable or set())
@@ -649,9 +643,7 @@ class HypothesisDirectedRetrievalOrchestrator:
                         if result.failure_type:
                             failure_type = result.failure_type
                         if result.status == "SOURCE_UNAVAILABLE":
-                            unavailable.update(
-                                s.value for s in adapter.supported_source_types
-                            )
+                            unavailable.update(s.value for s in adapter.supported_source_types)
                         continue
                     adapters_succeeded.append(adapter.adapter_name)
                     succeeded.update(s.value for s in adapter.supported_source_types)
@@ -671,9 +663,7 @@ class HypothesisDirectedRetrievalOrchestrator:
                     item_meta["intent_ids"] = intent_ids
 
                     if self._settings.retrieval_result_validation_enabled:
-                        validation = self._validator.validate(
-                            item, ctx, seen_keys=seen_keys
-                        )
+                        validation = self._validator.validate(item, ctx, seen_keys=seen_keys)
                         item_meta["validation_status"] = validation.status.value
                         validation_summary[validation.status.value] = (
                             validation_summary.get(validation.status.value, 0) + 1
@@ -687,15 +677,11 @@ class HypothesisDirectedRetrievalOrchestrator:
                     features = self._features.extract(item, ctx, identifiers)
                     item_meta["features"] = features.to_dict()
                     assessment = self._relevance.score(
-                        item_id=item.source_id
-                        or item.normalized_text_hash
-                        or item.query_id,
+                        item_id=item.source_id or item.normalized_text_hash or item.query_id,
                         features=features,
                         retrieval_score=item.retrieval_score,
                     )
-                    item_meta["retrieval_relevance_score"] = (
-                        assessment.retrieval_relevance_score
-                    )
+                    item_meta["retrieval_relevance_score"] = assessment.retrieval_relevance_score
                     relevance_scores.append(assessment.retrieval_relevance_score)
                     exact_matches = []
                     if identifiers:
@@ -761,9 +747,7 @@ class HypothesisDirectedRetrievalOrchestrator:
             "relevance_summary": {
                 "count": len(relevance_scores),
                 "max": max(relevance_scores) if relevance_scores else 0.0,
-                "avg": (
-                    sum(relevance_scores) / len(relevance_scores) if relevance_scores else 0.0
-                ),
+                "avg": (sum(relevance_scores) / len(relevance_scores) if relevance_scores else 0.0),
             },
         }
 

@@ -117,8 +117,7 @@ class HypothesisRetrievalContextBuilder:
             + _extract_actions_from_nodes(nodes)
         )
         resource_ids = _sorted_unique(
-            list(signals.get("resource_identifiers") or [])
-            + _extract_resources_from_nodes(nodes)
+            list(signals.get("resource_identifiers") or []) + _extract_resources_from_nodes(nodes)
         )
         error_signature = (
             str(signals.get("error_signature") or signals.get("error_code") or "") or None
@@ -158,11 +157,7 @@ class HypothesisRetrievalContextBuilder:
 
         parser_evidence = parse_evidence[: self._max_artifact_evidence]
         changed_files = _sorted_unique(
-            [
-                str(n.get("source_path"))
-                for n in neighborhood_nodes
-                if n.get("source_path")
-            ]
+            [str(n.get("source_path")) for n in neighborhood_nodes if n.get("source_path")]
             + ([hyp.affected_path] if hyp.affected_path else [])
         )
 
@@ -180,9 +175,7 @@ class HypothesisRetrievalContextBuilder:
             title=_mask(hyp.title),
             causal_claim=_mask(hyp.causal_claim),
             expected_observations=[_mask(str(x)) for x in (hyp.expected_observations or [])],
-            falsifying_observations=[
-                _mask(str(x)) for x in (hyp.falsifying_observations or [])
-            ],
+            falsifying_observations=[_mask(str(x)) for x in (hyp.falsifying_observations or [])],
             missing_evidence=[_mask(str(x)) for x in (hyp.missing_evidence or [])],
             proposed_verification_steps=[
                 _mask(str(x)) for x in (hyp.proposed_verification_steps or [])
@@ -204,13 +197,11 @@ class HypothesisRetrievalContextBuilder:
             causal_path_edge_ids=list(hyp.causal_path_edge_ids or []),
             graph_neighborhood_nodes=neighborhood_nodes,
             graph_neighborhood_edges=neighborhood_edges,
-            graph_consistency_status=consistency.status if consistency else (
-                graph_row.status if graph_row else None
-            ),
+            graph_consistency_status=consistency.status
+            if consistency
+            else (graph_row.status if graph_row else None),
             graph_warnings=[str(w) for w in (graph_row.warnings or [])] if graph_row else [],
-            missing_graph_links=[
-                str(x) for x in (graph_row.missing_link_diagnostics or [])
-            ]
+            missing_graph_links=[str(x) for x in (graph_row.missing_link_diagnostics or [])]
             if graph_row
             else [],
             affected_artifact_id=hyp.affected_artifact_id,
@@ -221,9 +212,7 @@ class HypothesisRetrievalContextBuilder:
             artifact_availability=[str(x) for x in (bundle.available_artifacts or [])]
             if bundle
             else [],
-            missing_artifacts=[str(x) for x in (bundle.missing_artifacts or [])]
-            if bundle
-            else [],
+            missing_artifacts=[str(x) for x in (bundle.missing_artifacts or [])] if bundle else [],
             open_set_status=open_set.status if open_set else None,
             disagreement_status=disagreement.agreement_level if disagreement else None,
             classification_candidates=class_candidates,
@@ -631,7 +620,7 @@ def _select_neighborhood(
             nodes,
             key=lambda n: (-(n.confidence or 0.0), n.stable_key),
         )
-        selected_ids = {n.id for n in ordered[: max_nodes]}
+        selected_ids = {n.id for n in ordered[:max_nodes]}
 
     selected_nodes = sorted(
         [n for n in nodes if n.id in selected_ids],

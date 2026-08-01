@@ -72,8 +72,7 @@ def build_hypothesis_prompt(context: HypothesisGenerationContext) -> str:
     }
     return (
         f"PROMPT_VERSION={HYPOTHESIS_PROMPT_VERSION}\n"
-        "Return JSON: {\"hypotheses\":[...]}.\n"
-        + json.dumps(payload, ensure_ascii=True)
+        'Return JSON: {"hypotheses":[...]}.\n' + json.dumps(payload, ensure_ascii=True)
     )
 
 
@@ -160,16 +159,16 @@ def parse_llm_hypotheses(
             level_3_code=path.level_3_code if category else None,
             root_cause_node_id=_opt_str(item.get("root_cause_node_id")),
             observed_failure_node_id=_opt_str(item.get("observed_failure_node_id")),
-            causal_path_node_ids=[
-                str(x) for x in (item.get("causal_path_node_ids") or []) if x
-            ][:20],
-            causal_path_edge_ids=[
-                str(x) for x in (item.get("causal_path_edge_ids") or []) if x
-            ][:30],
+            causal_path_node_ids=[str(x) for x in (item.get("causal_path_node_ids") or []) if x][
+                :20
+            ],
+            causal_path_edge_ids=[str(x) for x in (item.get("causal_path_edge_ids") or []) if x][
+                :30
+            ],
             evidence_links=links,
-            expected_observations=[
-                str(x) for x in (item.get("expected_observations") or []) if x
-            ][:10],
+            expected_observations=[str(x) for x in (item.get("expected_observations") or []) if x][
+                :10
+            ],
             falsifying_observations=[
                 str(x) for x in (item.get("falsifying_observations") or []) if x
             ][:10],

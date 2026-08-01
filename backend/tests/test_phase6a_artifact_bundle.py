@@ -67,8 +67,7 @@ def test_verifier_tools_never_fake_pass_when_disabled() -> None:
     assert statuses
     assert all(s.state == VerifierState.DISABLED for s in statuses)
     assert all(
-        s.state != VerifierState.AVAILABLE or "PASS" not in (s.detail or "")
-        for s in statuses
+        s.state != VerifierState.AVAILABLE or "PASS" not in (s.detail or "") for s in statuses
     )
 
 

@@ -59,9 +59,7 @@ class CausalHypothesisOrchestrator:
         )
         self._ref_validator = HypothesisReferenceValidator()
         self._path_validator = HypothesisCausalPathValidator()
-        self._deduper = HypothesisDeduplicator(
-            similarity_threshold=duplicate_similarity_threshold
-        )
+        self._deduper = HypothesisDeduplicator(similarity_threshold=duplicate_similarity_threshold)
         self._critic = CausalHypothesisCritic(enabled=critic_enabled)
         self._prior = GenerationPriorScorer()
 

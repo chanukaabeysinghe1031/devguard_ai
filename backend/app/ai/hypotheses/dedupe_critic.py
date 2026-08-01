@@ -37,9 +37,7 @@ class HypothesisDeduplicator:
     def __init__(self, *, similarity_threshold: float = 0.92) -> None:
         self._threshold = similarity_threshold
 
-    def deduplicate(
-        self, hypotheses: list[CausalHypothesis]
-    ) -> tuple[list[CausalHypothesis], int]:
+    def deduplicate(self, hypotheses: list[CausalHypothesis]) -> tuple[list[CausalHypothesis], int]:
         kept: list[CausalHypothesis] = []
         removed = 0
         seen_fps: list[str] = []
@@ -125,9 +123,10 @@ class CausalHypothesisCritic:
             graph_conflicts.extend(hypothesis.path_validation_warnings[:5])
 
         # Over-specific IAM action without evidence.
-        if "s3:putobject" in claim_l and "s3:putobject" not in (
-            context.combined_text_excerpt or ""
-        ).lower():
+        if (
+            "s3:putobject" in claim_l
+            and "s3:putobject" not in (context.combined_text_excerpt or "").lower()
+        ):
             specificity = "Claim names a specific IAM action not present in supplied evidence."
             unsupported.append("over_specific_action_without_evidence")
 
@@ -181,9 +180,7 @@ class CausalHypothesisCritic:
 class GenerationPriorScorer:
     """Initial generation_prior_score only — not final causal ranking."""
 
-    def score(
-        self, hypothesis: CausalHypothesis, context: HypothesisGenerationContext
-    ) -> float:
+    def score(self, hypothesis: CausalHypothesis, context: HypothesisGenerationContext) -> float:
         score = float(hypothesis.generation_confidence) * 0.35
         if hypothesis.template_id:
             score += 0.15

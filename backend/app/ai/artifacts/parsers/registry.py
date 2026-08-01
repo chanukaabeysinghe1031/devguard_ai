@@ -58,10 +58,7 @@ class ParserRegistry:
                     raw_summary={"filename": filename, "kind": kind.value},
                 )
             ]
-        return [
-            parser.parse(content, filename=filename, kind=kind)
-            for parser in supported
-        ]
+        return [parser.parse(content, filename=filename, kind=kind) for parser in supported]
 
 
 def build_default_parser_registry() -> ParserRegistry:

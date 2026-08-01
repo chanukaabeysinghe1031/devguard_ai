@@ -144,18 +144,12 @@ class ArtifactEvidenceRetrievalAdapter:
             if not excerpt:
                 continue
             needle_miss = (
-                needle
-                and needle not in excerpt.lower()
-                and not _tokens_overlap(needle, excerpt)
+                needle and needle not in excerpt.lower() and not _tokens_overlap(needle, excerpt)
             )
             if needle_miss and evidence.get("artifact_id") != context.affected_artifact_id:
                 continue
-            artifact_id = (
-                str(evidence.get("artifact_id") or "") or context.affected_artifact_id
-            )
-            title = str(
-                evidence.get("title") or evidence.get("parser_name") or "parser_evidence"
-            )
+            artifact_id = str(evidence.get("artifact_id") or "") or context.affected_artifact_id
+            title = str(evidence.get("title") or evidence.get("parser_name") or "parser_evidence")
             candidates.append(
                 self._item(
                     context,

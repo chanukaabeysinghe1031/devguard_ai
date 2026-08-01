@@ -20,14 +20,10 @@ PARSER_VERSION = "1.0.0"
 _TIMESTAMP_RE = re.compile(
     r"^(?P<ts>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)\s+"
 )
-_ERROR_KW_RE = re.compile(
-    r"(?i)\b(error|failed|failure|fatal|exception|panic|traceback)\b"
-)
+_ERROR_KW_RE = re.compile(r"(?i)\b(error|failed|failure|fatal|exception|panic|traceback)\b")
 _WARNING_KW_RE = re.compile(r"(?i)\b(warn(?:ing)?)\b")
 _ACCESS_DENIED_RE = re.compile(r"(?i)\bAccessDenied\b|is not authorized to perform")
-_TERRAFORM_RE = re.compile(
-    r"(?i)\b(Error:\s|terraform\s+(?:plan|apply|init)|│\s*with\s+)"
-)
+_TERRAFORM_RE = re.compile(r"(?i)\b(Error:\s|terraform\s+(?:plan|apply|init)|│\s*with\s+)")
 _DOCKER_RE = re.compile(
     r"(?i)\b(docker(?:-compose)?|failed to (?:build|pull|push)|denied: requested access)"
 )
@@ -88,9 +84,7 @@ class LogParser(StructuredArtifactParser):
             if timestamp:
                 timestamped += 1
 
-            is_error = bool(_ERROR_KW_RE.search(line)) or bool(
-                _ACCESS_DENIED_RE.search(line)
-            )
+            is_error = bool(_ERROR_KW_RE.search(line)) or bool(_ACCESS_DENIED_RE.search(line))
             is_warning = bool(_WARNING_KW_RE.search(line))
             is_access_denied = bool(_ACCESS_DENIED_RE.search(line))
             is_terraform = bool(_TERRAFORM_RE.search(line))

@@ -132,9 +132,7 @@ class TemporalEventRow(Base, UUIDPrimaryKeyMixin, CreatedAtMixin):
     event_key: Mapped[str] = mapped_column(String(64), nullable=False)
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
     sequence_index: Mapped[int] = mapped_column(Integer, nullable=False)
-    event_timestamp: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    event_timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     workflow_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     job_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     step_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -243,9 +241,7 @@ class EvidenceGraphRow(Base, UUIDPrimaryKeyMixin, CreatedAtMixin):
     builder_version: Mapped[str] = mapped_column(String(40), nullable=False)
     warnings: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
     errors: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
-    missing_link_diagnostics: Mapped[list[Any]] = mapped_column(
-        JSONB, nullable=False, default=list
-    )
+    missing_link_diagnostics: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
     metrics: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
 
     nodes: Mapped[list[EvidenceGraphNodeRow]] = relationship(

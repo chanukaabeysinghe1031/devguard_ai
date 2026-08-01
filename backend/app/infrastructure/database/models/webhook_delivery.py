@@ -32,7 +32,9 @@ class WebhookDelivery(Base, UUIDPrimaryKeyMixin):
     __tablename__ = "webhook_deliveries"
     __table_args__ = (
         UniqueConstraint("provider", "delivery_id", name="uq_webhook_deliveries_provider_id"),
-        Index("ix_webhook_deliveries_organization_id_received_at", "organization_id", "received_at"),
+        Index(
+            "ix_webhook_deliveries_organization_id_received_at", "organization_id", "received_at"
+        ),
         Index("ix_webhook_deliveries_repository_id_received_at", "repository_id", "received_at"),
         Index("ix_webhook_deliveries_processing_status", "processing_status"),
     )

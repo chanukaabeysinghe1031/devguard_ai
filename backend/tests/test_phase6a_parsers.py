@@ -122,12 +122,8 @@ def test_workflow_parser_extracts_jobs_needs_secrets_matrix() -> None:
     assert any(r.type == "NEEDS" for r in result.relationships)
     assert any("NPM_TOKEN" in e.label for e in result.entities if e.type == "SECRET_REFERENCE")
     assert result.raw_summary["secret_reference_count"] >= 2
-    assert any(
-        e.metadata.get("matrix") for e in result.entities if e.type == "JOB"
-    )
-    assert any(
-        e.metadata.get("reusable_local") for e in result.entities if e.type == "ACTION_REF"
-    )
+    assert any(e.metadata.get("matrix") for e in result.entities if e.type == "JOB")
+    assert any(e.metadata.get("reusable_local") for e in result.entities if e.type == "ACTION_REF")
 
 
 def test_log_parser_detects_access_denied_cascade_and_ordering() -> None:

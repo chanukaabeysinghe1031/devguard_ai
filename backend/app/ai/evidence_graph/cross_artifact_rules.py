@@ -341,7 +341,9 @@ def rule_changed_file_affects_resource(
         for resource in resources:
             src = (resource.source_path or "").lower()
             address = str(resource.metadata.get("address") or resource.label).lower()
-            if path and (path in src or path.endswith(".tf") and address and path.split("/")[-1] in src):
+            if path and (
+                path in src or path.endswith(".tf") and address and path.split("/")[-1] in src
+            ):
                 edges.append(
                     _edge(
                         analysis_id=analysis_id,
@@ -412,7 +414,9 @@ def rule_commit_modified_files(
 
 
 CROSS_ARTIFACT_RULES: tuple[CrossArtifactRule, ...] = (
-    CrossArtifactRule("CA-01", RULE_VERSION, "step executes terraform", rule_step_executes_terraform),
+    CrossArtifactRule(
+        "CA-01", RULE_VERSION, "step executes terraform", rule_step_executes_terraform
+    ),
     CrossArtifactRule("CA-02", RULE_VERSION, "env references output", rule_env_references_output),
     CrossArtifactRule("CA-03", RULE_VERSION, "output references role", rule_output_references_role),
     CrossArtifactRule(

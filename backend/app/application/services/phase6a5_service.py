@@ -288,9 +288,7 @@ class Phase6A5HypothesisRetrievalService:
 
         total = int(
             await self._session.scalar(
-                select(func.count())
-                .select_from(HypothesisRetrievedItemRow)
-                .where(*filters)
+                select(func.count()).select_from(HypothesisRetrievedItemRow).where(*filters)
             )
             or 0
         )

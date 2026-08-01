@@ -66,9 +66,7 @@ class RepositoryChangeRetrievalAdapter:
             )
 
         needle = (query_spec.normalized_query or "").lower()
-        target_paths = {
-            p.lower() for p in (query_spec.target_paths or []) if p
-        }
+        target_paths = {p.lower() for p in (query_spec.target_paths or []) if p}
         target_paths.update(p.lower() for p in context.changed_files if p)
         if context.affected_path:
             target_paths.add(context.affected_path.lower())
@@ -115,9 +113,7 @@ class RepositoryChangeRetrievalAdapter:
                     rank_within_query=idx,
                     metadata={
                         "changed": path in context.changed_files,
-                        "constraints": (query_spec.metadata or {}).get(
-                            "artifact_constraints"
-                        ),
+                        "constraints": (query_spec.metadata or {}).get("artifact_constraints"),
                     },
                     associated_query_ids=[query_spec.query_id],
                     contributing_adapters=[self.adapter_name],

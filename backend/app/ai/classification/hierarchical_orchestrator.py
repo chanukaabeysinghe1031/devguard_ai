@@ -59,9 +59,7 @@ class HierarchicalClassificationOrchestrator:
             registry=self._registry,
             enabled=disagreement_enabled,
         )
-        self._confidence = ClassificationConfidenceDecomposer(
-            enabled=confidence_breakdown_enabled
-        )
+        self._confidence = ClassificationConfidenceDecomposer(enabled=confidence_breakdown_enabled)
 
     def run(
         self,
@@ -153,9 +151,7 @@ class HierarchicalClassificationOrchestrator:
                 legacy=context.classifications[0] if context.classifications else None,
             )
             path = (
-                self._registry.map_code(final_code)
-                if final_code
-                else self._registry.unknown_path()
+                self._registry.map_code(final_code) if final_code else self._registry.unknown_path()
             )
 
             result.final_legacy_category_code = final_code
@@ -444,10 +440,7 @@ class HierarchicalClassificationOrchestrator:
             return "unknown_failure", ClassificationStatus.UNKNOWN, min(breakdown_confidence, 0.4)
 
         if disagreement.agreement_level == AgreementLevel.SEVERE:
-            if (
-                disagreement.recommended_action
-                == DisagreementRecommendedAction.MARK_UNKNOWN
-            ):
+            if disagreement.recommended_action == DisagreementRecommendedAction.MARK_UNKNOWN:
                 return (
                     "unknown_failure",
                     ClassificationStatus.UNKNOWN,

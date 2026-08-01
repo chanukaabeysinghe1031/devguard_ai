@@ -75,9 +75,7 @@ def _cand(
 
 def test_every_frozen_category_mapped() -> None:
     registry = get_taxonomy_registry()
-    assert set(p.legacy_category_code for p in registry.all_paths()) == set(
-        FROZEN_CATEGORY_CODES
-    )
+    assert set(p.legacy_category_code for p in registry.all_paths()) == set(FROZEN_CATEGORY_CODES)
     for code in FROZEN_CATEGORY_CODES:
         path = registry.map_code(code)
         assert path.level_3_code == code
@@ -231,9 +229,7 @@ def test_open_set_category_specific_threshold() -> None:
         enabled=True,
     )
     cands = [
-        ClassificationCandidateDetail(
-            category_code="aws_permission_failure", score=0.7, rank=1
-        )
+        ClassificationCandidateDetail(category_code="aws_permission_failure", score=0.7, rank=1)
     ]
     result = detector.assess(
         candidates=cands,
@@ -257,9 +253,9 @@ def test_malformed_threshold_config_raises() -> None:
     with pytest.raises(ValueError):
         parse_category_thresholds_json('{"aws_permission_failure": {"nope": 0.1}}')
     assert parse_category_thresholds_json("{}") == {}
-    assert parse_category_thresholds_json(
-        '{"test_failure": {"margin": 0.2}}'
-    ) == {"test_failure": {"margin": 0.2}}
+    assert parse_category_thresholds_json('{"test_failure": {"margin": 0.2}}') == {
+        "test_failure": {"margin": 0.2}
+    }
 
 
 # ---------------------------------------------------------------------------

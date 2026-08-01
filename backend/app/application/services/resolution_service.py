@@ -123,9 +123,8 @@ class ResolutionService:
         return [resolution_to_summary(r) for r in resolutions]
 
     async def _load_incident(self, organization_id: UUID, incident_id: UUID) -> Incident:
-        stmt = (
-            select(Incident)
-            .where(Incident.id == incident_id, Incident.organization_id == organization_id)
+        stmt = select(Incident).where(
+            Incident.id == incident_id, Incident.organization_id == organization_id
         )
         incident = await self._session.scalar(stmt)
         if incident is None:

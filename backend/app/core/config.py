@@ -1096,7 +1096,9 @@ class Settings(BaseSettings):
     @classmethod
     def positive_counterfactual_stage_timeout(cls, value: float) -> float:
         if float(value) <= 0:
-            raise ValueError("remediation/counterfactual/verifier timeouts must be greater than zero")
+            raise ValueError(
+                "remediation/counterfactual/verifier timeouts must be greater than zero"
+            )
         if float(value) > 600:
             raise ValueError("remediation/counterfactual/verifier timeout exceeds safe maximum")
         return float(value)
@@ -1215,10 +1217,7 @@ class Settings(BaseSettings):
             and self.llm_output_cost_usd_per_million_tokens < 0
         ):
             problems.append("OPENAI/LLM output cost must be >= 0")
-        if (
-            self.max_concurrent_hypothesis_retrieval_sessions
-            > self.max_hypotheses_for_retrieval
-        ):
+        if self.max_concurrent_hypothesis_retrieval_sessions > self.max_hypotheses_for_retrieval:
             problems.append(
                 "MAX_CONCURRENT_HYPOTHESIS_RETRIEVAL_SESSIONS cannot exceed "
                 "MAX_HYPOTHESES_FOR_RETRIEVAL"
@@ -1229,10 +1228,7 @@ class Settings(BaseSettings):
             problems.append(
                 "MAX_TOTAL_QUERIES_PER_HYPOTHESIS must be >= MAX_QUERIES_PER_HYPOTHESIS"
             )
-        if (
-            self.max_total_remediation_candidates
-            < self.max_remediation_candidates_per_hypothesis
-        ):
+        if self.max_total_remediation_candidates < self.max_remediation_candidates_per_hypothesis:
             problems.append(
                 "MAX_TOTAL_REMEDIATION_CANDIDATES must be >= "
                 "MAX_REMEDIATION_CANDIDATES_PER_HYPOTHESIS"
@@ -1256,13 +1252,11 @@ class Settings(BaseSettings):
             )
         if self.max_candidate_changed_lines > self.max_candidate_patch_characters:
             problems.append(
-                "MAX_CANDIDATE_CHANGED_LINES is inconsistent with "
-                "MAX_CANDIDATE_PATCH_CHARACTERS"
+                "MAX_CANDIDATE_CHANGED_LINES is inconsistent with MAX_CANDIDATE_PATCH_CHARACTERS"
             )
         if self.remediation_reject_risk_threshold < self.remediation_high_risk_threshold:
             problems.append(
-                "REMEDIATION_REJECT_RISK_THRESHOLD must be >= "
-                "REMEDIATION_HIGH_RISK_THRESHOLD"
+                "REMEDIATION_REJECT_RISK_THRESHOLD must be >= REMEDIATION_HIGH_RISK_THRESHOLD"
             )
         if self.max_remediation_llm_calls_per_analysis > 20:
             problems.append("MAX_REMEDIATION_LLM_CALLS_PER_ANALYSIS exceeds safe maximum (20)")

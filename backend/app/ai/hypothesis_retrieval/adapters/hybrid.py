@@ -156,8 +156,10 @@ class HybridPipelineHypothesisAdapter:
         self._exact_identifier_boost_enabled = exact_identifier_boost_enabled
 
     def is_available(self) -> bool:
-        return self._pipeline is not None and self._analysis_context is not None and (
-            self._static_kb_enabled or self._historical_enabled
+        return (
+            self._pipeline is not None
+            and self._analysis_context is not None
+            and (self._static_kb_enabled or self._historical_enabled)
         )
 
     def health_status(self) -> dict[str, Any]:
@@ -208,12 +210,8 @@ class HybridPipelineHypothesisAdapter:
             meta = query_spec.metadata or {}
             intent_fp = str(meta.get("intent_id") or meta.get("intent_type") or "")
             routing_raw = meta.get("routing")
-            routing: dict[str, Any] = (
-                routing_raw if isinstance(routing_raw, dict) else {}
-            )
-            routing_fp = ",".join(
-                sorted(str(x) for x in (routing.get("selected_sources") or []))
-            )
+            routing: dict[str, Any] = routing_raw if isinstance(routing_raw, dict) else {}
+            routing_fp = ",".join(sorted(str(x) for x in (routing.get("selected_sources") or [])))
             filter_fp = ""
             if self._metadata_filtering_enabled:
                 filter_fp = str(meta.get("identifiers") or meta.get("identifiers_used") or "")

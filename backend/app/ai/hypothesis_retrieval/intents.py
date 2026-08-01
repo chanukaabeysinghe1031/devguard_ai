@@ -56,8 +56,7 @@ class HypothesisQueryIntentGenerator:
                     session_id=session_id,
                     intent_type=QueryIntentType.FIND_EXACT_FAILURE_SIGNATURE,
                     objective=(
-                        f"Locate exact failure signature "
-                        f"{context.error_signature or claim[:160]}"
+                        f"Locate exact failure signature {context.error_signature or claim[:160]}"
                     ),
                     priority=15,
                     reason="exact_signature_search",
@@ -115,8 +114,7 @@ class HypothesisQueryIntentGenerator:
                         session_id=session_id,
                         intent_type=QueryIntentType.FIND_POLICY_BEHAVIOR,
                         objective=(
-                            "Determine whether an explicit deny overrides the "
-                            "identity allow"
+                            "Determine whether an explicit deny overrides the identity allow"
                         ),
                         priority=22,
                         reason="iam_policy_behavior",
@@ -147,9 +145,7 @@ class HypothesisQueryIntentGenerator:
                             HypothesisRetrievalSourceType.REPOSITORY_CHANGE,
                         ],
                         artifacts=(
-                            [context.affected_artifact_id]
-                            if context.affected_artifact_id
-                            else []
+                            [context.affected_artifact_id] if context.affected_artifact_id else []
                         ),
                     ),
                     self._intent(
@@ -157,9 +153,7 @@ class HypothesisQueryIntentGenerator:
                         hypothesis_id=hid,
                         session_id=session_id,
                         intent_type=QueryIntentType.FIND_PRIOR_SUCCESS_DIFFERENCE,
-                        objective=(
-                            "Compare assumed role against previous successful run"
-                        ),
+                        objective=("Compare assumed role against previous successful run"),
                         priority=24,
                         reason="wrong_role_prior_success",
                         preferred=[
@@ -242,9 +236,7 @@ class HypothesisQueryIntentGenerator:
                         HypothesisRetrievalSourceType.GRAPH,
                     ],
                     artifacts=(
-                        [context.affected_artifact_id]
-                        if context.affected_artifact_id
-                        else []
+                        [context.affected_artifact_id] if context.affected_artifact_id else []
                     ),
                     paths=[context.affected_path] if context.affected_path else [],
                 )

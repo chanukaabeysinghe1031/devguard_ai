@@ -28,23 +28,64 @@ _ARN_RE = re.compile(r"^arn:aws:([a-z0-9-]+):([a-z0-9-]*):(\d*):(.+)$")
 _COMPAT: set[tuple[str, str, str]] = set()
 
 
-def _add_compat(sources: list[GraphNodeType], edge: GraphEdgeType, targets: list[GraphNodeType]) -> None:
+def _add_compat(
+    sources: list[GraphNodeType], edge: GraphEdgeType, targets: list[GraphNodeType]
+) -> None:
     for s in sources:
         for t in targets:
             _COMPAT.add((s.value, edge.value, t.value))
 
 
-_add_compat([GraphNodeType.WORKFLOW, GraphNodeType.JOB, GraphNodeType.STEP], GraphEdgeType.CONTAINS, [GraphNodeType.JOB, GraphNodeType.STEP, GraphNodeType.ENVIRONMENT_VARIABLE, GraphNodeType.COMMAND])
-_add_compat([GraphNodeType.STEP], GraphEdgeType.EXECUTES, [GraphNodeType.COMMAND, GraphNodeType.TERRAFORM_RESOURCE, GraphNodeType.TERRAFORM_MODULE, GraphNodeType.TERRAFORM_PLAN_CHANGE, GraphNodeType.OTHER])
+_add_compat(
+    [GraphNodeType.WORKFLOW, GraphNodeType.JOB, GraphNodeType.STEP],
+    GraphEdgeType.CONTAINS,
+    [
+        GraphNodeType.JOB,
+        GraphNodeType.STEP,
+        GraphNodeType.ENVIRONMENT_VARIABLE,
+        GraphNodeType.COMMAND,
+    ],
+)
+_add_compat(
+    [GraphNodeType.STEP],
+    GraphEdgeType.EXECUTES,
+    [
+        GraphNodeType.COMMAND,
+        GraphNodeType.TERRAFORM_RESOURCE,
+        GraphNodeType.TERRAFORM_MODULE,
+        GraphNodeType.TERRAFORM_PLAN_CHANGE,
+        GraphNodeType.OTHER,
+    ],
+)
 _add_compat([GraphNodeType.JOB], GraphEdgeType.NEEDS, [GraphNodeType.JOB])
-_add_compat([GraphNodeType.ERROR_EVENT], GraphEdgeType.REQUIRES_PERMISSION, [GraphNodeType.PERMISSION_ACTION])
-_add_compat([GraphNodeType.ERROR_EVENT], GraphEdgeType.DOWNSTREAM_SYMPTOM_OF, [GraphNodeType.ERROR_EVENT, GraphNodeType.LOG_EVENT])
-_add_compat([GraphNodeType.ERROR_EVENT], GraphEdgeType.OCCURRED_BEFORE, [GraphNodeType.ERROR_EVENT, GraphNodeType.LOG_EVENT])
-_add_compat([GraphNodeType.POLICY_STATEMENT], GraphEdgeType.ALLOWS, [GraphNodeType.PERMISSION_ACTION])
-_add_compat([GraphNodeType.POLICY_STATEMENT], GraphEdgeType.DENIES, [GraphNodeType.PERMISSION_ACTION])
+_add_compat(
+    [GraphNodeType.ERROR_EVENT],
+    GraphEdgeType.REQUIRES_PERMISSION,
+    [GraphNodeType.PERMISSION_ACTION],
+)
+_add_compat(
+    [GraphNodeType.ERROR_EVENT],
+    GraphEdgeType.DOWNSTREAM_SYMPTOM_OF,
+    [GraphNodeType.ERROR_EVENT, GraphNodeType.LOG_EVENT],
+)
+_add_compat(
+    [GraphNodeType.ERROR_EVENT],
+    GraphEdgeType.OCCURRED_BEFORE,
+    [GraphNodeType.ERROR_EVENT, GraphNodeType.LOG_EVENT],
+)
+_add_compat(
+    [GraphNodeType.POLICY_STATEMENT], GraphEdgeType.ALLOWS, [GraphNodeType.PERMISSION_ACTION]
+)
+_add_compat(
+    [GraphNodeType.POLICY_STATEMENT], GraphEdgeType.DENIES, [GraphNodeType.PERMISSION_ACTION]
+)
 _add_compat([GraphNodeType.CHANGED_FILE], GraphEdgeType.CHANGE_AFFECTS_NODE, list(GraphNodeType))
 _add_compat([GraphNodeType.COMMIT], GraphEdgeType.MODIFIED_BY, [GraphNodeType.CHANGED_FILE])
-_add_compat([GraphNodeType.TERRAFORM_RESOURCE, GraphNodeType.TERRAFORM_MODULE], GraphEdgeType.DEPENDS_ON, list(GraphNodeType))
+_add_compat(
+    [GraphNodeType.TERRAFORM_RESOURCE, GraphNodeType.TERRAFORM_MODULE],
+    GraphEdgeType.DEPENDS_ON,
+    list(GraphNodeType),
+)
 
 
 class GraphConsistencyEngine:
@@ -73,7 +114,9 @@ class GraphConsistencyEngine:
         edges = list(graph.edges)
 
         # GC-01: step references missing terraform output
-        outputs = {n.label.lower() for n in graph.nodes if n.node_type == GraphNodeType.TERRAFORM_OUTPUT}
+        outputs = {
+            n.label.lower() for n in graph.nodes if n.node_type == GraphNodeType.TERRAFORM_OUTPUT
+        }
         for edge in edges:
             if edge.edge_type not in {
                 GraphEdgeType.REFERENCES_OUTPUT,
@@ -175,7 +218,8 @@ class GraphConsistencyEngine:
             linked_files = {
                 e.target_node_id
                 for e in edges
-                if e.edge_type == GraphEdgeType.MODIFIED_BY and e.source_node_id in {c.id for c in commits}
+                if e.edge_type == GraphEdgeType.MODIFIED_BY
+                and e.source_node_id in {c.id for c in commits}
             }
             for file_node in changed:
                 if file_node.id not in linked_files:
@@ -287,7 +331,11 @@ class GraphConsistencyEngine:
             key = (src.node_type.value, edge.edge_type.value, tgt.node_type.value)
             # Only enforce for edges we explicitly catalogued with same edge type present
             catalogued = any(k[1] == edge.edge_type.value for k in _COMPAT)
-            if catalogued and key not in _COMPAT and edge.derivation_type == GraphDerivationType.CROSS_ARTIFACT_RULE:
+            if (
+                catalogued
+                and key not in _COMPAT
+                and edge.derivation_type == GraphDerivationType.CROSS_ARTIFACT_RULE
+            ):
                 warnings.append(f"unusual_node_type_pair:{edge.id}")
 
         # Orphan nodes
