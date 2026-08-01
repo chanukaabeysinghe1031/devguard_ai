@@ -1,4 +1,4 @@
-"""Phase 6A.6 — counterfactual remediation domain package (Parts 1–2)."""
+"""Phase 6A.6 — counterfactual remediation domain package (Parts 1–3)."""
 
 from app.domain.counterfactual_remediation.eligibility import (
     CounterfactualHypothesisEligibilityEvaluator,
@@ -81,6 +81,33 @@ from app.domain.counterfactual_remediation.models import (
     RemediationTemplate,
     RemediationVerificationRequirement,
 )
+from app.domain.counterfactual_remediation.verification_enums import (
+    VerificationConsensusStatus,
+    VerificationRunStatus,
+    VerifierResultStatus,
+)
+from app.domain.counterfactual_remediation.verification_models import (
+    VerificationConsensus,
+    VerificationReport,
+    VerificationRun,
+    VerifierResult,
+)
+from app.domain.counterfactual_remediation.verification_versions import (
+    ACTIONLINT_VERIFIER_VERSION,
+    CHECKOV_VERIFIER_VERSION,
+    CONSENSUS_ENGINE_VERSION,
+    DEPENDENCY_MANIFEST_VERIFIER_VERSION,
+    HCL_FRAGMENT_VERIFIER_VERSION,
+    IAM_STRUCTURAL_VERIFIER_VERSION,
+    JSON_SCHEMA_VERIFIER_VERSION,
+    OPA_VERIFIER_VERSION,
+    SECURITY_STATIC_VERIFIER_VERSION,
+    TEMP_WORKSPACE_VERSION,
+    TERRAFORM_PLAN_VERIFIER_VERSION,
+    TERRAFORM_VALIDATE_VERIFIER_VERSION,
+    VERIFIER_ENGINE_VERSION,
+    YAML_VALIDATOR_VERSION,
+)
 from app.domain.counterfactual_remediation.versions import (
     CONSTRAINT_EXTRACTOR_VERSION,
     COUNTERFACTUAL_CONTEXT_VERSION,
@@ -95,13 +122,21 @@ from app.domain.counterfactual_remediation.versions import (
 
 __all__ = [
     "OPTIMIZATION_PRIORITIES",
+    "ACTIONLINT_VERIFIER_VERSION",
+    "CHECKOV_VERIFIER_VERSION",
+    "CONSENSUS_ENGINE_VERSION",
     "CONSTRAINT_EXTRACTOR_VERSION",
     "COUNTERFACTUAL_CONTEXT_VERSION",
     "COUNTERFACTUAL_REMEDIATION_PROMPT_VERSION",
     "COUNTERFACTUAL_REMEDIATION_SCHEMA_VERSION",
     "COUNTERFACTUAL_REMEDIATION_SNAPSHOT_VERSION",
     "COUNTERFACTUAL_STATE_VERSION",
+    "DEPENDENCY_MANIFEST_VERIFIER_VERSION",
+    "HCL_FRAGMENT_VERIFIER_VERSION",
+    "IAM_STRUCTURAL_VERIFIER_VERSION",
+    "JSON_SCHEMA_VERIFIER_VERSION",
     "MINIMAL_CHANGE_PLANNER_VERSION",
+    "OPA_VERIFIER_VERSION",
     "REMEDIATION_BLAST_RADIUS_VERSION",
     "REMEDIATION_CANDIDATE_PRIORITISER_VERSION",
     "REMEDIATION_CANDIDATE_VALIDATOR_VERSION",
@@ -117,6 +152,12 @@ __all__ = [
     "REMEDIATION_SIDE_EFFECTS_VERSION",
     "REMEDIATION_TEMPLATES_VERSION",
     "RULE_REMEDIATION_GENERATOR_VERSION",
+    "SECURITY_STATIC_VERIFIER_VERSION",
+    "TEMP_WORKSPACE_VERSION",
+    "TERRAFORM_PLAN_VERIFIER_VERSION",
+    "TERRAFORM_VALIDATE_VERIFIER_VERSION",
+    "VERIFIER_ENGINE_VERSION",
+    "YAML_VALIDATOR_VERSION",
     "BlastRadiusAssessment",
     "BlastRadiusLevel",
     "CandidateConstraintValidationResult",
@@ -171,5 +212,12 @@ __all__ = [
     "RiskLevel",
     "RollbackType",
     "SideEffectAssessment",
+    "VerificationConsensus",
+    "VerificationConsensusStatus",
+    "VerificationReport",
+    "VerificationRun",
+    "VerificationRunStatus",
+    "VerifierResult",
+    "VerifierResultStatus",
     "VerifierType",
 ]
