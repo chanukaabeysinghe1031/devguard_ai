@@ -741,6 +741,66 @@ class Settings(BaseSettings):
         alias="REMEDIATION_REJECT_RISK_THRESHOLD",
     )
 
+    # Phase 6A.6 Part 3 — independent verifier engine (all OFF).
+    # Temporary workspace only. Never terraform apply / git mutate / cloud mutate.
+    # LLMs are not verifiers. Missing tools return UNAVAILABLE — never fake PASS.
+    verifier_engine_enabled: bool = Field(
+        default=False,
+        alias="VERIFIER_ENGINE_ENABLED",
+    )
+    terraform_verifier_enabled: bool = Field(
+        default=False,
+        alias="TERRAFORM_VERIFIER_ENABLED",
+    )
+    actionlint_verifier_enabled: bool = Field(
+        default=False,
+        alias="ACTIONLINT_VERIFIER_ENABLED",
+    )
+    checkov_verifier_enabled: bool = Field(
+        default=False,
+        alias="CHECKOV_VERIFIER_ENABLED",
+    )
+    opa_verifier_enabled: bool = Field(
+        default=False,
+        alias="OPA_VERIFIER_ENABLED",
+    )
+    security_verifier_enabled: bool = Field(
+        default=False,
+        alias="SECURITY_VERIFIER_ENABLED",
+    )
+    verifier_persistence_enabled: bool = Field(
+        default=False,
+        alias="VERIFIER_PERSISTENCE_ENABLED",
+    )
+    verifier_debug_api_enabled: bool = Field(
+        default=False,
+        alias="VERIFIER_DEBUG_API_ENABLED",
+    )
+    max_candidates_for_verification: int = Field(
+        default=5,
+        alias="MAX_CANDIDATES_FOR_VERIFICATION",
+    )
+    max_verifier_timeout_seconds: float = Field(
+        default=60.0,
+        alias="MAX_VERIFIER_TIMEOUT_SECONDS",
+    )
+    max_verifier_stage_timeout_seconds: float = Field(
+        default=180.0,
+        alias="MAX_VERIFIER_STAGE_TIMEOUT_SECONDS",
+    )
+    max_verifier_stdout_chars: int = Field(
+        default=20_000,
+        alias="MAX_VERIFIER_STDOUT_CHARS",
+    )
+    max_temp_workspace_files: int = Field(
+        default=20,
+        alias="MAX_TEMP_WORKSPACE_FILES",
+    )
+    max_temp_workspace_bytes: int = Field(
+        default=5_000_000,
+        alias="MAX_TEMP_WORKSPACE_BYTES",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
@@ -947,6 +1007,10 @@ class Settings(BaseSettings):
         "max_candidate_side_effects",
         "max_candidate_risk_signals",
         "max_remediation_llm_calls_per_analysis",
+        "max_candidates_for_verification",
+        "max_verifier_stdout_chars",
+        "max_temp_workspace_files",
+        "max_temp_workspace_bytes",
         mode="after",
     )
     @classmethod
@@ -970,14 +1034,16 @@ class Settings(BaseSettings):
         "counterfactual_stage_timeout_seconds",
         "remediation_llm_timeout_seconds",
         "remediation_stage_timeout_seconds",
+        "max_verifier_timeout_seconds",
+        "max_verifier_stage_timeout_seconds",
         mode="after",
     )
     @classmethod
     def positive_counterfactual_stage_timeout(cls, value: float) -> float:
         if float(value) <= 0:
-            raise ValueError("remediation/counterfactual timeouts must be greater than zero")
+            raise ValueError("remediation/counterfactual/verifier timeouts must be greater than zero")
         if float(value) > 600:
-            raise ValueError("remediation/counterfactual timeout exceeds safe maximum")
+            raise ValueError("remediation/counterfactual/verifier timeout exceeds safe maximum")
         return float(value)
 
     @field_validator("max_retrieval_total_duration_seconds", mode="after")
@@ -1132,6 +1198,10 @@ class Settings(BaseSettings):
             )
         if self.max_remediation_llm_calls_per_analysis > 20:
             problems.append("MAX_REMEDIATION_LLM_CALLS_PER_ANALYSIS exceeds safe maximum (20)")
+        if self.max_candidates_for_verification > 20:
+            problems.append("MAX_CANDIDATES_FOR_VERIFICATION exceeds safe maximum (20)")
+        if self.max_temp_workspace_bytes > 50_000_000:
+            problems.append("MAX_TEMP_WORKSPACE_BYTES exceeds safe maximum")
         problems.extend(self._github_problems())
         if self.is_production:
             if self.debug:
