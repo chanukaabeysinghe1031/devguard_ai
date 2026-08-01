@@ -60,17 +60,19 @@ export function Sidebar() {
   const brandBlock = (
     <div
       className={cn(
-        "flex items-center gap-2.5 border-b border-border px-4",
+        "flex items-center gap-3 border-b border-border px-3",
         sidebarCollapsed && "justify-center px-0",
       )}
       style={{ height: "var(--topbar-height)" }}
     >
-      <BrandMark size="sm" className="h-9 w-9" />
+      <BrandMark size="md" className="h-12 w-12" priority />
       {!sidebarCollapsed && (
         <div className="min-w-0">
-          <span className="block text-lg font-bold text-text-primary">DevGuard AI</span>
+          <span className="block text-xl font-bold leading-tight tracking-tight text-text-primary">
+            DevGuard AI
+          </span>
           {session?.role && (
-            <span className="block truncate text-[10px] uppercase tracking-wide text-text-muted">
+            <span className="mt-0.5 block truncate text-[11px] uppercase tracking-wide text-text-muted">
               {session.role.replace(/_/g, " ")}
             </span>
           )}

@@ -19,11 +19,10 @@ export function ProjectBootstrapLoader({
 }: ProjectBootstrapLoaderProps) {
   return (
     <FullScreenBrandLoader
-      showWordmark
       projectName={projectName}
       title="Loading project"
-      subtitle="Preparing incidents, integrations, and AI analysis data"
       steps={steps}
+      stepsMode="status"
       error={error}
       onRetry={onRetry}
       secondaryAction={

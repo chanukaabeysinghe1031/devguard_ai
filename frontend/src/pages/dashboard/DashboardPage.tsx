@@ -30,7 +30,7 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { SeverityBadge } from "../../components/ui/SeverityBadge";
 import { Skeleton, SkeletonCard } from "../../components/ui/Skeleton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
-import { formatDurationMs, formatNumber, formatPercentage, formatRelativeTime } from "../../utils/formatters";
+import { formatDurationMs, formatNumber, formatRelativeTime } from "../../utils/formatters";
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: "var(--danger)",
@@ -161,7 +161,11 @@ export function DashboardPage() {
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Deployment success rate"
-          value={formatPercentage(summaryQuery.data?.deployment_success_rate ?? undefined)}
+          value={
+            summaryQuery.data?.deployment_success_rate == null
+              ? "—"
+              : `${summaryQuery.data.deployment_success_rate.toFixed(0)}%`
+          }
           icon={Rocket}
           tone="primary"
           isLoading={summaryQuery.isLoading}

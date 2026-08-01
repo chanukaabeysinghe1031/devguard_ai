@@ -4,7 +4,7 @@ import { BrandLogo, type BrandLogoSize } from "./BrandLogo";
 export interface BrandMarkProps {
   size?: BrandLogoSize;
   className?: string;
-  /** Soft rounded frame — helps when the PNG has a fixed dark plate. */
+  /** Optional soft frame. Prefer off — logo assets are transparent. */
   framed?: boolean;
   priority?: boolean;
   animated?: boolean;

@@ -6,7 +6,8 @@
  * - frontend/assets/logo.png — symbol-only shield
  * - frontend/assets/banner.png — legacy wide wordmark (superseded by logo2)
  *
- * Runtime copies have dark/starfield backgrounds removed (RGBA).
+ * Runtime copies are alpha-cropped from the transparent sources so the shield
+ * fills the frame (no large empty plate / black padding).
  */
 import brandLogoFullUrl from "./brand-logo-full.png";
 import brandLogoIconUrl from "./brand-logo-icon.png";

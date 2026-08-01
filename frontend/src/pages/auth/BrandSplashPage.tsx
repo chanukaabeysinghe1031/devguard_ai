@@ -96,7 +96,7 @@ export function BrandSplashPage() {
           decoding="async"
           draggable={false}
           className={cn(
-            "h-36 w-36 object-contain sm:h-44 sm:w-44",
+            "h-52 w-52 object-contain drop-shadow-[0_0_28px_rgba(37,99,235,0.35)] sm:h-64 sm:w-64",
             "brand-splash-logo",
             phase !== "logo" && "brand-float",
           )}

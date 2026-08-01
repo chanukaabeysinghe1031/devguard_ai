@@ -13,6 +13,12 @@ export interface FullScreenBrandLoaderProps {
   title: string;
   subtitle?: string;
   steps?: LoaderStep[];
+  /**
+   * `checklist` — full step list (auth flows).
+   * `status` — single live status line (project bootstrap).
+   * `none` — logo + title + progress only.
+   */
+  stepsMode?: "checklist" | "status" | "none";
   projectName?: string;
   showWordmark?: boolean;
   error?: string | null;
@@ -27,6 +33,7 @@ export function FullScreenBrandLoader({
   title,
   subtitle,
   steps,
+  stepsMode = "checklist",
   projectName,
   showWordmark = false,
   error,
@@ -35,11 +42,11 @@ export function FullScreenBrandLoader({
   className,
   progress = null,
 }: FullScreenBrandLoaderProps) {
-  const liveStatus =
-    error ??
-    steps?.find((s) => s.status === "active")?.label ??
-    steps?.find((s) => s.status === "done")?.label ??
-    title;
+  const activeStep =
+    steps?.find((s) => s.status === "active") ??
+    steps?.find((s) => s.status === "error") ??
+    null;
+  const liveStatus = error ?? activeStep?.label ?? title;
 
   return (
     <div
@@ -60,23 +67,27 @@ export function FullScreenBrandLoader({
         aria-hidden
       />
 
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
+      <div className="relative z-10 flex w-full max-w-sm flex-col items-center text-center">
         {showWordmark && (
           <div className="mb-8">
             <BrandLogo variant="full" size="md" priority animated />
           </div>
         )}
 
-        <BrandLoadingMark size="xl" label={title} />
+        <div className="flex flex-col items-center">
+          <BrandLoadingMark size="xl" label={title} />
+        </div>
 
-        {projectName && (
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
-            {projectName}
-          </p>
-        )}
+        <div className="mt-8 flex w-full flex-col items-center">
+          {projectName && (
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
+              {projectName}
+            </p>
+          )}
 
-        <h1 className="mt-4 text-2xl font-bold text-text-primary">{title}</h1>
-        {subtitle && <p className="mt-2 text-sm text-text-secondary">{subtitle}</p>}
+          <h1 className="text-2xl font-bold text-text-primary">{title}</h1>
+          {subtitle && <p className="mt-2 text-sm text-text-secondary">{subtitle}</p>}
+        </div>
 
         <p className="sr-only">{liveStatus}</p>
 
@@ -93,7 +104,11 @@ export function FullScreenBrandLoader({
           </div>
         )}
 
-        {steps && steps.length > 0 && (
+        {stepsMode === "status" && !error && activeStep && (
+          <p className="mt-4 text-sm text-text-muted">{activeStep.label}</p>
+        )}
+
+        {stepsMode === "checklist" && steps && steps.length > 0 && (
           <ol className="mt-8 w-full space-y-2 text-left">
             {steps.map((step) => (
               <li

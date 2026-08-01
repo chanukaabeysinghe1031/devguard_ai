@@ -27,7 +27,7 @@ export function MobileNav() {
           style={{ height: "var(--topbar-height)" }}
         >
           <div className="flex items-center gap-2.5">
-            <BrandMark size="sm" className="h-9 w-9" />
+            <BrandMark size="md" className="h-12 w-12" priority />
             <span className="text-lg font-bold text-text-primary">DevGuard AI</span>
           </div>
           <button

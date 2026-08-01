@@ -63,7 +63,9 @@ export function formatDurationMs(ms: number | null | undefined): string {
 
 export function formatPercentage(value: number | null | undefined, digits = 0): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
-  return `${(value * 100).toFixed(digits)}%`;
+  // Accept either a 0–1 ratio or an already-scaled percent (e.g. API returns 45.3).
+  const asPercent = Math.abs(value) <= 1 ? value * 100 : value;
+  return `${asPercent.toFixed(digits)}%`;
 }
 
 export function formatConfidence(value: number | null | undefined): string {
