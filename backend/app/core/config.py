@@ -1010,7 +1010,6 @@ class Settings(BaseSettings):
         "max_candidates_for_verification",
         "max_verifier_stdout_chars",
         "max_temp_workspace_files",
-        "max_temp_workspace_bytes",
         mode="after",
     )
     @classmethod
@@ -1019,6 +1018,15 @@ class Settings(BaseSettings):
             raise ValueError("hypothesis retrieval limits must be greater than zero")
         if int(value) > 100_000:
             raise ValueError("hypothesis retrieval limit exceeds safe maximum")
+        return int(value)
+
+    @field_validator("max_temp_workspace_bytes", mode="after")
+    @classmethod
+    def positive_temp_workspace_bytes(cls, value: int) -> int:
+        if int(value) <= 0:
+            raise ValueError("MAX_TEMP_WORKSPACE_BYTES must be greater than zero")
+        if int(value) > 50_000_000:
+            raise ValueError("MAX_TEMP_WORKSPACE_BYTES exceeds safe maximum")
         return int(value)
 
     @field_validator("hypothesis_retrieval_timeout_seconds", mode="after")

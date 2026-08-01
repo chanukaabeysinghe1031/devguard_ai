@@ -23,6 +23,10 @@ from app.infrastructure.database.models.counterfactual_remediation import (
     RemediationRiskSignalRow,
     RemediationVerificationRequirementRow,
 )
+from app.infrastructure.database.models.remediation_verification import (
+    RemediationVerificationResultRow,
+    RemediationVerificationRunRow,
+)
 from app.infrastructure.database.models.evaluation import Evaluation
 from app.infrastructure.database.models.evidence_item import EvidenceItem
 from app.infrastructure.database.models.failure_category import FailureCategory
@@ -119,6 +123,8 @@ __all__ = [
     "RemediationPreconditionRow",
     "RemediationRiskSignalRow",
     "RemediationVerificationRequirementRow",
+    "RemediationVerificationResultRow",
+    "RemediationVerificationRunRow",
     "Incident",
     "IncidentAssignment",
     "IncidentEvent",
