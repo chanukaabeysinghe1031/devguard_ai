@@ -148,6 +148,59 @@ class CounterfactualRemediationPersistService:
         assert self._repository is not None
         return await self._repository.create_candidate(candidate)
 
+    async def update_candidate(
+        self,
+        candidate: CounterfactualRemediationCandidate,
+    ) -> CounterfactualRemediationCandidate | None:
+        if not self.enabled:
+            logger.debug("counterfactual_persist_skipped update_candidate")
+            return None
+        assert self._repository is not None
+        updater = getattr(self._repository, "update_candidate", None)
+        if callable(updater):
+            return await updater(candidate)
+        return await self._repository.create_candidate(candidate)
+
+    async def persist_generated_candidates(
+        self,
+        *,
+        run: CounterfactualRemediationRun,
+        candidates: list[CounterfactualRemediationCandidate],
+    ) -> list[CounterfactualRemediationCandidate]:
+        """Persist Part 2 generated candidates with changes and risk signals."""
+        if not self.enabled:
+            return []
+        saved: list[CounterfactualRemediationCandidate] = []
+        await self.update_run(run)
+        for candidate in candidates:
+            persisted = await self.update_candidate(candidate)
+            if persisted is None:
+                continue
+            saved.append(persisted)
+            if candidate.changes:
+                await self.create_changes_batch(
+                    list(candidate.changes),
+                    remediation_run_id=run.id,
+                    organization_id=run.organization_id,
+                    analysis_run_id=run.analysis_id,
+                    hypothesis_id=candidate.hypothesis_id,
+                    candidate_id=candidate.id,
+                )
+            risk_items = [
+                item
+                for item in (candidate.risk_summary or [])
+                if isinstance(item, RemediationRiskSignal)
+            ]
+            if risk_items:
+                await self.create_risk_signals_batch(
+                    risk_items,
+                    remediation_run_id=run.id,
+                    organization_id=run.organization_id,
+                    analysis_run_id=run.analysis_id,
+                    candidate_id=candidate.id,
+                )
+        return saved
+
     async def create_constraints_batch(
         self,
         constraints: list[RemediationConstraint],

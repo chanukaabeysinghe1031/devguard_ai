@@ -1094,6 +1094,25 @@ class CounterfactualRemediationCandidate:
     template_id: str | None = None
     template_version: str | None = None
     status: CounterfactualCandidateStatus = CounterfactualCandidateStatus.DRAFT
+    # Phase 6A.6 Part 2 generation metadata (unverified candidates only).
+    rendered_patch: str | None = None
+    patch_format: str | None = None
+    patch_hash: str | None = None
+    changed_file_count: int = 0
+    changed_line_count: int = 0
+    risk_score: float | None = None
+    risk_level: str | None = None
+    blast_radius: str | None = None
+    priority_score: float | None = None
+    priority_status: str | None = None
+    deduplication_fingerprint: str | None = None
+    validation_status: str | None = None
+    constraint_status: str | None = None
+    prompt_version: str | None = None
+    side_effects_json: list[Any] = field(default_factory=list)
+    quality_components_json: dict[str, Any] = field(default_factory=dict)
+    risk_components_json: dict[str, Any] = field(default_factory=dict)
+    generation_provenance: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=_utc_now)
     updated_at: datetime = field(default_factory=_utc_now)
 
@@ -1152,6 +1171,24 @@ class CounterfactualRemediationCandidate:
             "template_id": self.template_id,
             "template_version": self.template_version,
             "status": _enum_value(self.status),
+            "rendered_patch": self.rendered_patch,
+            "patch_format": self.patch_format,
+            "patch_hash": self.patch_hash,
+            "changed_file_count": self.changed_file_count,
+            "changed_line_count": self.changed_line_count,
+            "risk_score": self.risk_score,
+            "risk_level": self.risk_level,
+            "blast_radius": self.blast_radius,
+            "priority_score": self.priority_score,
+            "priority_status": self.priority_status,
+            "deduplication_fingerprint": self.deduplication_fingerprint,
+            "validation_status": self.validation_status,
+            "constraint_status": self.constraint_status,
+            "prompt_version": self.prompt_version,
+            "side_effects_json": list(self.side_effects_json),
+            "quality_components_json": dict(self.quality_components_json),
+            "risk_components_json": dict(self.risk_components_json),
+            "generation_provenance": dict(self.generation_provenance),
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }

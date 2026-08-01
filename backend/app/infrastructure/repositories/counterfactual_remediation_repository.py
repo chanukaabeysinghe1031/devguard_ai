@@ -266,6 +266,80 @@ class CounterfactualRemediationRepositoryImpl:
             )
             return saved
 
+    async def update_candidate(
+        self,
+        candidate: CounterfactualRemediationCandidate,
+    ) -> CounterfactualRemediationCandidate | None:
+        """Update an existing candidate row (Part 2 generation fields + changes)."""
+        try:
+            cand_id = _as_uuid(candidate.id)
+            org_id = _require_uuid(candidate.organization_id, field="organization_id")
+            if cand_id is None:
+                return await self.create_candidate(candidate)
+            existing = await self._session.scalar(
+                select(CounterfactualRemediationCandidateRow).where(
+                    CounterfactualRemediationCandidateRow.organization_id == org_id,
+                    CounterfactualRemediationCandidateRow.id == cand_id,
+                )
+            )
+            if existing is None:
+                return await self.create_candidate(candidate)
+            fresh = await self._build_candidate_row(candidate)
+            for col in (
+                "title",
+                "summary",
+                "artifact_type",
+                "category_code",
+                "affected_artifact_ids",
+                "primary_artifact_id",
+                "target_paths",
+                "change_types",
+                "current_state_snapshot",
+                "counterfactual_state_snapshot",
+                "expected_effects",
+                "expected_preserved_behaviors",
+                "expected_failure_condition",
+                "assumptions",
+                "limitations",
+                "rollback_plan",
+                "risk_summary",
+                "blast_radius_summary",
+                "generator_type",
+                "generator_name",
+                "generator_version",
+                "template_id",
+                "template_version",
+                "status",
+                "rendered_patch",
+                "patch_format",
+                "patch_hash",
+                "changed_file_count",
+                "changed_line_count",
+                "risk_score",
+                "risk_level",
+                "blast_radius",
+                "priority_score",
+                "priority_status",
+                "deduplication_fingerprint",
+                "validation_status",
+                "constraint_status",
+                "prompt_version",
+                "side_effects_json",
+                "quality_components_json",
+                "risk_components_json",
+                "generation_provenance",
+            ):
+                setattr(existing, col, getattr(fresh, col))
+            await self._session.flush()
+            candidate.id = str(existing.id)
+            return candidate
+        except (SQLAlchemyError, ValueError) as exc:
+            logger.warning(
+                "cf_remediation_update_candidate_failed error=%s",
+                type(exc).__name__,
+            )
+            return None
+
     async def _build_candidate_row(
         self,
         candidate: CounterfactualRemediationCandidate,
@@ -315,6 +389,24 @@ class CounterfactualRemediationRepositoryImpl:
             template_id=candidate.template_id,
             template_version=candidate.template_version,
             status=_enum_str(candidate.status, CounterfactualCandidateStatus.DRAFT.value),
+            rendered_patch=candidate.rendered_patch,
+            patch_format=candidate.patch_format,
+            patch_hash=candidate.patch_hash,
+            changed_file_count=int(candidate.changed_file_count or 0),
+            changed_line_count=int(candidate.changed_line_count or 0),
+            risk_score=candidate.risk_score,
+            risk_level=candidate.risk_level,
+            blast_radius=candidate.blast_radius,
+            priority_score=candidate.priority_score,
+            priority_status=candidate.priority_status,
+            deduplication_fingerprint=candidate.deduplication_fingerprint,
+            validation_status=candidate.validation_status,
+            constraint_status=candidate.constraint_status,
+            prompt_version=candidate.prompt_version,
+            side_effects_json=list(candidate.side_effects_json or []),
+            quality_components_json=dict(candidate.quality_components_json or {}),
+            risk_components_json=dict(candidate.risk_components_json or {}),
+            generation_provenance=dict(candidate.generation_provenance or {}),
         )
 
     async def list_candidates_by_analysis(
@@ -326,6 +418,10 @@ class CounterfactualRemediationRepositoryImpl:
         status: str | None = None,
         artifact_type: str | None = None,
         template_id: str | None = None,
+        generator_type: str | None = None,
+        risk_level: str | None = None,
+        blast_radius: str | None = None,
+        priority_status: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[CounterfactualRemediationCandidateRow]:
@@ -348,12 +444,58 @@ class CounterfactualRemediationRepositoryImpl:
                 )
             if template_id:
                 stmt = stmt.where(CounterfactualRemediationCandidateRow.template_id == template_id)
+            if generator_type:
+                stmt = stmt.where(
+                    CounterfactualRemediationCandidateRow.generator_type == generator_type
+                )
+            if risk_level:
+                stmt = stmt.where(CounterfactualRemediationCandidateRow.risk_level == risk_level)
+            if blast_radius:
+                stmt = stmt.where(
+                    CounterfactualRemediationCandidateRow.blast_radius == blast_radius
+                )
+            if priority_status:
+                stmt = stmt.where(
+                    CounterfactualRemediationCandidateRow.priority_status == priority_status
+                )
             stmt = stmt.offset(max(0, offset)).limit(max(1, min(limit, 500)))
             result = await self._session.scalars(stmt)
             return list(result.all())
         except (SQLAlchemyError, ValueError) as exc:
             logger.warning(
                 "cf_remediation_list_candidates_failed error=%s",
+                type(exc).__name__,
+            )
+            return []
+
+    async def list_changes_by_candidate(
+        self,
+        *,
+        organization_id: str | UUID,
+        analysis_run_id: str | UUID,
+        candidate_id: str | UUID,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list[CounterfactualChangeRow]:
+        try:
+            org_id = _require_uuid(organization_id, field="organization_id")
+            analysis_id = _require_uuid(analysis_run_id, field="analysis_run_id")
+            cand = _require_uuid(candidate_id, field="candidate_id")
+            stmt = (
+                select(CounterfactualChangeRow)
+                .where(
+                    CounterfactualChangeRow.organization_id == org_id,
+                    CounterfactualChangeRow.analysis_run_id == analysis_id,
+                    CounterfactualChangeRow.candidate_id == cand,
+                )
+                .order_by(CounterfactualChangeRow.change_order.asc())
+                .offset(max(0, offset))
+                .limit(max(1, min(limit, 500)))
+            )
+            return list((await self._session.scalars(stmt)).all())
+        except (SQLAlchemyError, ValueError) as exc:
+            logger.warning(
+                "cf_remediation_list_changes_failed error=%s",
                 type(exc).__name__,
             )
             return []

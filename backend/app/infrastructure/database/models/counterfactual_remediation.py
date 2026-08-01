@@ -87,6 +87,10 @@ class CounterfactualRemediationCandidateRow(Base, UUIDPrimaryKeyMixin, CreatedAt
         Index("ix_cf_rem_cand_hypothesis", "hypothesis_id"),
         Index("ix_cf_rem_cand_status", "status"),
         Index("ix_cf_rem_cand_artifact", "artifact_type"),
+        Index("ix_cf_rem_cand_priority_status", "priority_status"),
+        Index("ix_cf_rem_cand_risk_level", "risk_level"),
+        Index("ix_cf_rem_cand_dedupe_fp", "deduplication_fingerprint"),
+        Index("ix_cf_rem_cand_generator_type", "generator_type"),
     )
 
     remediation_run_id: Mapped[uuid.UUID] = mapped_column(
@@ -146,6 +150,31 @@ class CounterfactualRemediationCandidateRow(Base, UUIDPrimaryKeyMixin, CreatedAt
     template_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     template_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[str] = mapped_column(String(40), nullable=False)
+    # Phase 6A.6 Part 2 generation metadata (nullable / defaulted; never implies verified).
+    rendered_patch: Mapped[str | None] = mapped_column(Text, nullable=True)
+    patch_format: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    patch_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    changed_file_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    changed_line_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    risk_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    risk_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    blast_radius: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    priority_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    priority_status: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    deduplication_fingerprint: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    validation_status: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    constraint_status: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    prompt_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    side_effects_json: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
+    quality_components_json: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
+    risk_components_json: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
+    generation_provenance: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
