@@ -112,12 +112,12 @@ class RemediationCandidatePrioritiser:
             )
 
         no_safe = safe_count == 0 or all(
-            (statuses[cid].value if hasattr(statuses[cid], "value") else str(statuses[cid]))
+            (status.value if isinstance(status, CandidatePriorityStatus) else str(status))
             in {
                 CandidatePriorityStatus.REJECTED_CANDIDATE.value,
                 CandidatePriorityStatus.INCOMPLETE_CANDIDATE.value,
             }
-            for cid in ordered
+            for status in (statuses[cid] for cid in ordered)
         )
         if no_safe:
             for _score, cand, _comp in scored:

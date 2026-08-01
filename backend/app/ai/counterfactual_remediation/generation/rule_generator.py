@@ -672,7 +672,10 @@ class RuleBasedRemediationGenerator:
         status: CounterfactualCandidateStatus = CounterfactualCandidateStatus.STRUCTURED,
     ) -> CounterfactualRemediationCandidate:
         candidate_id = str(uuid4())
-        artifact_id = first_str(state.get("artifact_id"), *(context.valid_artifact_ids or [None]))
+        artifact_id = first_str(
+            state.get("artifact_id"),
+            *(list(context.valid_artifact_ids or [])),
+        )
         change = CounterfactualChange(
             id=str(uuid4()),
             candidate_id=candidate_id,

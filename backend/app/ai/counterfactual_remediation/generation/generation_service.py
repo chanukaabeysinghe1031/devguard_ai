@@ -159,7 +159,7 @@ class CounterfactualRemediationGenerationService:
             raise ValueError("run_required")
 
         if not self.any_generation_enabled():
-            meta = {
+            disabled_meta: dict[str, Any] = {
                 "generation_enabled": False,
                 "status": RemediationGenerationStatus.DISABLED.value,
                 "warnings": ["remediation_generation_disabled"],
@@ -168,16 +168,19 @@ class CounterfactualRemediationGenerationService:
             if "remediation_generation_disabled" not in run.warnings:
                 run.warnings.append("remediation_generation_disabled")
             if return_meta:
-                return [], meta
+                return [], disabled_meta
             return run, []
 
         started = datetime.now(UTC)
+        gen_warnings: list[str] = []
+        gen_errors: list[str] = []
+        generator_results: list[Any] = []
         meta: dict[str, Any] = {
             "generation_enabled": True,
-            "generator_results": [],
+            "generator_results": generator_results,
             "prioritisation": None,
-            "warnings": [],
-            "errors": [],
+            "warnings": gen_warnings,
+            "errors": gen_errors,
         }
         generated: list[CounterfactualRemediationCandidate] = []
         contexts_by_hyp = {c.hypothesis_id: c for c in contexts}
@@ -209,7 +212,7 @@ class CounterfactualRemediationGenerationService:
                     context.hypothesis_id,
                     type(exc).__name__,
                 )
-                meta["errors"].append(
+                gen_errors.append(
                     f"hypothesis_generation_failed:{context.hypothesis_id}:{type(exc).__name__}"
                 )
 
@@ -218,13 +221,13 @@ class CounterfactualRemediationGenerationService:
             try:
                 ctx = contexts_by_hyp.get(candidate.hypothesis_id)
                 if ctx is None:
-                    meta["warnings"].append(f"missing_context:{candidate.id}")
+                    gen_warnings.append(f"missing_context:{candidate.id}")
                     continue
                 processed = self._enrich_candidate(candidate, ctx)
                 if processed is not None:
                     enriched.append(processed)
             except Exception as exc:  # noqa: BLE001
-                meta["warnings"].append(
+                gen_warnings.append(
                     f"candidate_enrichment_failed:{candidate.id}:{type(exc).__name__}"
                 )
 
@@ -260,14 +263,14 @@ class CounterfactualRemediationGenerationService:
         max_total = bound_int(self._settings, "max_total_final_candidates", 8)
         final = final[:max_total]
 
-        run.warnings.extend(meta.get("warnings") or [])
-        run.errors.extend(meta.get("errors") or [])
+        run.warnings.extend(gen_warnings)
+        run.errors.extend(gen_errors)
         self._update_run_counts(run, final, prioritisation)
         meta["status"] = self._overall_status(final, meta).value
         meta["duration_ms"] = int((datetime.now(UTC) - started).total_seconds() * 1000)
         snap = dict(run.configuration_snapshot or {})
         snap["part2_generation_meta"] = {k: v for k, v in meta.items() if k != "generator_results"}
-        snap["part2_generator_result_count"] = len(meta.get("generator_results") or [])
+        snap["part2_generator_result_count"] = len(generator_results)
         run.configuration_snapshot = snap
         if return_meta:
             return final, meta
@@ -404,7 +407,10 @@ class CounterfactualRemediationGenerationService:
                 high_risk_threshold=self._high_risk,
                 reject_risk_threshold=self._reject_risk,
             )
-            candidate.risk_summary = list(risk.risk_signals)
+            candidate.risk_summary = [
+                (s.to_dict() if hasattr(s, "to_dict") else dict(s) if isinstance(s, dict) else s)
+                for s in risk.risk_signals
+            ]
             candidate.risk_score = risk.overall_risk_score
             candidate.risk_level = (
                 risk.risk_level.value if hasattr(risk.risk_level, "value") else str(risk.risk_level)
