@@ -801,6 +801,53 @@ class Settings(BaseSettings):
         alias="MAX_TEMP_WORKSPACE_BYTES",
     )
 
+    # Phase 6A.7 — final diagnosis / confidence / abstention (all OFF).
+    # Highest-ranked ≠ proven root cause. Verified ≠ applied. Abstention is safe.
+    final_diagnosis_enabled: bool = Field(
+        default=False,
+        alias="FINAL_DIAGNOSIS_ENABLED",
+    )
+    final_confidence_enabled: bool = Field(
+        default=False,
+        alias="FINAL_CONFIDENCE_ENABLED",
+    )
+    diagnosis_abstention_enabled: bool = Field(
+        default=False,
+        alias="DIAGNOSIS_ABSTENTION_ENABLED",
+    )
+    final_explanation_enabled: bool = Field(
+        default=False,
+        alias="FINAL_EXPLANATION_ENABLED",
+    )
+    final_diagnosis_debug_api_enabled: bool = Field(
+        default=False,
+        alias="FINAL_DIAGNOSIS_DEBUG_API_ENABLED",
+    )
+    min_final_diagnosis_score: float = Field(
+        default=0.70,
+        alias="MIN_FINAL_DIAGNOSIS_SCORE",
+    )
+    min_final_evidence_sufficiency: float = Field(
+        default=0.60,
+        alias="MIN_FINAL_EVIDENCE_SUFFICIENCY",
+    )
+    min_final_verifier_support: float = Field(
+        default=0.60,
+        alias="MIN_FINAL_VERIFIER_SUPPORT",
+    )
+    max_final_contradiction_penalty: float = Field(
+        default=0.40,
+        alias="MAX_FINAL_CONTRADICTION_PENALTY",
+    )
+    min_top_hypothesis_margin: float = Field(
+        default=0.08,
+        alias="MIN_TOP_HYPOTHESIS_MARGIN",
+    )
+    max_final_explanation_items: int = Field(
+        default=10,
+        alias="MAX_FINAL_EXPLANATION_ITEMS",
+    )
+
     hybrid_weight_profile: str = Field(
         default="hybrid_static_v1",
         alias="HYBRID_WEIGHT_PROFILE",
@@ -1078,6 +1125,11 @@ class Settings(BaseSettings):
         "remediation_tie_epsilon",
         "remediation_high_risk_threshold",
         "remediation_reject_risk_threshold",
+        "min_final_diagnosis_score",
+        "min_final_evidence_sufficiency",
+        "min_final_verifier_support",
+        "max_final_contradiction_penalty",
+        "min_top_hypothesis_margin",
         mode="after",
     )
     @classmethod
@@ -1086,6 +1138,14 @@ class Settings(BaseSettings):
         if score < 0.0 or score > 1.0:
             raise ValueError("evidence assessment / remediation scores must be in [0, 1]")
         return score
+
+    @field_validator("max_final_explanation_items", mode="after")
+    @classmethod
+    def final_explanation_item_bounds(cls, value: int) -> int:
+        count = int(value)
+        if count < 1 or count > 50:
+            raise ValueError("MAX_FINAL_EXPLANATION_ITEMS must be in [1, 50]")
+        return count
 
     @field_validator("embedding_model", mode="after")
     @classmethod

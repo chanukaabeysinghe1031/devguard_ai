@@ -1,0 +1,47 @@
+"""Enums for Phase 6A.7 final diagnosis, confidence, and abstention."""
+
+from __future__ import annotations
+
+from enum import StrEnum
+
+
+class FinalDiagnosisStatus(StrEnum):
+    """Final decision status — never implies applied remediation or proven root cause."""
+
+    DIAGNOSED = "DIAGNOSED"
+    DIAGNOSED_WITH_WARNINGS = "DIAGNOSED_WITH_WARNINGS"
+    INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+    CONFLICTED = "CONFLICTED"
+    UNKNOWN = "UNKNOWN"
+    FAILED = "FAILED"
+    DISABLED = "DISABLED"
+
+
+class AbstentionReasonCode(StrEnum):
+    OPEN_SET_UNKNOWN = "OPEN_SET_UNKNOWN"
+    EVIDENCE_INSUFFICIENT = "EVIDENCE_INSUFFICIENT"
+    VERIFIER_UNAVAILABLE = "VERIFIER_UNAVAILABLE"
+    VERIFIER_FAILED = "VERIFIER_FAILED"
+    HYPOTHESES_TIED = "HYPOTHESES_TIED"
+    HIGH_CONTRADICTION = "HIGH_CONTRADICTION"
+    GRAPH_INCOMPLETE = "GRAPH_INCOMPLETE"
+    ARTIFACTS_MISSING = "ARTIFACTS_MISSING"
+    NO_SAFE_REMEDIATION = "NO_SAFE_REMEDIATION"
+    HIGH_RISK_REMEDIATION = "HIGH_RISK_REMEDIATION"
+    CLASSIFIER_DISAGREEMENT = "CLASSIFIER_DISAGREEMENT"
+    INTERNAL_FAILURE = "INTERNAL_FAILURE"
+
+
+class VerifierSupportLevel(StrEnum):
+    STRONG = "STRONG"
+    MODERATE = "MODERATE"
+    WEAK = "WEAK"
+    NONE = "NONE"
+    UNAVAILABLE = "UNAVAILABLE"
+
+
+class FinalConfidenceBand(StrEnum):
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+    INSUFFICIENT = "INSUFFICIENT"
