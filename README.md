@@ -28,6 +28,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Phase 6A.5 Part 1B — Hypothesis retrieval** | ✅ Infrastructure only (flag OFF; no causal ranking) |
 | **Phase 6A.5 Part 2 — Adaptive retrieval** | ✅ Intelligence path (all Part 2 flags OFF by default; no migration 016) |
 | **Phase 6A.5 Part 3 — Evidence assessment** | ✅ Sufficiency / contradiction / ranking / candidates (all flags OFF; no migration 016) |
+| **Phase 6A.6 Part 1 — Counterfactual foundation** | ✅ Constraints + skeletons (all flags OFF; migration 016; no apply/verifiers) |
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
@@ -74,6 +75,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 - Phase 6A.5 Part 1B hypothesis-directed retrieval (experimental): `HYPOTHESIS_DIRECTED_RAG_ENABLED` defaults **false**; when off, Modules 6–9 RAG/diagnosis are unchanged. Part 1B is infrastructure only — not causal ranking; `SUPPORT_CANDIDATE` ≠ proven support. See `docs/PHASE6A5_HYPOTHESIS_RETRIEVAL_CONTRACTS.md`.
 - Phase 6A.5 Part 2 adaptive retrieval intelligence: `ADAPTIVE_HYPOTHESIS_RETRIEVAL_ENABLED` and related flags default **false** (Part 1B unchanged when off). No migration 016 — payloads live in existing JSONB. See `docs/PHASE6A5_ADAPTIVE_RETRIEVAL.md`.
 - Phase 6A.5 Part 3 evidence assessment: `HYPOTHESIS_EVIDENCE_ASSESSMENT_ENABLED` and related flags default **false**. `RankingScore` ≠ root-cause confidence; candidates only. No migration 016. See `docs/PHASE6A5_EVIDENCE_ASSESSMENT.md`.
+- Phase 6A.6 Part 1 counterfactual remediation foundation: `COUNTERFACTUAL_REMEDIATION_ENABLED` and related flags default **false**. Candidates are hypothesis-conditional and unverified; no apply/verifiers. Migration `016_phase6a6_cf_foundation`. See `docs/PHASE6A6_COUNTERFACTUAL_REMEDIATION_FOUNDATION.md`.
 - Deterministic diagnostic signals, lexical exact-match, versioned hybrid weight profiles, dedupe/diversity reranking
 - Organization membership resolution and role-based authorization dependencies
 - Default organization + owner membership created on user registration
@@ -341,7 +343,7 @@ docker compose exec backend alembic upgrade head
 docker compose exec backend alembic current
 ```
 
-Expected head after Phase 6A.5 Part 1B/Part 2/Part 3: `015_phase6a5_hyp_retrieval` (Part 2/Part 3 add **no** migration 016).
+Expected head after Phase 6A.6 Part 1: `016_phase6a6_cf_foundation` (Part 6A.5 Part 2/Part 3 added **no** migration; Part 1 of 6A.6 introduces 016).
 
 Safe settings diagnostic (masks nothing itself — print only non-secret parts):
 

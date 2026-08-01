@@ -171,7 +171,7 @@ Ordered by Phase 6A subphases (implementation **after** audit approval):
 | **6A.3** | Hierarchical taxonomy **mapping** + open-set detector |
 | **6A.4** | Competing `CausalHypothesis` generation (templates + validated LLM JSON) |
 | **6A.5** | Hypothesis-directed RAG + ranker + disagreement analyser |
-| **6A.6** | Counterfactual remediation model + temp workspaces |
+| **6A.6** | Counterfactual remediation model + temp workspaces — **Part 1 foundation complete** (flags OFF; migration 016; no apply/verifiers) |
 | **6A.7** | Verifier suite adapters (optional tools) |
 | **6A.8** | Confidence decomposition + abstention engine |
 | **6A.9** | Frontend Causal Analysis experience |
@@ -407,7 +407,9 @@ Phase 6A.1 is implemented. See `docs/PHASE6A_ARTIFACT_BUNDLE_AND_PARSERS.md`.
 
 > **Update:** Phase 6A.5 Part 1A (audit) and **Part 1B** (hypothesis-directed retrieval infrastructure) delivered. Master flag `HYPOTHESIS_DIRECTED_RAG_ENABLED` defaults OFF. Causal ranking / Part 2+ still deferred.
 
-**Still deferred:** 6A.5 Part 2+ adaptive retrieval, 6A.6–6A.8 ranking/remediation/verifier stages, 6A.9 Causal UI.
+**Still deferred:** 6A.6 Part 2 generation, 6A.7–6A.8 verifier/abstention stages, 6A.9 Causal UI.
+
+> **Update:** Phase 6A.6 Part 1 counterfactual remediation foundation delivered (flags OFF; migration `016_phase6a6_cf_foundation`). Candidates only — no apply/verifiers. See `docs/PHASE6A6_COUNTERFACTUAL_REMEDIATION_FOUNDATION.md`.
 
 ---
 
