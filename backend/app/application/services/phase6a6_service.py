@@ -16,6 +16,10 @@ from app.infrastructure.database.models.counterfactual_remediation import (
 from app.infrastructure.repositories.counterfactual_remediation_repository import (
     CounterfactualRemediationRepositoryImpl,
 )
+from app.infrastructure.repositories.remediation_verification_repository import (
+    RemediationVerificationRepositoryImpl,
+    consensus_from_row,
+)
 from app.schemas.phase6a6 import (
     CounterfactualChangeItem,
     CounterfactualChangeListResponse,
@@ -36,6 +40,13 @@ from app.schemas.phase6a6 import (
     RemediationPreconditionListResponse,
     RemediationVerificationRequirementItem,
     RemediationVerificationRequirementListResponse,
+    VerificationConsensusResponse,
+    VerificationResultItem,
+    VerificationResultListResponse,
+    VerificationRunDetailResponse,
+    VerificationRunListItem,
+    VerificationRunListResponse,
+    VerifierLogsResponse,
 )
 
 _SECRETISH = re.compile(
@@ -95,10 +106,18 @@ class Phase6A6CounterfactualService:
         self._session = run_service._session  # noqa: SLF001
         self._settings = settings
         self._repo = CounterfactualRemediationRepositoryImpl(self._session)
+        self._verif_repo = RemediationVerificationRepositoryImpl(self._session)
 
     def _ensure_debug_enabled(self) -> None:
         if not self._settings.counterfactual_debug_api_enabled:
             raise ResourceNotFoundError("Counterfactual remediation debug API not found.")
+
+    def _ensure_verifier_debug_enabled(self) -> None:
+        if not (
+            self._settings.verifier_debug_api_enabled
+            or self._settings.counterfactual_debug_api_enabled
+        ):
+            raise ResourceNotFoundError("Counterfactual verification debug API not found.")
 
     async def get_run(
         self, *, organization_id: UUID, analysis_run_id: UUID
@@ -629,6 +648,182 @@ class Phase6A6CounterfactualService:
             analysis_run_id=analysis_run_id,
             items=items,
             total_items=len(items),
+        )
+
+    async def list_verification_runs(
+        self, *, organization_id: UUID, analysis_run_id: UUID
+    ) -> VerificationRunListResponse:
+        self._ensure_verifier_debug_enabled()
+        await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
+        rows = await self._verif_repo.list_runs_by_analysis(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+        )
+        items = [
+            VerificationRunListItem(
+                id=r.id,
+                candidate_id=r.candidate_id,
+                status=r.status,
+                consensus_status=r.consensus_status,
+                duration_ms=r.duration_ms,
+                engine_version=r.engine_version,
+                created_at=r.created_at,
+                completed_at=r.completed_at,
+            )
+            for r in rows
+        ]
+        return VerificationRunListResponse(
+            analysis_run_id=analysis_run_id,
+            items=items,
+            total_items=len(items),
+        )
+
+    async def get_verification_run(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        run_id: UUID,
+    ) -> VerificationRunDetailResponse:
+        self._ensure_verifier_debug_enabled()
+        await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
+        row = await self._verif_repo.get_run(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            run_id=run_id,
+        )
+        if row is None:
+            raise ResourceNotFoundError("Verification run not found.")
+        snapshot = dict(row.configuration_snapshot or {})
+        # Drop bulky stdout from nested consensus if any.
+        return VerificationRunDetailResponse(
+            id=row.id,
+            analysis_run_id=row.analysis_run_id,
+            candidate_id=row.candidate_id,
+            remediation_run_id=row.remediation_run_id,
+            status=row.status,
+            consensus_status=row.consensus_status,
+            configuration_snapshot=snapshot,
+            warnings=[str(x) for x in (row.warnings or [])],
+            errors=[str(x) for x in (row.errors or [])],
+            duration_ms=row.duration_ms,
+            engine_version=row.engine_version,
+            consensus_version=row.consensus_version,
+            workspace_version=row.workspace_version,
+            created_at=row.created_at,
+            completed_at=row.completed_at,
+        )
+
+    async def list_verification_results(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID | None = None,
+        verifier_name: str | None = None,
+    ) -> VerificationResultListResponse:
+        self._ensure_verifier_debug_enabled()
+        await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
+        rows = await self._verif_repo.list_results_by_analysis(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+            verifier_name=verifier_name,
+        )
+        items = [
+            VerificationResultItem(
+                id=r.id,
+                verification_run_id=r.verification_run_id,
+                candidate_id=r.candidate_id,
+                verifier_name=r.verifier_name,
+                verifier_version=r.verifier_version,
+                status=r.status,
+                duration_ms=r.duration_ms,
+                tool_available=bool(r.tool_available),
+                message=r.message,
+                findings=[str(x) for x in (r.findings or [])],
+                warnings=[str(x) for x in (r.warnings or [])],
+                errors=[str(x) for x in (r.errors or [])],
+                artifacts_checked=list(r.artifacts_checked or []),
+                created_at=r.created_at,
+            )
+            for r in rows
+        ]
+        return VerificationResultListResponse(
+            analysis_run_id=analysis_run_id,
+            items=items,
+            total_items=len(items),
+        )
+
+    async def get_verification_consensus(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID,
+    ) -> VerificationConsensusResponse:
+        self._ensure_verifier_debug_enabled()
+        await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
+        cand = await self._repo.get_candidate_by_id(
+            organization_id=organization_id,
+            candidate_id=candidate_id,
+        )
+        if cand is None or cand.analysis_run_id != analysis_run_id:
+            raise ResourceNotFoundError("Counterfactual remediation candidate not found.")
+        row = await self._verif_repo.get_run_for_candidate(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        if row is None:
+            raise ResourceNotFoundError("Verification consensus not found.")
+        consensus = consensus_from_row(row)
+        return VerificationConsensusResponse(
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+            verification_run_id=row.id,
+            consensus_status=row.consensus_status,
+            consensus=consensus.to_dict() if consensus is not None else {},
+        )
+
+    async def get_verifier_logs(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID,
+    ) -> VerifierLogsResponse:
+        self._ensure_verifier_debug_enabled()
+        await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
+        cand = await self._repo.get_candidate_by_id(
+            organization_id=organization_id,
+            candidate_id=candidate_id,
+        )
+        if cand is None or cand.analysis_run_id != analysis_run_id:
+            raise ResourceNotFoundError("Counterfactual remediation candidate not found.")
+        rows = await self._verif_repo.list_results_by_analysis(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        items: list[dict[str, Any]] = []
+        for r in rows:
+            items.append(
+                {
+                    "verifier_name": r.verifier_name,
+                    "verifier_version": r.verifier_version,
+                    "status": r.status,
+                    "tool_available": bool(r.tool_available),
+                    "stdout_truncated": r.stdout_truncated,
+                    "stderr_truncated": r.stderr_truncated,
+                    "returncode": r.returncode,
+                    "message": r.message,
+                }
+            )
+        return VerifierLogsResponse(
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+            items=items,
         )
 
     async def _load_candidate(

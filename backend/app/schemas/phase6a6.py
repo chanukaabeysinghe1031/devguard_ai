@@ -263,3 +263,92 @@ class RemediationVerificationRequirementListResponse(BaseModel):
     analysis_run_id: UUID
     items: list[RemediationVerificationRequirementItem]
     total_items: int
+
+
+# --- Phase 6A.6 Part 3 verifier debug schemas ---
+
+
+class VerificationRunListItem(BaseModel):
+    id: UUID
+    candidate_id: UUID
+    status: str
+    consensus_status: str | None = None
+    duration_ms: int | None = None
+    engine_version: str
+    created_at: datetime
+    completed_at: datetime | None = None
+
+
+class VerificationRunListResponse(BaseModel):
+    analysis_run_id: UUID
+    items: list[VerificationRunListItem]
+    total_items: int
+    disclaimer: str = (
+        "Verifier outcomes validate temporary counterfactual state only. "
+        "PASS is not a proven root-cause fix; candidates are never applied."
+    )
+
+
+class VerificationRunDetailResponse(BaseModel):
+    id: UUID
+    analysis_run_id: UUID
+    candidate_id: UUID
+    remediation_run_id: UUID | None = None
+    status: str
+    consensus_status: str | None = None
+    configuration_snapshot: dict[str, Any] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    duration_ms: int | None = None
+    engine_version: str
+    consensus_version: str | None = None
+    workspace_version: str | None = None
+    created_at: datetime
+    completed_at: datetime | None = None
+    disclaimer: str = (
+        "Temporary workspace verification only. No repository or cloud mutation."
+    )
+
+
+class VerificationResultItem(BaseModel):
+    id: UUID
+    verification_run_id: UUID
+    candidate_id: UUID | None = None
+    verifier_name: str
+    verifier_version: str
+    status: str
+    duration_ms: int | None = None
+    tool_available: bool = True
+    message: str | None = None
+    findings: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    artifacts_checked: list[Any] = Field(default_factory=list)
+    created_at: datetime
+
+
+class VerificationResultListResponse(BaseModel):
+    analysis_run_id: UUID
+    items: list[VerificationResultItem]
+    total_items: int
+
+
+class VerificationConsensusResponse(BaseModel):
+    analysis_run_id: UUID
+    candidate_id: UUID
+    verification_run_id: UUID | None = None
+    consensus_status: str | None = None
+    consensus: dict[str, Any] = Field(default_factory=dict)
+    disclaimer: str = (
+        "Consensus is deterministic and non-LLM. "
+        "VERIFIED means temporary checks passed — not applied, not proven root cause."
+    )
+
+
+class VerifierLogsResponse(BaseModel):
+    analysis_run_id: UUID
+    candidate_id: UUID
+    items: list[dict[str, Any]] = Field(default_factory=list)
+    disclaimer: str = (
+        "Stdout/stderr are truncated and secret-redacted. No apply endpoints exist."
+    )

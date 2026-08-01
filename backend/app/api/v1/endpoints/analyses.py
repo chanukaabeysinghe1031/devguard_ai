@@ -82,6 +82,11 @@ from app.schemas.phase6a6 import (
     RemediationConstraintListResponse,
     RemediationPreconditionListResponse,
     RemediationVerificationRequirementListResponse,
+    VerificationConsensusResponse,
+    VerificationResultListResponse,
+    VerificationRunDetailResponse,
+    VerificationRunListResponse,
+    VerifierLogsResponse,
 )
 
 router = APIRouter(tags=["Analysis Runs"])
@@ -1277,6 +1282,101 @@ async def get_counterfactual_remediation_prioritisation(
     return await service.get_prioritisation(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-verification-runs",
+    response_model=VerificationRunListResponse,
+)
+async def list_counterfactual_verification_runs(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> VerificationRunListResponse:
+    """Part 3 verification runs — temporary workspace outcomes only."""
+    _, organization_id, _ = ctx
+    return await service.list_verification_runs(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-verification-runs/{run_id}",
+    response_model=VerificationRunDetailResponse,
+)
+async def get_counterfactual_verification_run(
+    analysis_run_id: UUID,
+    run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> VerificationRunDetailResponse:
+    """Single verification run detail (no apply)."""
+    _, organization_id, _ = ctx
+    return await service.get_verification_run(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        run_id=run_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-verification-results",
+    response_model=VerificationResultListResponse,
+)
+async def list_counterfactual_verification_results(
+    analysis_run_id: UUID,
+    candidate_id: UUID | None = None,
+    verifier: str | None = None,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> VerificationResultListResponse:
+    """Per-verifier results; filter by candidate or verifier name."""
+    _, organization_id, _ = ctx
+    return await service.list_verification_results(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+        verifier_name=verifier,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/verification-consensus",
+    response_model=VerificationConsensusResponse,
+)
+async def get_counterfactual_verification_consensus(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> VerificationConsensusResponse:
+    """Deterministic consensus for a candidate — not proven root cause."""
+    _, organization_id, _ = ctx
+    return await service.get_verification_consensus(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/verifier-logs",
+    response_model=VerifierLogsResponse,
+)
+async def get_counterfactual_verifier_logs(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> VerifierLogsResponse:
+    """Truncated/redacted verifier stdout/stderr — no apply path."""
+    _, organization_id, _ = ctx
+    return await service.get_verifier_logs(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
     )
 
 

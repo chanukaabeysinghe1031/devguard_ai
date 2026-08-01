@@ -7971,6 +7971,399 @@
         }
       }
     },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-verification-runs": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Counterfactual Verification Runs",
+        "description": "Part 3 verification runs \u2014 temporary workspace outcomes only.",
+        "operationId": "list_counterfactual_verification_runs_api_v1_analyses__analysis_run_id__counterfactual_verification_runs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationRunListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-verification-runs/{run_id}": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Verification Run",
+        "description": "Single verification run detail (no apply).",
+        "operationId": "get_counterfactual_verification_run_api_v1_analyses__analysis_run_id__counterfactual_verification_runs__run_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationRunDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-verification-results": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Counterfactual Verification Results",
+        "description": "Per-verifier results; filter by candidate or verifier name.",
+        "operationId": "list_counterfactual_verification_results_api_v1_analyses__analysis_run_id__counterfactual_verification_results_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "verifier",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Verifier"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationResultListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/verification-consensus": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Verification Consensus",
+        "description": "Deterministic consensus for a candidate \u2014 not proven root cause.",
+        "operationId": "get_counterfactual_verification_consensus_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__verification_consensus_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationConsensusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/verifier-logs": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Verifier Logs",
+        "description": "Truncated/redacted verifier stdout/stderr \u2014 no apply path.",
+        "operationId": "get_counterfactual_verifier_logs_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__verifier_logs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifierLogsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/analyses/{analysis_run_id}/cancel": {
       "post": {
         "tags": [
@@ -22153,6 +22546,461 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerificationConsensusResponse": {
+        "properties": {
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "verification_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Run Id"
+          },
+          "consensus_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consensus Status"
+          },
+          "consensus": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Consensus"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Consensus is deterministic and non-LLM. VERIFIED means temporary checks passed \u2014 not applied, not proven root cause."
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis_run_id",
+          "candidate_id"
+        ],
+        "title": "VerificationConsensusResponse"
+      },
+      "VerificationResultItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "verification_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Verification Run Id"
+          },
+          "candidate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Id"
+          },
+          "verifier_name": {
+            "type": "string",
+            "title": "Verifier Name"
+          },
+          "verifier_version": {
+            "type": "string",
+            "title": "Verifier Version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "tool_available": {
+            "type": "boolean",
+            "title": "Tool Available",
+            "default": true
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "findings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Findings"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "artifacts_checked": {
+            "items": {},
+            "type": "array",
+            "title": "Artifacts Checked"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "verification_run_id",
+          "verifier_name",
+          "verifier_version",
+          "status",
+          "created_at"
+        ],
+        "title": "VerificationResultItem"
+      },
+      "VerificationResultListResponse": {
+        "properties": {
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationResultItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis_run_id",
+          "items",
+          "total_items"
+        ],
+        "title": "VerificationResultListResponse"
+      },
+      "VerificationRunDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "remediation_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remediation Run Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "consensus_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consensus Status"
+          },
+          "configuration_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Configuration Snapshot"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "consensus_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consensus Version"
+          },
+          "workspace_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Temporary workspace verification only. No repository or cloud mutation."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "analysis_run_id",
+          "candidate_id",
+          "status",
+          "engine_version",
+          "created_at"
+        ],
+        "title": "VerificationRunDetailResponse"
+      },
+      "VerificationRunListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "consensus_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consensus Status"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "candidate_id",
+          "status",
+          "engine_version",
+          "created_at"
+        ],
+        "title": "VerificationRunListItem"
+      },
+      "VerificationRunListResponse": {
+        "properties": {
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationRunListItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Verifier outcomes validate temporary counterfactual state only. PASS is not a proven root-cause fix; candidates are never applied."
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis_run_id",
+          "items",
+          "total_items"
+        ],
+        "title": "VerificationRunListResponse"
+      },
+      "VerifierLogsResponse": {
+        "properties": {
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Stdout/stderr are truncated and secret-redacted. No apply endpoints exist."
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis_run_id",
+          "candidate_id"
+        ],
+        "title": "VerifierLogsResponse"
       },
       "WebhookAcceptedResponse": {
         "properties": {
