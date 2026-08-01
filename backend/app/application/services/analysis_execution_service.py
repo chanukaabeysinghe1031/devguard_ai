@@ -116,6 +116,7 @@ class AnalysisExecutionService:
             await self._maybe_run_phase6a5_hypothesis_retrieval(run, context)
             await self._maybe_run_phase6a5_evidence_assessment(run, context)
             await self._maybe_run_phase6a6_counterfactual_foundation(run, context)
+            await self._maybe_run_phase6a6_counterfactual_generation(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -212,6 +213,24 @@ class AnalysisExecutionService:
             options["rule_remediation_generation_enabled"] = False
         if not self._settings.llm_remediation_generation_enabled:
             options["llm_remediation_generation_enabled"] = False
+        if not self._settings.remediation_risk_analysis_enabled:
+            options["remediation_risk_analysis_enabled"] = False
+        if not self._settings.remediation_side_effect_analysis_enabled:
+            options["remediation_side_effect_analysis_enabled"] = False
+        if not self._settings.remediation_ranking_enabled:
+            options["remediation_ranking_enabled"] = False
+        if not self._settings.remediation_deduplication_enabled:
+            options["remediation_deduplication_enabled"] = False
+        if not self._settings.remediation_diversity_enabled:
+            options["remediation_diversity_enabled"] = False
+        if not self._settings.remediation_patch_rendering_enabled:
+            options["remediation_patch_rendering_enabled"] = False
+        if not self._settings.remediation_rollback_generation_enabled:
+            options["remediation_rollback_generation_enabled"] = False
+        if not self._settings.remediation_reference_validation_enabled:
+            options["remediation_reference_validation_enabled"] = False
+        if not self._settings.remediation_constraint_validation_enabled:
+            options["remediation_constraint_validation_enabled"] = False
 
         # Clamp latency to server maximum.
         try:
@@ -1255,6 +1274,11 @@ class AnalysisExecutionService:
             )
             # Never overwrite diagnosis / recommendations / retrieved / evidence assessment.
             context.options["counterfactual_remediation"] = result.to_dict()
+            # Keep live candidate objects for Part 2 generation (not serialised in to_dict).
+            persist_payload = getattr(foundation, "_last_persist_payload", None) or {}
+            context.options["_counterfactual_foundation_candidates"] = list(
+                persist_payload.get("candidates") or []
+            )
             status_value = (
                 result.status.value if hasattr(result.status, "value") else str(result.status)
             )
@@ -1298,6 +1322,111 @@ class AnalysisExecutionService:
                 event_type="counterfactual_remediation_foundation_failed",
                 metadata={"analysis_run_id": str(run.id)},
             )
+
+    async def _maybe_run_phase6a6_counterfactual_generation(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Surface Part 2 generation results (foundation already runs generation).
+
+        Soft-fail. Never overwrites recommendations. Avoids a second generation pass.
+        """
+        if not (
+            self._settings.rule_remediation_generation_enabled
+            or self._settings.llm_remediation_generation_enabled
+        ):
+            context.options.pop("_counterfactual_foundation_candidates", None)
+            return
+        try:
+            foundation_payload = context.options.get("counterfactual_remediation") or {}
+            if not isinstance(foundation_payload, dict):
+                return
+            snapshot = dict(foundation_payload.get("configuration_snapshot") or {})
+            gen_meta = dict(snapshot.get("part2_generation_meta") or {})
+            prioritisation = gen_meta.get("prioritisation") or snapshot.get("prioritisation")
+            if prioritisation and "prioritisation" not in snapshot:
+                snapshot["prioritisation"] = prioritisation
+                foundation_payload["configuration_snapshot"] = snapshot
+                context.options["counterfactual_remediation"] = foundation_payload
+
+            candidates = list(
+                context.options.pop("_counterfactual_foundation_candidates", []) or []
+            )
+            if self._settings.counterfactual_persistence_enabled and candidates:
+                from app.ai.counterfactual_remediation.persist import (
+                    CounterfactualRemediationPersistService,
+                )
+                from app.domain.counterfactual_remediation.enums import (
+                    CounterfactualRemediationRunStatus,
+                )
+                from app.domain.counterfactual_remediation.models import (
+                    CounterfactualRemediationRun,
+                )
+                from app.infrastructure.repositories.counterfactual_remediation_repository import (
+                    CounterfactualRemediationRepositoryImpl,
+                )
+
+                status_raw = foundation_payload.get("status") or "COMPLETE"
+                try:
+                    status = CounterfactualRemediationRunStatus(str(status_raw))
+                except ValueError:
+                    status = CounterfactualRemediationRunStatus.COMPLETE
+                rem_run = CounterfactualRemediationRun(
+                    id=str(foundation_payload.get("id") or run.id),
+                    organization_id=str(context.organization_id or ""),
+                    project_id=str(context.project_id or ""),
+                    incident_id=str(run.incident_id or ""),
+                    analysis_id=str(run.id),
+                    status=status,
+                    selected_hypothesis_ids=list(
+                        foundation_payload.get("selected_hypothesis_ids") or []
+                    ),
+                    configuration_snapshot=snapshot,
+                    warnings=list(foundation_payload.get("warnings") or []),
+                    errors=list(foundation_payload.get("errors") or []),
+                    limitations=list(foundation_payload.get("limitations") or []),
+                    candidate_count=int(
+                        foundation_payload.get("candidate_count") or len(candidates)
+                    ),
+                    safe_candidate_count=int(
+                        foundation_payload.get("safe_candidate_count") or 0
+                    ),
+                    incomplete_candidate_count=int(
+                        foundation_payload.get("incomplete_candidate_count") or 0
+                    ),
+                    rejected_candidate_count=int(
+                        foundation_payload.get("rejected_candidate_count") or 0
+                    ),
+                )
+                persist = CounterfactualRemediationPersistService(
+                    enabled=True,
+                    repository=CounterfactualRemediationRepositoryImpl(self._session),
+                )
+                await persist.persist_generated_candidates(
+                    run=rem_run, candidates=candidates
+                )
+
+            context.options["counterfactual_remediation_generation"] = {
+                "status": gen_meta.get("status") or ("COMPLETE" if gen_meta else "SKIPPED"),
+                "candidate_count": foundation_payload.get("candidate_count"),
+                "duration_ms": gen_meta.get("duration_ms"),
+                "prioritisation": prioritisation,
+                "warnings": list(gen_meta.get("warnings") or []),
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "phase6a6_counterfactual_generation_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(
+                f"phase6a6_counterfactual_generation_failed:{type(exc).__name__}"
+            )
+            context.options["counterfactual_remediation_generation"] = {
+                "status": "FAILED",
+                "error": type(exc).__name__,
+            }
 
     async def _ensure_model_version(self) -> ModelVersion:
         stmt = select(ModelVersion).where(

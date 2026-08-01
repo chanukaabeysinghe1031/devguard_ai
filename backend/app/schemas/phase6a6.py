@@ -49,6 +49,16 @@ class CounterfactualRemediationCandidateListItem(BaseModel):
     template_id: str | None = None
     change_types: list[str] = Field(default_factory=list)
     target_paths: list[str] = Field(default_factory=list)
+    generator_type: str | None = None
+    risk_level: str | None = None
+    blast_radius: str | None = None
+    priority_status: str | None = None
+    priority_score: float | None = None
+    risk_score: float | None = None
+    changed_file_count: int = 0
+    changed_line_count: int = 0
+    validation_status: str | None = None
+    constraint_status: str | None = None
 
 
 class CounterfactualRemediationCandidateListResponse(BaseModel):
@@ -85,8 +95,105 @@ class CounterfactualRemediationCandidateDetailResponse(BaseModel):
     template_id: str | None = None
     template_version: str | None = None
     status: str
-    disclaimer: str = "Candidate skeleton only — not verified, not applied."
+    patch_format: str | None = None
+    patch_hash: str | None = None
+    has_rendered_patch: bool = False
+    changed_file_count: int = 0
+    changed_line_count: int = 0
+    risk_score: float | None = None
+    risk_level: str | None = None
+    blast_radius: str | None = None
+    priority_score: float | None = None
+    priority_status: str | None = None
+    deduplication_fingerprint: str | None = None
+    validation_status: str | None = None
+    constraint_status: str | None = None
+    prompt_version: str | None = None
+    side_effects_json: list[Any] = Field(default_factory=list)
+    quality_components_json: dict[str, Any] = Field(default_factory=dict)
+    risk_components_json: dict[str, Any] = Field(default_factory=dict)
+    generation_provenance: dict[str, Any] = Field(default_factory=dict)
+    disclaimer: str = (
+        "Candidate is hypothesis-conditional and unverified. "
+        "Not applied; priority_score is not verification confidence."
+    )
 
+
+class CounterfactualChangeItem(BaseModel):
+    id: UUID
+    artifact_id: str | None = None
+    artifact_type: str | None = None
+    source_path: str | None = None
+    change_type: str
+    target_property: str | None = None
+    original_fragment_hash: str | None = None
+    proposed_fragment_hash: str | None = None
+    has_normalized_diff: bool = False
+    expected_effect: str | None = None
+    rationale: str = ""
+    change_order: int = 0
+    content_hash_before: str | None = None
+    content_hash_after_candidate: str | None = None
+
+
+class CounterfactualChangeListResponse(BaseModel):
+    candidate_id: UUID
+    analysis_run_id: UUID
+    items: list[CounterfactualChangeItem]
+    total_items: int
+
+
+class CounterfactualPatchResponse(BaseModel):
+    candidate_id: UUID
+    analysis_run_id: UUID
+    patch_format: str | None = None
+    patch_hash: str | None = None
+    rendered_patch: str | None = None
+    changed_file_count: int = 0
+    changed_line_count: int = 0
+    redaction_note: str = "Secret values are never returned; fragments may be redacted."
+
+
+class CounterfactualRiskResponse(BaseModel):
+    candidate_id: UUID
+    analysis_run_id: UUID
+    risk_score: float | None = None
+    risk_level: str | None = None
+    risk_components_json: dict[str, Any] = Field(default_factory=dict)
+    risk_summary: list[Any] = Field(default_factory=list)
+    disclaimer: str = "Static heuristic risk only — not verification confidence."
+
+
+class CounterfactualSideEffectsResponse(BaseModel):
+    candidate_id: UUID
+    analysis_run_id: UUID
+    side_effects_json: list[Any] = Field(default_factory=list)
+    disclaimer: str = "Heuristic side-effect predictions only."
+
+
+class CounterfactualRollbackResponse(BaseModel):
+    candidate_id: UUID
+    analysis_run_id: UUID
+    rollback_plan: dict[str, Any] = Field(default_factory=dict)
+    disclaimer: str = "Structured rollback plan only — no shell commands; not executed."
+
+
+class CounterfactualConstraintValidationResponse(BaseModel):
+    candidate_id: UUID
+    analysis_run_id: UUID
+    validation_status: str | None = None
+    constraint_status: str | None = None
+    disclaimer: str = "Structural validation only — verifier CLIs are not executed."
+
+
+class CounterfactualPrioritisationResponse(BaseModel):
+    analysis_run_id: UUID
+    prioritisation: dict[str, Any] = Field(default_factory=dict)
+    candidates: list[CounterfactualRemediationCandidateListItem] = Field(default_factory=list)
+    disclaimer: str = (
+        "Priority orders candidates for later verification. "
+        "Not the fix; not verification confidence."
+    )
 
 class CounterfactualStateSnapshotResponse(BaseModel):
     candidate_id: UUID

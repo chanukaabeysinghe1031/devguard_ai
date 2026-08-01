@@ -68,9 +68,16 @@ from app.schemas.phase6a5 import (
     HypothesisRetrievedItemListResponse,
 )
 from app.schemas.phase6a6 import (
+    CounterfactualChangeListResponse,
+    CounterfactualConstraintValidationResponse,
+    CounterfactualPatchResponse,
+    CounterfactualPrioritisationResponse,
     CounterfactualRemediationCandidateDetailResponse,
     CounterfactualRemediationCandidateListResponse,
     CounterfactualRemediationRunResponse,
+    CounterfactualRiskResponse,
+    CounterfactualRollbackResponse,
+    CounterfactualSideEffectsResponse,
     CounterfactualStateSnapshotResponse,
     RemediationConstraintListResponse,
     RemediationPreconditionListResponse,
@@ -999,16 +1006,32 @@ async def list_counterfactual_remediation_candidates(
     analysis_run_id: UUID,
     page: int = 1,
     page_size: int = 50,
+    hypothesis: UUID | None = None,
+    status: str | None = None,
+    generator_type: str | None = None,
+    artifact_type: str | None = None,
+    risk_level: str | None = None,
+    blast_radius: str | None = None,
+    priority_status: str | None = None,
+    template_id: str | None = None,
     ctx: tuple = Depends(require_org_reader),
     service: Phase6A6CounterfactualService = Depends(_phase6a6),
 ) -> CounterfactualRemediationCandidateListResponse:
-    """List counterfactual remediation candidate skeletons for an analysis."""
+    """List counterfactual remediation candidates (unverified; debug flag gated)."""
     _, organization_id, _ = ctx
     return await service.list_candidates(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
         page=page,
         page_size=page_size,
+        hypothesis_id=hypothesis,
+        status=status,
+        generator_type=generator_type,
+        artifact_type=artifact_type,
+        risk_level=risk_level,
+        blast_radius=blast_radius,
+        priority_status=priority_status,
+        template_id=template_id,
     )
 
 
@@ -1117,12 +1140,143 @@ async def list_counterfactual_candidate_verification_requirements(
     ctx: tuple = Depends(require_org_reader),
     service: Phase6A6CounterfactualService = Depends(_phase6a6),
 ) -> RemediationVerificationRequirementListResponse:
-    """Reserved verification requirements — NOT_RUN in Part 1."""
+    """Reserved verification requirements — NOT_RUN in Part 1/2."""
     _, organization_id, _ = ctx
     return await service.list_verification_requirements(
         organization_id=organization_id,
         analysis_run_id=analysis_run_id,
         candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/changes",
+    response_model=CounterfactualChangeListResponse,
+)
+async def list_counterfactual_candidate_changes(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualChangeListResponse:
+    """Structured changes for a candidate (fragment bodies redacted to hashes)."""
+    _, organization_id, _ = ctx
+    return await service.list_changes(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/patch",
+    response_model=CounterfactualPatchResponse,
+)
+async def get_counterfactual_candidate_patch(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualPatchResponse:
+    """Rendered patch if present — never returns secret values; not applied."""
+    _, organization_id, _ = ctx
+    return await service.get_patch(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/risk",
+    response_model=CounterfactualRiskResponse,
+)
+async def get_counterfactual_candidate_risk(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualRiskResponse:
+    """Static risk metadata for a candidate."""
+    _, organization_id, _ = ctx
+    return await service.get_risk(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/side-effects",
+    response_model=CounterfactualSideEffectsResponse,
+)
+async def get_counterfactual_candidate_side_effects(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualSideEffectsResponse:
+    """Heuristic side-effect predictions for a candidate."""
+    _, organization_id, _ = ctx
+    return await service.get_side_effects(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/rollback",
+    response_model=CounterfactualRollbackResponse,
+)
+async def get_counterfactual_candidate_rollback(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualRollbackResponse:
+    """Structured rollback plan (not executed)."""
+    _, organization_id, _ = ctx
+    return await service.get_rollback(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/constraint-validation",
+    response_model=CounterfactualConstraintValidationResponse,
+)
+async def get_counterfactual_candidate_constraint_validation(
+    analysis_run_id: UUID,
+    candidate_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualConstraintValidationResponse:
+    """Structural constraint validation status — not verifier execution."""
+    _, organization_id, _ = ctx
+    return await service.get_constraint_validation(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
+        candidate_id=candidate_id,
+    )
+
+
+@router.get(
+    "/analyses/{analysis_run_id}/counterfactual-remediation-prioritisation",
+    response_model=CounterfactualPrioritisationResponse,
+)
+async def get_counterfactual_remediation_prioritisation(
+    analysis_run_id: UUID,
+    ctx: tuple = Depends(require_org_reader),
+    service: Phase6A6CounterfactualService = Depends(_phase6a6),
+) -> CounterfactualPrioritisationResponse:
+    """Candidate prioritisation for later verification — not 'the fix'."""
+    _, organization_id, _ = ctx
+    return await service.get_prioritisation(
+        organization_id=organization_id,
+        analysis_run_id=analysis_run_id,
     )
 
 

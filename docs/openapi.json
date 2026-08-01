@@ -6784,7 +6784,7 @@
           "Analysis Runs"
         ],
         "summary": "List Counterfactual Remediation Candidates",
-        "description": "List counterfactual remediation candidate skeletons for an analysis.",
+        "description": "List counterfactual remediation candidates (unverified; debug flag gated).",
         "operationId": "list_counterfactual_remediation_candidates_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates_get",
         "security": [
           {
@@ -6820,6 +6820,135 @@
               "type": "integer",
               "default": 50,
               "title": "Page Size"
+            }
+          },
+          {
+            "name": "hypothesis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hypothesis"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "generator_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Generator Type"
+            }
+          },
+          {
+            "name": "artifact_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Artifact Type"
+            }
+          },
+          {
+            "name": "risk_level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risk Level"
+            }
+          },
+          {
+            "name": "blast_radius",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Blast Radius"
+            }
+          },
+          {
+            "name": "priority_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority Status"
+            }
+          },
+          {
+            "name": "template_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Template Id"
             }
           },
           {
@@ -7250,7 +7379,7 @@
           "Analysis Runs"
         ],
         "summary": "List Counterfactual Candidate Verification Requirements",
-        "description": "Reserved verification requirements \u2014 NOT_RUN in Part 1.",
+        "description": "Reserved verification requirements \u2014 NOT_RUN in Part 1/2.",
         "operationId": "list_counterfactual_candidate_verification_requirements_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__verification_requirements_get",
         "security": [
           {
@@ -7303,6 +7432,528 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RemediationVerificationRequirementListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/changes": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "List Counterfactual Candidate Changes",
+        "description": "Structured changes for a candidate (fragment bodies redacted to hashes).",
+        "operationId": "list_counterfactual_candidate_changes_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__changes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualChangeListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/patch": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Candidate Patch",
+        "description": "Rendered patch if present \u2014 never returns secret values; not applied.",
+        "operationId": "get_counterfactual_candidate_patch_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__patch_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualPatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/risk": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Candidate Risk",
+        "description": "Static risk metadata for a candidate.",
+        "operationId": "get_counterfactual_candidate_risk_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__risk_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualRiskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/side-effects": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Candidate Side Effects",
+        "description": "Heuristic side-effect predictions for a candidate.",
+        "operationId": "get_counterfactual_candidate_side_effects_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__side_effects_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualSideEffectsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/rollback": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Candidate Rollback",
+        "description": "Structured rollback plan (not executed).",
+        "operationId": "get_counterfactual_candidate_rollback_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__rollback_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualRollbackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-candidates/{candidate_id}/constraint-validation": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Candidate Constraint Validation",
+        "description": "Structural constraint validation status \u2014 not verifier execution.",
+        "operationId": "get_counterfactual_candidate_constraint_validation_api_v1_analyses__analysis_run_id__counterfactual_remediation_candidates__candidate_id__constraint_validation_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualConstraintValidationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_run_id}/counterfactual-remediation-prioritisation": {
+      "get": {
+        "tags": [
+          "Analysis Runs"
+        ],
+        "summary": "Get Counterfactual Remediation Prioritisation",
+        "description": "Candidate prioritisation for later verification \u2014 not 'the fix'.",
+        "operationId": "get_counterfactual_remediation_prioritisation_api_v1_analyses__analysis_run_id__counterfactual_remediation_prioritisation_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Run Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualPrioritisationResponse"
                 }
               }
             }
@@ -13091,6 +13742,318 @@
         "type": "object",
         "title": "ConnectionUpdateRequest"
       },
+      "CounterfactualChangeItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Id"
+          },
+          "artifact_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Type"
+          },
+          "source_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Path"
+          },
+          "change_type": {
+            "type": "string",
+            "title": "Change Type"
+          },
+          "target_property": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Property"
+          },
+          "original_fragment_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Fragment Hash"
+          },
+          "proposed_fragment_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Fragment Hash"
+          },
+          "has_normalized_diff": {
+            "type": "boolean",
+            "title": "Has Normalized Diff",
+            "default": false
+          },
+          "expected_effect": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Effect"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "default": ""
+          },
+          "change_order": {
+            "type": "integer",
+            "title": "Change Order",
+            "default": 0
+          },
+          "content_hash_before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Hash Before"
+          },
+          "content_hash_after_candidate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Hash After Candidate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "change_type"
+        ],
+        "title": "CounterfactualChangeItem"
+      },
+      "CounterfactualChangeListResponse": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CounterfactualChangeItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "analysis_run_id",
+          "items",
+          "total_items"
+        ],
+        "title": "CounterfactualChangeListResponse"
+      },
+      "CounterfactualConstraintValidationResponse": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          },
+          "constraint_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Constraint Status"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Structural validation only \u2014 verifier CLIs are not executed."
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "analysis_run_id"
+        ],
+        "title": "CounterfactualConstraintValidationResponse"
+      },
+      "CounterfactualPatchResponse": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "patch_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patch Format"
+          },
+          "patch_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patch Hash"
+          },
+          "rendered_patch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rendered Patch"
+          },
+          "changed_file_count": {
+            "type": "integer",
+            "title": "Changed File Count",
+            "default": 0
+          },
+          "changed_line_count": {
+            "type": "integer",
+            "title": "Changed Line Count",
+            "default": 0
+          },
+          "redaction_note": {
+            "type": "string",
+            "title": "Redaction Note",
+            "default": "Secret values are never returned; fragments may be redacted."
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "analysis_run_id"
+        ],
+        "title": "CounterfactualPatchResponse"
+      },
+      "CounterfactualPrioritisationResponse": {
+        "properties": {
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "prioritisation": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Prioritisation"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CounterfactualRemediationCandidateListItem"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Priority orders candidates for later verification. Not the fix; not verification confidence."
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis_run_id"
+        ],
+        "title": "CounterfactualPrioritisationResponse"
+      },
       "CounterfactualRemediationCandidateDetailResponse": {
         "properties": {
           "id": {
@@ -13284,10 +14247,166 @@
             "type": "string",
             "title": "Status"
           },
+          "patch_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patch Format"
+          },
+          "patch_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patch Hash"
+          },
+          "has_rendered_patch": {
+            "type": "boolean",
+            "title": "Has Rendered Patch",
+            "default": false
+          },
+          "changed_file_count": {
+            "type": "integer",
+            "title": "Changed File Count",
+            "default": 0
+          },
+          "changed_line_count": {
+            "type": "integer",
+            "title": "Changed Line Count",
+            "default": 0
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Score"
+          },
+          "risk_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Level"
+          },
+          "blast_radius": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blast Radius"
+          },
+          "priority_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Score"
+          },
+          "priority_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Status"
+          },
+          "deduplication_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deduplication Fingerprint"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          },
+          "constraint_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Constraint Status"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "side_effects_json": {
+            "items": {},
+            "type": "array",
+            "title": "Side Effects Json"
+          },
+          "quality_components_json": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Quality Components Json"
+          },
+          "risk_components_json": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Risk Components Json"
+          },
+          "generation_provenance": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Generation Provenance"
+          },
           "disclaimer": {
             "type": "string",
             "title": "Disclaimer",
-            "default": "Candidate skeleton only \u2014 not verified, not applied."
+            "default": "Candidate is hypothesis-conditional and unverified. Not applied; priority_score is not verification confidence."
           }
         },
         "type": "object",
@@ -13372,6 +14491,104 @@
             },
             "type": "array",
             "title": "Target Paths"
+          },
+          "generator_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generator Type"
+          },
+          "risk_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Level"
+          },
+          "blast_radius": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blast Radius"
+          },
+          "priority_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Status"
+          },
+          "priority_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Score"
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Score"
+          },
+          "changed_file_count": {
+            "type": "integer",
+            "title": "Changed File Count",
+            "default": 0
+          },
+          "changed_line_count": {
+            "type": "integer",
+            "title": "Changed Line Count",
+            "default": 0
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          },
+          "constraint_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Constraint Status"
           }
         },
         "type": "object",
@@ -13568,6 +14785,123 @@
           "created_at"
         ],
         "title": "CounterfactualRemediationRunResponse"
+      },
+      "CounterfactualRiskResponse": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Score"
+          },
+          "risk_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Level"
+          },
+          "risk_components_json": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Risk Components Json"
+          },
+          "risk_summary": {
+            "items": {},
+            "type": "array",
+            "title": "Risk Summary"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Static heuristic risk only \u2014 not verification confidence."
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "analysis_run_id"
+        ],
+        "title": "CounterfactualRiskResponse"
+      },
+      "CounterfactualRollbackResponse": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "rollback_plan": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Rollback Plan"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Structured rollback plan only \u2014 no shell commands; not executed."
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "analysis_run_id"
+        ],
+        "title": "CounterfactualRollbackResponse"
+      },
+      "CounterfactualSideEffectsResponse": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Run Id"
+          },
+          "side_effects_json": {
+            "items": {},
+            "type": "array",
+            "title": "Side Effects Json"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Heuristic side-effect predictions only."
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "analysis_run_id"
+        ],
+        "title": "CounterfactualSideEffectsResponse"
       },
       "CounterfactualStateSnapshotResponse": {
         "properties": {

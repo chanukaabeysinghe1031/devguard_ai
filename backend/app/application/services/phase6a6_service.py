@@ -7,7 +7,7 @@ import re
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from app.application.services.analysis_run_service import AnalysisRunService
 from app.core.config import Settings
@@ -19,10 +19,18 @@ from app.infrastructure.repositories.counterfactual_remediation_repository impor
     CounterfactualRemediationRepositoryImpl,
 )
 from app.schemas.phase6a6 import (
+    CounterfactualChangeItem,
+    CounterfactualChangeListResponse,
+    CounterfactualConstraintValidationResponse,
+    CounterfactualPatchResponse,
+    CounterfactualPrioritisationResponse,
     CounterfactualRemediationCandidateDetailResponse,
     CounterfactualRemediationCandidateListItem,
     CounterfactualRemediationCandidateListResponse,
     CounterfactualRemediationRunResponse,
+    CounterfactualRiskResponse,
+    CounterfactualRollbackResponse,
+    CounterfactualSideEffectsResponse,
     CounterfactualStateSnapshotResponse,
     RemediationConstraintItem,
     RemediationConstraintListResponse,
@@ -150,46 +158,79 @@ class Phase6A6CounterfactualService:
         analysis_run_id: UUID,
         page: int = 1,
         page_size: int = 50,
+        hypothesis_id: UUID | None = None,
+        status: str | None = None,
+        generator_type: str | None = None,
+        artifact_type: str | None = None,
+        risk_level: str | None = None,
+        blast_radius: str | None = None,
+        priority_status: str | None = None,
+        template_id: str | None = None,
     ) -> CounterfactualRemediationCandidateListResponse:
         self._ensure_debug_enabled()
         await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
         page = max(1, page)
         page_size = max(1, min(page_size, 100))
         offset = (page - 1) * page_size
-        total = await self._session.scalar(
-            select(func.count())
-            .select_from(CounterfactualRemediationCandidateRow)
-            .where(
-                CounterfactualRemediationCandidateRow.organization_id == organization_id,
-                CounterfactualRemediationCandidateRow.analysis_run_id == analysis_run_id,
-            )
-        )
         rows = await self._repo.list_candidates_by_analysis(
             organization_id=organization_id,
             analysis_run_id=analysis_run_id,
+            hypothesis_id=hypothesis_id,
+            status=status,
+            artifact_type=artifact_type,
+            template_id=template_id,
+            generator_type=generator_type,
+            risk_level=risk_level,
+            blast_radius=blast_radius,
+            priority_status=priority_status,
             limit=page_size,
             offset=offset,
         )
-        items = [
-            CounterfactualRemediationCandidateListItem(
-                id=r.id,
-                candidate_key=r.candidate_key,
-                hypothesis_id=r.hypothesis_id,
-                title=r.title,
-                summary=r.summary,
-                artifact_type=r.artifact_type,
-                status=r.status,
-                template_id=r.template_id,
-                change_types=[str(x) for x in (r.change_types or [])],
-                target_paths=[str(x) for x in (r.target_paths or [])],
-            )
-            for r in rows
-        ]
+        # Approximate total with a second unbounded count via filters (same filters, high limit).
+        all_filtered = await self._repo.list_candidates_by_analysis(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            hypothesis_id=hypothesis_id,
+            status=status,
+            artifact_type=artifact_type,
+            template_id=template_id,
+            generator_type=generator_type,
+            risk_level=risk_level,
+            blast_radius=blast_radius,
+            priority_status=priority_status,
+            limit=500,
+            offset=0,
+        )
+        items = [self._list_item(r) for r in rows]
         return CounterfactualRemediationCandidateListResponse(
             items=items,
-            total_items=int(total or 0),
+            total_items=len(all_filtered),
             page=page,
             page_size=page_size,
+        )
+
+    def _list_item(self, r: CounterfactualRemediationCandidateRow) -> CounterfactualRemediationCandidateListItem:
+        return CounterfactualRemediationCandidateListItem(
+            id=r.id,
+            candidate_key=r.candidate_key,
+            hypothesis_id=r.hypothesis_id,
+            title=r.title,
+            summary=r.summary,
+            artifact_type=r.artifact_type,
+            status=r.status,
+            template_id=r.template_id,
+            change_types=[str(x) for x in (r.change_types or [])],
+            target_paths=[str(x) for x in (r.target_paths or [])],
+            generator_type=r.generator_type,
+            risk_level=getattr(r, "risk_level", None),
+            blast_radius=getattr(r, "blast_radius", None),
+            priority_status=getattr(r, "priority_status", None),
+            priority_score=getattr(r, "priority_score", None),
+            risk_score=getattr(r, "risk_score", None),
+            changed_file_count=int(getattr(r, "changed_file_count", 0) or 0),
+            changed_line_count=int(getattr(r, "changed_line_count", 0) or 0),
+            validation_status=getattr(r, "validation_status", None),
+            constraint_status=getattr(r, "constraint_status", None),
         )
 
     async def get_candidate(
@@ -231,6 +272,202 @@ class Phase6A6CounterfactualService:
             template_id=row.template_id,
             template_version=row.template_version,
             status=row.status,
+            patch_format=getattr(row, "patch_format", None),
+            patch_hash=getattr(row, "patch_hash", None),
+            has_rendered_patch=bool(getattr(row, "rendered_patch", None)),
+            changed_file_count=int(getattr(row, "changed_file_count", 0) or 0),
+            changed_line_count=int(getattr(row, "changed_line_count", 0) or 0),
+            risk_score=getattr(row, "risk_score", None),
+            risk_level=getattr(row, "risk_level", None),
+            blast_radius=getattr(row, "blast_radius", None),
+            priority_score=getattr(row, "priority_score", None),
+            priority_status=getattr(row, "priority_status", None),
+            deduplication_fingerprint=getattr(row, "deduplication_fingerprint", None),
+            validation_status=getattr(row, "validation_status", None),
+            constraint_status=getattr(row, "constraint_status", None),
+            prompt_version=getattr(row, "prompt_version", None),
+            side_effects_json=list(getattr(row, "side_effects_json", None) or []),
+            quality_components_json=dict(getattr(row, "quality_components_json", None) or {}),
+            risk_components_json=dict(getattr(row, "risk_components_json", None) or {}),
+            generation_provenance=dict(getattr(row, "generation_provenance", None) or {}),
+        )
+
+    async def list_changes(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID,
+    ) -> CounterfactualChangeListResponse:
+        await self._load_candidate(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        rows = await self._repo.list_changes_by_candidate(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        items = [
+            CounterfactualChangeItem(
+                id=r.id,
+                artifact_id=r.artifact_id,
+                artifact_type=r.artifact_type,
+                source_path=r.source_path,
+                change_type=r.change_type,
+                target_property=r.target_property,
+                original_fragment_hash=_hash_preview(r.original_fragment),
+                proposed_fragment_hash=_hash_preview(r.proposed_fragment),
+                has_normalized_diff=bool(r.normalized_diff),
+                expected_effect=r.expected_effect,
+                rationale=r.rationale or "",
+                change_order=r.change_order,
+                content_hash_before=r.content_hash_before,
+                content_hash_after_candidate=r.content_hash_after_candidate,
+            )
+            for r in rows
+        ]
+        return CounterfactualChangeListResponse(
+            candidate_id=candidate_id,
+            analysis_run_id=analysis_run_id,
+            items=items,
+            total_items=len(items),
+        )
+
+    async def get_patch(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID,
+    ) -> CounterfactualPatchResponse:
+        row = await self._load_candidate(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        patch = getattr(row, "rendered_patch", None)
+        if isinstance(patch, str) and _SECRETISH.search(patch):
+            patch = "[REDACTED]"
+        return CounterfactualPatchResponse(
+            candidate_id=row.id,
+            analysis_run_id=row.analysis_run_id,
+            patch_format=getattr(row, "patch_format", None),
+            patch_hash=getattr(row, "patch_hash", None),
+            rendered_patch=patch,
+            changed_file_count=int(getattr(row, "changed_file_count", 0) or 0),
+            changed_line_count=int(getattr(row, "changed_line_count", 0) or 0),
+        )
+
+    async def get_risk(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID,
+    ) -> CounterfactualRiskResponse:
+        row = await self._load_candidate(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        return CounterfactualRiskResponse(
+            candidate_id=row.id,
+            analysis_run_id=row.analysis_run_id,
+            risk_score=getattr(row, "risk_score", None),
+            risk_level=getattr(row, "risk_level", None),
+            risk_components_json=dict(getattr(row, "risk_components_json", None) or {}),
+            risk_summary=list(row.risk_summary or []),
+        )
+
+    async def get_side_effects(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID,
+    ) -> CounterfactualSideEffectsResponse:
+        row = await self._load_candidate(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        return CounterfactualSideEffectsResponse(
+            candidate_id=row.id,
+            analysis_run_id=row.analysis_run_id,
+            side_effects_json=list(getattr(row, "side_effects_json", None) or []),
+        )
+
+    async def get_rollback(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID,
+    ) -> CounterfactualRollbackResponse:
+        row = await self._load_candidate(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        return CounterfactualRollbackResponse(
+            candidate_id=row.id,
+            analysis_run_id=row.analysis_run_id,
+            rollback_plan=_redact_snapshot(dict(row.rollback_plan or {})),
+        )
+
+    async def get_constraint_validation(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+        candidate_id: UUID,
+    ) -> CounterfactualConstraintValidationResponse:
+        row = await self._load_candidate(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            candidate_id=candidate_id,
+        )
+        return CounterfactualConstraintValidationResponse(
+            candidate_id=row.id,
+            analysis_run_id=row.analysis_run_id,
+            validation_status=getattr(row, "validation_status", None),
+            constraint_status=getattr(row, "constraint_status", None),
+        )
+
+    async def get_prioritisation(
+        self,
+        *,
+        organization_id: UUID,
+        analysis_run_id: UUID,
+    ) -> CounterfactualPrioritisationResponse:
+        self._ensure_debug_enabled()
+        await self._runs._load_run(organization_id, analysis_run_id)  # noqa: SLF001
+        run_row = await self._repo.get_run_by_analysis(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+        )
+        snapshot = dict(run_row.configuration_snapshot or {}) if run_row else {}
+        prioritisation = dict(snapshot.get("prioritisation") or {})
+        rows = await self._repo.list_candidates_by_analysis(
+            organization_id=organization_id,
+            analysis_run_id=analysis_run_id,
+            limit=100,
+            offset=0,
+        )
+        # Order by priority_score desc when present.
+        rows_sorted = sorted(
+            rows,
+            key=lambda r: (
+                -(float(getattr(r, "priority_score", None) or 0.0)),
+                r.candidate_key,
+            ),
+        )
+        return CounterfactualPrioritisationResponse(
+            analysis_run_id=analysis_run_id,
+            prioritisation=prioritisation,
+            candidates=[self._list_item(r) for r in rows_sorted],
         )
 
     async def get_current_state(
