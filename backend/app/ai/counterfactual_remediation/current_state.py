@@ -141,6 +141,7 @@ class RemediationCurrentStateBuilder:
             or meta.get("source_fragment")
             or meta.get("current_configuration_fragment")
         )
+        content_hash: str | None
         if isinstance(fragment, str):
             fragment = sanitize_untrusted_instructions(fragment)
             if contains_secret_material(fragment):
@@ -150,9 +151,9 @@ class RemediationCurrentStateBuilder:
             content_hash = _sha256(fragment)
         else:
             fragment = None
-            content_hash = meta.get("content_hash")
-            if isinstance(content_hash, str) and content_hash:
-                pass
+            raw_hash = meta.get("content_hash")
+            if isinstance(raw_hash, str) and raw_hash:
+                content_hash = raw_hash
             elif entity_dicts:
                 content_hash = _sha256(
                     str(
