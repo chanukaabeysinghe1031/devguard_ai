@@ -118,9 +118,7 @@ class RepositoryProjectConstraintExtractor(BaseRemediationConstraintExtractor):
         )
 
         # Do not invent CODEOWNERS if absent.
-        if not any(
-            "CODEOWNERS" in f.upper() for f in changed + ([path] if path else [])
-        ):
+        if not any("CODEOWNERS" in f.upper() for f in changed + ([path] if path else [])):
             warnings.append("codeowners_absent_not_invented")
 
         if context.previous_successful_version:

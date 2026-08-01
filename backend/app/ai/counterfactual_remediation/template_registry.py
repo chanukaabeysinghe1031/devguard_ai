@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterable
+from collections.abc import Iterable
 
 from app.ai.counterfactual_remediation.model_types import RemediationTemplate
 from app.ai.counterfactual_remediation.templates import build_initial_template_skeletons
@@ -30,9 +30,7 @@ def candidate_builder_implemented(template: RemediationTemplate) -> bool:
         return False
     if "candidate_builder_not_implemented" in markers:
         return False
-    if "candidate_builder_implemented=true" in markers:
-        return True
-    return False
+    return "candidate_builder_implemented=true" in markers
 
 
 class RemediationTemplateRegistry:
@@ -97,7 +95,10 @@ class RemediationTemplateRegistry:
             if prohibited & active:
                 continue
             cat_hit = (
-                any(c.lower() in category_l or category_l in c.lower() for c in template.category_codes)
+                any(
+                    c.lower() in category_l or category_l in c.lower()
+                    for c in template.category_codes
+                )
                 if category_l
                 else False
             )

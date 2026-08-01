@@ -59,12 +59,7 @@ class TerraformRemediationConstraintExtractor(BaseRemediationConstraintExtractor
         for entity in entities:
             et = entity_type(entity)
             meta = entity_meta(entity)
-            address = str(
-                meta.get("address")
-                or entity.get("label")
-                or entity.get("id")
-                or ""
-            )
+            address = str(meta.get("address") or entity.get("label") or entity.get("id") or "")
             if et in {"RESOURCE", "MODULE", "DATA", "OUTPUT", "VARIABLE", "PROVIDER"} and address:
                 declared.add(address)
                 constraints.append(
@@ -144,9 +139,7 @@ class TerraformRemediationConstraintExtractor(BaseRemediationConstraintExtractor
                         )
                     )
 
-        region = current_state.current_region or current_state.current_values.get(
-            "provider_region"
-        )
+        region = current_state.current_region or current_state.current_values.get("provider_region")
         if region:
             from app.ai.counterfactual_remediation.extractors._helpers import context_category
 
@@ -159,12 +152,12 @@ class TerraformRemediationConstraintExtractor(BaseRemediationConstraintExtractor
                     constraint_key=f"terraform.region:{region}",
                     constraint_type=ConstraintType.REGION,
                     severity=(
-                        ConstraintSeverity.MEDIUM
-                        if region_related
-                        else ConstraintSeverity.BLOCKING
+                        ConstraintSeverity.MEDIUM if region_related else ConstraintSeverity.BLOCKING
                     ),
                     source_type=ConstraintSourceType.TERRAFORM,
-                    description="Provider region must not change unless hypothesis is region-related",
+                    description=(
+                        "Provider region must not change unless hypothesis is region-related"
+                    ),
                     machine_readable_rule={
                         "rule": "preserve_provider_region_unless_hypothesis_region",
                         "region": region,

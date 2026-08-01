@@ -297,8 +297,7 @@ class CounterfactualRemediationRepositoryImpl:
             target_paths=list(candidate.target_paths),
             change_types=change_types,
             current_state_snapshot=_jsonable(candidate.current_state_snapshot) or {},
-            counterfactual_state_snapshot=_jsonable(candidate.counterfactual_state_snapshot)
-            or {},
+            counterfactual_state_snapshot=_jsonable(candidate.counterfactual_state_snapshot) or {},
             expected_effects=list(candidate.expected_effects),
             expected_preserved_behaviors=list(candidate.expected_preserved_behaviors),
             expected_failure_condition=failure_json,
@@ -340,9 +339,7 @@ class CounterfactualRemediationRepositoryImpl:
             if hypothesis_id is not None:
                 hyp_id = _as_uuid(hypothesis_id)
                 if hyp_id is not None:
-                    stmt = stmt.where(
-                        CounterfactualRemediationCandidateRow.hypothesis_id == hyp_id
-                    )
+                    stmt = stmt.where(CounterfactualRemediationCandidateRow.hypothesis_id == hyp_id)
             if status:
                 stmt = stmt.where(CounterfactualRemediationCandidateRow.status == status)
             if artifact_type:
@@ -350,9 +347,7 @@ class CounterfactualRemediationRepositoryImpl:
                     CounterfactualRemediationCandidateRow.artifact_type == artifact_type
                 )
             if template_id:
-                stmt = stmt.where(
-                    CounterfactualRemediationCandidateRow.template_id == template_id
-                )
+                stmt = stmt.where(CounterfactualRemediationCandidateRow.template_id == template_id)
             stmt = stmt.offset(max(0, offset)).limit(max(1, min(limit, 500)))
             result = await self._session.scalars(stmt)
             return list(result.all())
@@ -580,15 +575,11 @@ class CounterfactualRemediationRepositoryImpl:
                     ),
                     project_id=_as_uuid(constraint.project_id),
                     incident_id=_as_uuid(constraint.incident_id),
-                    analysis_run_id=_require_uuid(
-                        constraint.analysis_id, field="analysis_id"
-                    ),
+                    analysis_run_id=_require_uuid(constraint.analysis_id, field="analysis_id"),
                     hypothesis_id=_as_uuid(constraint.hypothesis_id),
                     constraint_key=constraint.constraint_key,
                     constraint_type=_enum_str(constraint.constraint_type, "UNKNOWN"),
-                    severity=_enum_str(
-                        constraint.severity, ConstraintSeverity.INFORMATIONAL.value
-                    ),
+                    severity=_enum_str(constraint.severity, ConstraintSeverity.INFORMATIONAL.value),
                     source_type=_enum_str(
                         constraint.source_type, ConstraintSourceType.UNKNOWN.value
                     ),

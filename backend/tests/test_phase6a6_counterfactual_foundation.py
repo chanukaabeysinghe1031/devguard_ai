@@ -26,8 +26,8 @@ from app.ai.counterfactual_remediation.foundation_service import (
     CounterfactualRemediationFoundationService,
 )
 from app.ai.counterfactual_remediation.minimal_planner import (
-    DeterministicMinimalChangePlanner,
     LOCALITY_RULES,
+    DeterministicMinimalChangePlanner,
     build_minimal_change_objective,
 )
 from app.ai.counterfactual_remediation.safety import sanitize_untrusted_instructions
@@ -204,7 +204,11 @@ def test_workflow_needs_and_secrets() -> None:
                 "id": "job-deploy",
                 "type": "JOB",
                 "label": "deploy",
-                "metadata": {"job_key": "deploy", "needs": ["build"], "permissions": {"contents": "read"}},
+                "metadata": {
+                    "job_key": "deploy",
+                    "needs": ["build"],
+                    "permissions": {"contents": "read"},
+                },
             },
             {
                 "id": "job-build",
@@ -288,7 +292,7 @@ def test_security_test_bypass_prohibition() -> None:
     assert "no_remove_or_skip_tests" in rules
 
 
-# --------------------------------------------------------------------------- conflict / validator / planner
+# ------------------------------------------------ conflict / validator / planner
 
 
 def test_conflict_detector_explicit_deny_vs_add_allow() -> None:
@@ -354,14 +358,15 @@ def test_minimal_planner_wrong_role_prefers_update_role() -> None:
     )
     assert templates
     assert any(
-        t.change_type == CounterfactualChangeType.UPDATE_ROLE
-        or "UPDATE_ROLE" in str(t.change_type)
+        t.change_type == CounterfactualChangeType.UPDATE_ROLE or "UPDATE_ROLE" in str(t.change_type)
         for t in templates
     )
     assert "never_fix_test_by_deleting_or_bypassing_test" in LOCALITY_RULES
 
     ctx = _ctx(causal_claim="wrong role reference in workflow", category="aws_iam")
-    state = _state(artifact_type=RemediationArtifactType.IAM_POLICY, source_fragment='{"Version":"2012-10-17"}')
+    state = _state(
+        artifact_type=RemediationArtifactType.IAM_POLICY, source_fragment='{"Version":"2012-10-17"}'
+    )
     cset = RemediationConstraintSet(hypothesis_id=ctx.hypothesis_id, constraints=[])
     objective = build_minimal_change_objective(ctx, state)
     failure = CounterfactualFailureCondition(
@@ -379,9 +384,11 @@ def test_minimal_planner_wrong_role_prefers_update_role() -> None:
         objective,
         templates,
     )
-    assert CounterfactualChangeType.UPDATE_ROLE.value in plan.proposed_change_types or any(
-        "role" in str(t).lower() for t in plan.proposed_change_types
-    ) or any(t.change_type == CounterfactualChangeType.UPDATE_ROLE for t in templates)
+    assert (
+        CounterfactualChangeType.UPDATE_ROLE.value in plan.proposed_change_types
+        or any("role" in str(t).lower() for t in plan.proposed_change_types)
+        or any(t.change_type == CounterfactualChangeType.UPDATE_ROLE for t in templates)
+    )
     assert "never_fix_test_by_deleting_or_bypassing_test" in (plan.assumptions or LOCALITY_RULES)
 
 
@@ -421,7 +428,11 @@ def test_scenario_1_missing_iam_permission_skeleton() -> None:
                 {
                     "id": "stmt-1",
                     "type": "POLICY_STATEMENT",
-                    "metadata": {"Effect": "Allow", "Action": ["s3:GetObject"], "Resource": ["arn:aws:s3:::b/*"]},
+                    "metadata": {
+                        "Effect": "Allow",
+                        "Action": ["s3:GetObject"],
+                        "Resource": ["arn:aws:s3:::b/*"],
+                    },
                 }
             ],
         },

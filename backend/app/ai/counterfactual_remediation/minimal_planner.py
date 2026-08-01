@@ -101,9 +101,10 @@ class DeterministicMinimalChangePlanner:
                 incomplete.append(f"precondition:{pre.condition_type}")
 
         artifact_type = current_state.artifact_type
-        artifact_value = (
-            artifact_type.value if hasattr(artifact_type, "value") else str(artifact_type or "")
-        )
+        if hasattr(artifact_type, "value"):
+            artifact_value = str(artifact_type.value)  # type: ignore[union-attr]
+        else:
+            artifact_value = str(artifact_type or "")
 
         if artifact_value == RemediationArtifactType.SOURCE_CODE.value and not (
             current_state.source_fragment
@@ -166,7 +167,11 @@ class DeterministicMinimalChangePlanner:
             if p
         ]
 
-        if incomplete and not current_state.source_fragment and not current_state.structured_entities:
+        if (
+            incomplete
+            and not current_state.source_fragment
+            and not current_state.structured_entities
+        ):
             status = MinimalChangePlanStatus.INCOMPLETE
         elif blocking_keys and not templates:
             status = MinimalChangePlanStatus.NO_SAFE_CHANGE
@@ -198,12 +203,17 @@ class DeterministicMinimalChangePlanner:
             assumptions=[
                 "part_1_skeleton_only",
                 "no_final_patch",
-                f"optimization_order={list(objective.optimization_priorities or OPTIMIZATION_PRIORITIES)[:3]}",
+                "optimization_order="
+                f"{list(objective.optimization_priorities or OPTIMIZATION_PRIORITIES)[:3]}",
                 *LOCALITY_RULES,
             ],
             expected_effects=[
-                failure_condition.expected_condition_after_change,
-                *[e for t in templates for e in t.expected_effects],
+                effect
+                for effect in [
+                    failure_condition.expected_condition_after_change,
+                    *[e for t in templates for e in t.expected_effects],
+                ]
+                if effect
             ][:20],
             expected_preserved_behaviors=[
                 b for t in templates for b in t.expected_preserved_behaviors
@@ -238,9 +248,11 @@ def build_minimal_change_objective(
         maximum_files=maximum_files,
         maximum_changed_lines=maximum_changed_lines,
         allowed_artifact_types=[
-            current_state.artifact_type.value
-            if hasattr(current_state.artifact_type, "value")
-            else str(current_state.artifact_type)
+            (
+                str(current_state.artifact_type.value)  # type: ignore[union-attr]
+                if hasattr(current_state.artifact_type, "value")
+                else str(current_state.artifact_type or RemediationArtifactType.UNKNOWN.value)
+            )
         ],
         preserve_behaviors=[
             "security_controls",

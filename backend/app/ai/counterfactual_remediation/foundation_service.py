@@ -48,7 +48,6 @@ from app.domain.counterfactual_remediation.enums import (
     CounterfactualRemediationRunStatus,
     HypothesisEligibilityStatus,
     MinimalChangePlanStatus,
-    RemediationVerificationStatus,
     RollbackType,
     VerifierType,
 )
@@ -438,9 +437,11 @@ class CounterfactualRemediationFoundationService:
                     eligible.append(hyp)
                 continue
             status_text = str(hyp.get("selection_status") or "").upper()
-            if selected_ids and hyp_id in selected_ids:
-                eligible.append(hyp)
-            elif status_text in {"SELECTED", "TOP", "TIE", "ELIGIBLE"}:
+            if (
+                selected_ids
+                and hyp_id in selected_ids
+                or status_text in {"SELECTED", "TOP", "TIE", "ELIGIBLE"}
+            ):
                 eligible.append(hyp)
             elif not selected_ids and not by_id:
                 continue
@@ -543,10 +544,11 @@ class CounterfactualRemediationFoundationService:
             "counterfactual_template_registry_enabled",
             self._bounds.get("template_registry_enabled", True),
         ):
+            artifact_type = current_state.artifact_type
             artifact_type = (
-                current_state.artifact_type.value
-                if hasattr(current_state.artifact_type, "value")
-                else str(current_state.artifact_type)
+                str(artifact_type.value)  # type: ignore[union-attr]
+                if hasattr(artifact_type, "value")
+                else str(artifact_type or "")
             )
             templates = self._registry.resolve(
                 category=context.category,

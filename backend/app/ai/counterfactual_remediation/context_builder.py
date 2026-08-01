@@ -60,7 +60,9 @@ def _node_ids(items: list[Any]) -> list[str]:
         if isinstance(item, str):
             ids.append(item)
         elif isinstance(item, dict):
-            ids.append(str(item.get("id") or item.get("node_id") or json.dumps(item, sort_keys=True)[:80]))
+            ids.append(
+                str(item.get("id") or item.get("node_id") or json.dumps(item, sort_keys=True)[:80])
+            )
         else:
             ids.append(str(getattr(item, "id", item)))
     return sorted({i for i in ids if i})
@@ -136,21 +138,23 @@ class CounterfactualRemediationContextBuilder:
         artifacts = self._collect_artifacts(options, hypothesis)
         missing_artifacts = self._missing_artifacts(artifacts, hypothesis)
 
-        fragment = artifacts.get("current_configuration_fragment")
-        if isinstance(fragment, str):
-            fragment = sanitize_untrusted_instructions(fragment)
-        else:
-            fragment = None
+        raw_fragment = artifacts.get("current_configuration_fragment")
+        fragment = (
+            sanitize_untrusted_instructions(raw_fragment) if isinstance(raw_fragment, str) else None
+        )
 
         causal_claim = sanitize_untrusted_instructions(
             str(hypothesis.get("causal_claim") or hypothesis.get("summary") or "")
         )
-        category = str(
-            hypothesis.get("category_code")
-            or hypothesis.get("category")
-            or hypothesis.get("failure_category")
-            or ""
-        ) or None
+        category = (
+            str(
+                hypothesis.get("category_code")
+                or hypothesis.get("category")
+                or hypothesis.get("failure_category")
+                or ""
+            )
+            or None
+        )
 
         affected_artifact_id = None
         affected = artifacts.get("affected_artifact")
@@ -314,9 +318,10 @@ class CounterfactualRemediationContextBuilder:
         edges = edges[: self._max_graph_edges]
         # Keep typed node id lists from dict payloads when available.
         raw_nodes = _sorted_dicts(_as_list(data.get("nodes") or []))
-        artifact_nodes = _node_ids(
-            [n for n in raw_nodes if "ARTIFACT" in str(n.get("type") or "").upper()]
-        ) or []
+        artifact_nodes = (
+            _node_ids([n for n in raw_nodes if "ARTIFACT" in str(n.get("type") or "").upper()])
+            or []
+        )
         policy_nodes = _node_ids(
             [
                 n
@@ -329,7 +334,9 @@ class CounterfactualRemediationContextBuilder:
             [n for n in raw_nodes if "RESOURCE" in str(n.get("type") or "").upper()]
         )
         return {
-            "root_cause_node": _optional_str(data.get("root_cause_node") or data.get("root_node_id")),
+            "root_cause_node": _optional_str(
+                data.get("root_cause_node") or data.get("root_node_id")
+            ),
             "nodes": nodes,
             "edges": edges,
             "artifact_nodes": artifact_nodes,
@@ -350,8 +357,10 @@ class CounterfactualRemediationContextBuilder:
             _as_list(options.get("parse_results") or bundle.get("parse_results") or [])
         )
         affected = hypothesis.get("affected_artifact") or bundle.get("affected_artifact")
-        affected_dict = _as_dict(affected) if isinstance(affected, dict) else (
-            {"id": affected} if isinstance(affected, str) else None
+        affected_dict = (
+            _as_dict(affected)
+            if isinstance(affected, dict)
+            else ({"id": affected} if isinstance(affected, str) else None)
         )
 
         entities: list[dict[str, Any]] = []
@@ -366,7 +375,9 @@ class CounterfactualRemediationContextBuilder:
         line_range = None
         quality = None
         if affected_dict:
-            source_path = _optional_str(affected_dict.get("source_path") or affected_dict.get("path"))
+            source_path = _optional_str(
+                affected_dict.get("source_path") or affected_dict.get("path")
+            )
             line_range = affected_dict.get("line_range")
             raw_fragment = affected_dict.get("current_configuration_fragment") or affected_dict.get(
                 "source_fragment"
@@ -410,12 +421,11 @@ class CounterfactualRemediationContextBuilder:
         missing: list[str] = []
         if not artifacts.get("affected_artifact") and not artifacts.get("parser_entities"):
             missing.append("affected_artifact")
-        if not artifacts.get("current_configuration_fragment"):
-            if hypothesis.get("requires_configuration_fragment", True):
-                missing.append("current_configuration_fragment")
-        category = str(
-            hypothesis.get("category_code") or hypothesis.get("category") or ""
-        ).lower()
+        if not artifacts.get("current_configuration_fragment") and hypothesis.get(
+            "requires_configuration_fragment", True
+        ):
+            missing.append("current_configuration_fragment")
+        category = str(hypothesis.get("category_code") or hypothesis.get("category") or "").lower()
         if "iam" in category or "permission" in category:
             has_policy = any(
                 "POLICY" in str(e.get("type") or "").upper()

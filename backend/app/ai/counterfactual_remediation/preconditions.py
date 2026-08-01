@@ -71,7 +71,9 @@ def build_counterfactual_preconditions(
         required=True,
     )
 
-    if any(k in category_text for k in ("iam", "permission", "accessdenied", "access_denied", "policy")):
+    if any(
+        k in category_text for k in ("iam", "permission", "accessdenied", "access_denied", "policy")
+    ):
         denied = values.get("denied_action") or context.error_code or context.affected_command
         add(
             "iam_denied_action_known",

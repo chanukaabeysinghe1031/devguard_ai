@@ -11,9 +11,7 @@ _EXTRA_SECRET_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"(?i)aws_secret_access_key\s*[=:]\s*[^\s\"']+"),
     re.compile(r"AKIA[0-9A-Z]{16}"),
     re.compile(r"(?i)\bBearer\s+[A-Za-z0-9\-._~+/]+=*"),
-    re.compile(
-        r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"
-    ),
+    re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     re.compile(
         r"(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis|amqp)"
         r"://[^/\s:@]+:[^@/\s]+@"
@@ -65,10 +63,7 @@ def contains_secret_material(text: str | None) -> bool:
         return True
     if masked != text:
         return True
-    for pattern in _EXTRA_SECRET_PATTERNS:
-        if pattern.search(text):
-            return True
-    return False
+    return any(pattern.search(text) for pattern in _EXTRA_SECRET_PATTERNS)
 
 
 def sanitize_untrusted_instructions(text: str | None) -> str:

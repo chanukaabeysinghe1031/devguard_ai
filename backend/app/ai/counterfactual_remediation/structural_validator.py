@@ -59,12 +59,19 @@ class CounterfactualCandidateStructuralValidator:
             blocking.append("hypothesis_missing")
 
         if context is not None:
-            org_ok = not candidate.organization_id or candidate.organization_id == context.organization_id
+            org_ok = (
+                not candidate.organization_id
+                or candidate.organization_id == context.organization_id
+            )
             checks["organization_scope_match"] = org_ok
             if not org_ok:
                 reasons.append("organization_scope_mismatch")
                 blocking.append("org_scope")
-            if context.project_id and candidate.project_id and candidate.project_id != context.project_id:
+            if (
+                context.project_id
+                and candidate.project_id
+                and candidate.project_id != context.project_id
+            ):
                 reasons.append("project_scope_mismatch")
                 blocking.append("project_scope")
                 checks["project_scope_match"] = False
@@ -120,11 +127,15 @@ class CounterfactualCandidateStructuralValidator:
         if isinstance(snapshot, dict):
             proposed = snapshot.get("proposed_permissions") or snapshot.get("proposed_values") or {}
         elif snapshot is not None:
-            proposed = getattr(snapshot, "proposed_permissions", None) or getattr(
-                snapshot, "proposed_values", None
-            ) or {}
-        wildcard = _has_wildcard(proposed) or _has_wildcard(candidate.summary) or _has_wildcard(
-            candidate.title
+            proposed = (
+                getattr(snapshot, "proposed_permissions", None)
+                or getattr(snapshot, "proposed_values", None)
+                or {}
+            )
+        wildcard = (
+            _has_wildcard(proposed)
+            or _has_wildcard(candidate.summary)
+            or _has_wildcard(candidate.title)
         )
         checks["no_wildcard_broadening"] = not wildcard
         if wildcard:
@@ -133,7 +144,9 @@ class CounterfactualCandidateStructuralValidator:
 
         artifact_type = candidate.artifact_type
         artifact_value = (
-            artifact_type.value if hasattr(artifact_type, "value") else str(artifact_type or "")
+            str(artifact_type.value)  # type: ignore[union-attr]
+            if hasattr(artifact_type, "value")
+            else str(artifact_type or "")
         )
         if artifact_value == RemediationArtifactType.SOURCE_CODE.value and not candidate.changes:
             warnings.append("source_code_without_changes")
@@ -141,7 +154,11 @@ class CounterfactualCandidateStructuralValidator:
                 reasons.append("prohibited_or_unsupported_source_rewrite")
                 blocking.append("prohibited_artifact")
 
-        if template is not None and candidate.template_id and template.template_id != candidate.template_id:
+        if (
+            template is not None
+            and candidate.template_id
+            and template.template_id != candidate.template_id
+        ):
             reasons.append("template_mismatch")
             blocking.append("template")
         checks["template_ok"] = "template" not in blocking
@@ -212,7 +229,9 @@ def _has_wildcard(value: Any) -> bool:
     if value is None:
         return False
     if isinstance(value, str):
-        return '"*"' in value or value.strip() == "*" or "Action: *" in value or "Resource: *" in value
+        return (
+            '"*"' in value or value.strip() == "*" or "Action: *" in value or "Resource: *" in value
+        )
     if isinstance(value, dict):
         for key, item in value.items():
             if str(key).lower() in {"action", "resource"} and (

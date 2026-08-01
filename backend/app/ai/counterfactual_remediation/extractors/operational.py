@@ -38,12 +38,15 @@ _OPERATIONAL_RULES: tuple[tuple[str, str, dict, bool], ...] = (
     (
         "ops.rollback_required",
         "Rollback must be possible for generated candidates",
-        {"rule": "rollback_required", "rollback_types_allowed": [
-            "RESTORE_ORIGINAL_FRAGMENT",
-            "RESTORE_ORIGINAL_FILE",
-            "REVERT_REFERENCE",
-            "RESTORE_VERSION",
-        ]},
+        {
+            "rule": "rollback_required",
+            "rollback_types_allowed": [
+                "RESTORE_ORIGINAL_FRAGMENT",
+                "RESTORE_ORIGINAL_FILE",
+                "REVERT_REFERENCE",
+                "RESTORE_VERSION",
+            ],
+        },
         True,
     ),
     (
@@ -92,9 +95,7 @@ class OperationalRemediationConstraintExtractor(BaseRemediationConstraintExtract
                     current_state=current_state,
                     constraint_key=key,
                     constraint_type=ConstraintType.OPERATIONAL,
-                    severity=(
-                        ConstraintSeverity.BLOCKING if blocking else ConstraintSeverity.HIGH
-                    ),
+                    severity=(ConstraintSeverity.BLOCKING if blocking else ConstraintSeverity.HIGH),
                     source_type=ConstraintSourceType.SYSTEM_POLICY,
                     description=description,
                     machine_readable_rule=dict(rule),

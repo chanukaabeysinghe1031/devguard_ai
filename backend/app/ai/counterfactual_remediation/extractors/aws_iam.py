@@ -56,15 +56,12 @@ class AwsIamRemediationConstraintExtractor(BaseRemediationConstraintExtractor):
         warnings: list[str] = []
         entities = list(current_state.structured_entities) or list(context.parser_entities)
 
-        denied_action = (
-            current_state.current_values.get("denied_action")
-            or context.error_code
-        )
+        denied_action = current_state.current_values.get("denied_action") or context.error_code
         if not denied_action and context.affected_command:
             denied_action = context.affected_command
-        principal = current_state.current_values.get("principal") or current_state.current_values.get(
-            "role"
-        )
+        principal = current_state.current_values.get(
+            "principal"
+        ) or current_state.current_values.get("role")
         resource = context.affected_resource or current_state.current_values.get("resource")
 
         if denied_action:
@@ -96,7 +93,9 @@ class AwsIamRemediationConstraintExtractor(BaseRemediationConstraintExtractor):
             if et in {"POLICY_STATEMENT", "IAM_POLICY"}:
                 effect = str(meta.get("Effect") or meta.get("effect") or "").lower()
                 actions = [str(a) for a in _as_list(meta.get("Action") or meta.get("actions"))]
-                resources = [str(r) for r in _as_list(meta.get("Resource") or meta.get("resources"))]
+                resources = [
+                    str(r) for r in _as_list(meta.get("Resource") or meta.get("resources"))
+                ]
                 sid = str(entity.get("label") or entity.get("id") or "")
                 if effect == "deny":
                     explicit_denies.append(sid)

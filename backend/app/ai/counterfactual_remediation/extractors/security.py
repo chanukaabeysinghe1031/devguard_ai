@@ -120,7 +120,9 @@ class SecurityRemediationConstraintExtractor(BaseRemediationConstraintExtractor)
                     description=f"Existing security finding must not be worsened: {finding_key}",
                     machine_readable_rule={
                         "rule": "do_not_worsen_security_finding",
-                        "finding": finding if isinstance(finding, dict) else {"finding": finding_key},
+                        "finding": finding
+                        if isinstance(finding, dict)
+                        else {"finding": finding_key},
                         "source": "inferred_from_current_state",
                     },
                     is_blocking=True,

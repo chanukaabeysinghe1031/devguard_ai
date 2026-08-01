@@ -31,8 +31,8 @@ from app.ai.counterfactual_remediation.foundation_service import (
     CounterfactualRemediationFoundationService,
 )
 from app.ai.counterfactual_remediation.minimal_planner import (
-    DeterministicMinimalChangePlanner,
     LOCALITY_RULES,
+    DeterministicMinimalChangePlanner,
     MinimalChangePlanner,
     build_minimal_change_objective,
 )

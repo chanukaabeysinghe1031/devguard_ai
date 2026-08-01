@@ -10,8 +10,8 @@ from app.domain.counterfactual_remediation.enums import (
     CandidateStructuralValidationStatus,
     ConstraintExtractionStatus,
     ConstraintSatisfactionStatus,
-    ConstraintSeverity,
     ConstraintSetCompleteness,
+    ConstraintSeverity,
     ConstraintSourceType,
     ConstraintType,
     CounterfactualCandidateStatus,
@@ -549,9 +549,7 @@ class RemediationConstraint:
     extractor_version: str = CONSTRAINT_EXTRACTOR_VERSION
     is_blocking: bool = False
     is_satisfied: bool | None = None
-    satisfaction_status: ConstraintSatisfactionStatus = (
-        ConstraintSatisfactionStatus.NOT_EVALUATED
-    )
+    satisfaction_status: ConstraintSatisfactionStatus = ConstraintSatisfactionStatus.NOT_EVALUATED
     limitations: list[str] = field(
         default_factory=lambda: [
             "satisfaction_is_structural_only",
@@ -791,9 +789,7 @@ class CounterfactualFailureCondition:
             "affected_artifact": self.affected_artifact,
             "expected_condition_after_change": self.expected_condition_after_change,
             "measurable_static_indicator": self.measurable_static_indicator,
-            "required_verifier_types": [
-                _enum_value(v) for v in self.required_verifier_types
-            ],
+            "required_verifier_types": [_enum_value(v) for v in self.required_verifier_types],
             "confidence": self.confidence,
             "limitations": list(self.limitations),
         }
@@ -810,9 +806,7 @@ class MinimalChangeObjective:
     maximum_files: int = 1
     maximum_changed_lines: int = 50
     allowed_artifact_types: list[RemediationArtifactType | str] = field(default_factory=list)
-    prohibited_artifact_types: list[RemediationArtifactType | str] = field(
-        default_factory=list
-    )
+    prohibited_artifact_types: list[RemediationArtifactType | str] = field(default_factory=list)
     preserve_behaviors: list[str] = field(default_factory=list)
     avoid_side_effects: list[str] = field(default_factory=list)
     required_constraints: list[str] = field(default_factory=list)
@@ -836,12 +830,8 @@ class MinimalChangeObjective:
             "desired_state": dict(desired) if isinstance(desired, dict) else desired,
             "maximum_files": self.maximum_files,
             "maximum_changed_lines": self.maximum_changed_lines,
-            "allowed_artifact_types": [
-                _enum_value(t) for t in self.allowed_artifact_types
-            ],
-            "prohibited_artifact_types": [
-                _enum_value(t) for t in self.prohibited_artifact_types
-            ],
+            "allowed_artifact_types": [_enum_value(t) for t in self.allowed_artifact_types],
+            "prohibited_artifact_types": [_enum_value(t) for t in self.prohibited_artifact_types],
             "preserve_behaviors": list(self.preserve_behaviors),
             "avoid_side_effects": list(self.avoid_side_effects),
             "required_constraints": list(self.required_constraints),
@@ -858,9 +848,7 @@ class MinimalChangePlan:
     hypothesis_id: str
     candidate_plan_key: str = ""
     target_artifacts: list[str] = field(default_factory=list)
-    proposed_change_types: list[CounterfactualChangeType | str] = field(
-        default_factory=list
-    )
+    proposed_change_types: list[CounterfactualChangeType | str] = field(default_factory=list)
     proposed_properties: list[str] = field(default_factory=list)
     change_sequence: list[dict[str, Any]] = field(default_factory=list)
     constraints_considered: list[str] = field(default_factory=list)
@@ -886,9 +874,7 @@ class MinimalChangePlan:
             "hypothesis_id": self.hypothesis_id,
             "candidate_plan_key": self.candidate_plan_key,
             "target_artifacts": list(self.target_artifacts),
-            "proposed_change_types": [
-                _enum_value(t) for t in self.proposed_change_types
-            ],
+            "proposed_change_types": [_enum_value(t) for t in self.proposed_change_types],
             "proposed_properties": list(self.proposed_properties),
             "change_sequence": [dict(s) for s in self.change_sequence],
             "constraints_considered": list(self.constraints_considered),
@@ -914,9 +900,7 @@ class RemediationTemplate:
     category_codes: list[str] = field(default_factory=list)
     hierarchy_paths: list[str] = field(default_factory=list)
     supported_hypothesis_patterns: list[str] = field(default_factory=list)
-    supported_artifact_types: list[RemediationArtifactType | str] = field(
-        default_factory=list
-    )
+    supported_artifact_types: list[RemediationArtifactType | str] = field(default_factory=list)
     required_preconditions: list[str] = field(default_factory=list)
     optional_preconditions: list[str] = field(default_factory=list)
     prohibited_conditions: list[str] = field(default_factory=list)
@@ -944,9 +928,7 @@ class RemediationTemplate:
             "category_codes": list(self.category_codes),
             "hierarchy_paths": list(self.hierarchy_paths),
             "supported_hypothesis_patterns": list(self.supported_hypothesis_patterns),
-            "supported_artifact_types": [
-                _enum_value(t) for t in self.supported_artifact_types
-            ],
+            "supported_artifact_types": [_enum_value(t) for t in self.supported_artifact_types],
             "required_preconditions": list(self.required_preconditions),
             "optional_preconditions": list(self.optional_preconditions),
             "prohibited_conditions": list(self.prohibited_conditions),
@@ -957,9 +939,7 @@ class RemediationTemplate:
             "counterfactual_state_builder": self.counterfactual_state_builder,
             "expected_effects": list(self.expected_effects),
             "expected_preserved_behaviors": list(self.expected_preserved_behaviors),
-            "default_verification_requirements": list(
-                self.default_verification_requirements
-            ),
+            "default_verification_requirements": list(self.default_verification_requirements),
             "default_rollback_strategy": _enum_value(self.default_rollback_strategy),
             "risk_notes": list(self.risk_notes),
             "limitations": list(self.limitations),
@@ -1094,25 +1074,19 @@ class CounterfactualRemediationCandidate:
     change_types: list[CounterfactualChangeType | str] = field(default_factory=list)
     changes: list[CounterfactualChange] = field(default_factory=list)
     current_state_snapshot: RemediationCurrentState | dict[str, Any] | None = None
-    counterfactual_state_snapshot: RemediationCounterfactualState | dict[str, Any] | None = (
-        None
-    )
+    counterfactual_state_snapshot: RemediationCounterfactualState | dict[str, Any] | None = None
     expected_effects: list[str] = field(default_factory=list)
     expected_preserved_behaviors: list[str] = field(default_factory=list)
     expected_failure_condition: str | CounterfactualFailureCondition | None = None
     assumptions: list[str] = field(default_factory=list)
-    limitations: list[str] = field(
-        default_factory=lambda: list(_DEFAULT_CANDIDATE_LIMITATIONS)
-    )
+    limitations: list[str] = field(default_factory=lambda: list(_DEFAULT_CANDIDATE_LIMITATIONS))
     constraints: list[RemediationConstraint] = field(default_factory=list)
     unsatisfied_constraints: list[RemediationConstraint] = field(default_factory=list)
     verification_requirements: list[RemediationVerificationRequirement] = field(
         default_factory=list
     )
     rollback_plan: RemediationRollbackPlan | dict[str, Any] | None = None
-    risk_summary: list[RemediationRiskSignal] | list[dict[str, Any]] = field(
-        default_factory=list
-    )
+    risk_summary: list[RemediationRiskSignal] | list[dict[str, Any]] = field(default_factory=list)
     blast_radius_summary: dict[str, Any] = field(default_factory=dict)
     generator_type: str | None = None
     generator_name: str | None = None
@@ -1158,9 +1132,7 @@ class CounterfactualRemediationCandidate:
             "expected_effects": list(self.expected_effects),
             "expected_preserved_behaviors": list(self.expected_preserved_behaviors),
             "expected_failure_condition": (
-                failure
-                if isinstance(failure, str) or failure is None
-                else _maybe_to_dict(failure)
+                failure if isinstance(failure, str) or failure is None else _maybe_to_dict(failure)
             ),
             "assumptions": list(self.assumptions),
             "limitations": list(self.limitations),

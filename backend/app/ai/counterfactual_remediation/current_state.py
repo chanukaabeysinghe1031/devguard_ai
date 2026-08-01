@@ -105,7 +105,11 @@ class RemediationCurrentStateBuilder:
         entity_dicts = [_entity_dict(e) for e in (entities or [])][:_MAX_ENTITIES]
         entity_dicts = sorted(
             entity_dicts,
-            key=lambda e: (str(e.get("type") or ""), str(e.get("id") or ""), str(e.get("label") or "")),
+            key=lambda e: (
+                str(e.get("type") or ""),
+                str(e.get("id") or ""),
+                str(e.get("label") or ""),
+            ),
         )
         rel_dicts: list[dict[str, Any]] = []
         for rel in relationships or []:
@@ -132,8 +136,10 @@ class RemediationCurrentStateBuilder:
             ),
         )[:_MAX_RELATIONSHIPS]
 
-        fragment = source_fragment or meta.get("source_fragment") or meta.get(
-            "current_configuration_fragment"
+        fragment = (
+            source_fragment
+            or meta.get("source_fragment")
+            or meta.get("current_configuration_fragment")
         )
         if isinstance(fragment, str):
             fragment = sanitize_untrusted_instructions(fragment)
@@ -145,7 +151,9 @@ class RemediationCurrentStateBuilder:
         else:
             fragment = None
             content_hash = meta.get("content_hash")
-            if not content_hash and entity_dicts:
+            if isinstance(content_hash, str) and content_hash:
+                pass
+            elif entity_dicts:
                 content_hash = _sha256(
                     str(
                         sorted(
@@ -154,10 +162,10 @@ class RemediationCurrentStateBuilder:
                         )
                     )
                 )
+            else:
+                content_hash = None
 
-        values, references, dependencies, permissions = self._extract_from_entities(
-            entity_dicts
-        )
+        values, references, dependencies, permissions = self._extract_from_entities(entity_dicts)
         region = _first_str(
             meta.get("region"),
             values.get("region"),
@@ -193,20 +201,23 @@ class RemediationCurrentStateBuilder:
             structured_entities=entity_dicts,
             structured_relationships=rel_dicts,
             current_values=values,
-            current_references=sorted(set(references)),
-            current_dependencies=sorted(set(dependencies)),
+            current_references={str(i): ref for i, ref in enumerate(sorted(set(references)))},
+            current_dependencies=[{"dependency": d} for d in sorted(set(dependencies))],
             current_permissions=permissions,
-            current_conditions=sorted(
-                {
-                    str(c)
-                    for e in entity_dicts
-                    for c in _as_list(
-                        (e.get("metadata") or {}).get("condition")
-                        or (e.get("metadata") or {}).get("conditions")
-                    )
-                    if c
-                }
-            ),
+            current_conditions=[
+                {"condition": str(c)}
+                for c in sorted(
+                    {
+                        str(c)
+                        for e in entity_dicts
+                        for c in _as_list(
+                            (e.get("metadata") or {}).get("condition")
+                            or (e.get("metadata") or {}).get("conditions")
+                        )
+                        if c
+                    }
+                )
+            ],
             current_region=region,
             current_account_context=account,
             current_environment=environment,
@@ -220,8 +231,10 @@ class RemediationCurrentStateBuilder:
             ],
             current_failure_condition=failure_condition,
             parser_version=_first_str(meta.get("parser_version")),
-            extraction_quality=_optional_float(
-                meta.get("extraction_quality") or meta.get("quality")
+            extraction_quality=(
+                None
+                if _optional_float(meta.get("extraction_quality") or meta.get("quality")) is None
+                else str(_optional_float(meta.get("extraction_quality") or meta.get("quality")))
             ),
             missing_fields=missing,
             redaction_status="masked",

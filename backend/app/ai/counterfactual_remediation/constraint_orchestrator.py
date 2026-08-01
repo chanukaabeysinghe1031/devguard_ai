@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from app.ai.counterfactual_remediation.extractors import (
     AwsIamRemediationConstraintExtractor,
@@ -26,19 +27,28 @@ from app.domain.counterfactual_remediation.enums import (
     ConstraintSetCompleteness,
     ConstraintSeverity,
     ConstraintSourceType,
+    ConstraintType,
     RemediationArtifactType,
 )
 
 logger = logging.getLogger(__name__)
 
 
-def _artifact_type(value: RemediationArtifactType | str) -> RemediationArtifactType:
+def _artifact_type(value: RemediationArtifactType | str | None) -> RemediationArtifactType:
+    if value is None:
+        return RemediationArtifactType.UNKNOWN
     if isinstance(value, RemediationArtifactType):
         return value
     try:
         return RemediationArtifactType(str(value))
     except ValueError:
         return RemediationArtifactType.UNKNOWN
+
+
+def _constraint_type_value(value: ConstraintType | str | None) -> str:
+    if value is None:
+        return ""
+    return value.value if isinstance(value, ConstraintType) else str(value)
 
 
 class RemediationConstraintOrchestrator:
@@ -99,22 +109,17 @@ class RemediationConstraintOrchestrator:
                 result = extractor.extract(context, current_state)
                 validation_errors = extractor.validate_output(result)
                 if validation_errors:
-                    errors.extend(
-                        f"{extractor.extractor_name}:{err}" for err in validation_errors
-                    )
+                    errors.extend(f"{extractor.extractor_name}:{err}" for err in validation_errors)
                 # Drop LLM-only blocking constraints (defence in depth).
                 safe_constraints = [
                     c
                     for c in result.constraints
                     if not (
-                        c.is_blocking
-                        and str(c.extraction_method).lower() in {"llm", "llm_only"}
+                        c.is_blocking and str(c.extraction_method).lower() in {"llm", "llm_only"}
                     )
                 ]
                 if len(safe_constraints) != len(result.constraints):
-                    warnings.append(
-                        f"dropped_llm_only_blocking:{extractor.extractor_name}"
-                    )
+                    warnings.append(f"dropped_llm_only_blocking:{extractor.extractor_name}")
                 result.constraints = safe_constraints
                 result.extracted_count = len(safe_constraints)
                 result.blocking_count = sum(1 for c in safe_constraints if c.is_blocking)
@@ -181,12 +186,12 @@ class RemediationConstraintOrchestrator:
         artifact = _artifact_type(current_state.artifact_type)
         selected: list[RemediationConstraintExtractor] = []
         for extractor in self._extractors:
-            supported = getattr(extractor, "supported_artifact_types", frozenset())
+            supported: frozenset[Any] | set[Any] = getattr(
+                extractor, "supported_artifact_types", frozenset()
+            )
             # Security / repo / operational always run; typed extractors when matching.
             name = extractor.extractor_name
-            always = name.startswith(
-                ("security_", "repository_", "operational_")
-            )
+            always = name.startswith(("security_", "repository_", "operational_"))
             if always or artifact in supported or artifact == RemediationArtifactType.UNKNOWN:
                 # For UNKNOWN, still run typed extractors if entities hint at type.
                 if always or artifact in supported:
@@ -194,32 +199,36 @@ class RemediationConstraintOrchestrator:
                     continue
                 entities = current_state.structured_entities
                 types = {str(e.get("type") or "").upper() for e in entities}
-                if name.startswith("workflow_") and (
-                    "JOB" in types or "WORKFLOW" in types
+                if (
+                    name.startswith("workflow_")
+                    and ("JOB" in types or "WORKFLOW" in types)
+                    or name.startswith("terraform_")
+                    and types
+                    & {
+                        "RESOURCE",
+                        "MODULE",
+                        "VARIABLE",
+                        "PROVIDER",
+                        "OUTPUT",
+                        "DATA",
+                    }
+                    or name.startswith("aws_iam_")
+                    and types
+                    & {
+                        "IAM_POLICY",
+                        "POLICY_STATEMENT",
+                    }
+                    or artifact == RemediationArtifactType.UNKNOWN
+                    and always
                 ):
-                    selected.append(extractor)
-                elif name.startswith("terraform_") and types & {
-                    "RESOURCE",
-                    "MODULE",
-                    "VARIABLE",
-                    "PROVIDER",
-                    "OUTPUT",
-                    "DATA",
-                }:
-                    selected.append(extractor)
-                elif name.startswith("aws_iam_") and types & {
-                    "IAM_POLICY",
-                    "POLICY_STATEMENT",
-                }:
-                    selected.append(extractor)
-                elif artifact == RemediationArtifactType.UNKNOWN and always:
                     selected.append(extractor)
         # Ensure universal extractors always present.
         names = {e.extractor_name for e in selected}
         for extractor in self._extractors:
-            if extractor.extractor_name.startswith(
-                ("security_", "repository_", "operational_")
-            ) and extractor.extractor_name not in names:
+            if (
+                extractor.extractor_name.startswith(("security_", "repository_", "operational_"))
+                and extractor.extractor_name not in names
+            ):
                 selected.append(extractor)
         return selected
 
@@ -264,7 +273,7 @@ class RemediationConstraintOrchestrator:
             if source in {
                 ConstraintSourceType.SECURITY_POLICY,
                 ConstraintSourceType.SYSTEM_POLICY,
-            } or constraint.constraint_type.value in {
+            } or _constraint_type_value(constraint.constraint_type) in {
                 "SECURITY",
                 "ENCRYPTION",
                 "PUBLIC_ACCESS",
@@ -288,11 +297,12 @@ class RemediationConstraintOrchestrator:
                 ConstraintSourceType.PROJECT_CONFIGURATION,
             }:
                 buckets["repository"].append(constraint)
-            if source == ConstraintSourceType.SYSTEM_POLICY and constraint.constraint_key.startswith(
-                "ops."
+            if (
+                source == ConstraintSourceType.SYSTEM_POLICY
+                and constraint.constraint_key.startswith("ops.")
+                or _constraint_type_value(constraint.constraint_type)
+                in {"OPERATIONAL", "ROLLBACK", "COST"}
             ):
-                buckets["operational"].append(constraint)
-            elif constraint.constraint_type.value in {"OPERATIONAL", "ROLLBACK", "COST"}:
                 buckets["operational"].append(constraint)
         return buckets
 

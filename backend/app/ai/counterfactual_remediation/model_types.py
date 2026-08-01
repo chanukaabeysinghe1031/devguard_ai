@@ -1,55 +1,30 @@
-"""Prefer domain models; fall back to AI stubs when domain models are absent."""
+"""Re-export Phase 6A.6 domain models for the AI package."""
 
 from __future__ import annotations
 
-try:
-    from app.domain.counterfactual_remediation.models import (  # type: ignore[attr-defined]
-        OPTIMIZATION_PRIORITIES,
-        CandidateStructuralValidationResult,
-        ConstraintConflict,
-        ConstraintExtractionResult,
-        CounterfactualChange,
-        CounterfactualFailureCondition,
-        CounterfactualPrecondition,
-        CounterfactualRemediationCandidate,
-        CounterfactualRemediationContext,
-        CounterfactualRemediationRun,
-        HypothesisEligibilityResult,
-        MinimalChangeObjective,
-        MinimalChangePlan,
-        RemediationConstraint,
-        RemediationConstraintSet,
-        RemediationCounterfactualState,
-        RemediationCurrentState,
-        RemediationRiskSignal,
-        RemediationRollbackPlan,
-        RemediationTemplate,
-        RemediationVerificationRequirement,
-    )
-except ImportError:  # pragma: no cover - parallel domain landing
-    from app.ai.counterfactual_remediation.domain_stubs import (
-        OPTIMIZATION_PRIORITIES,
-        CandidateStructuralValidationResult,
-        ConstraintConflict,
-        ConstraintExtractionResult,
-        CounterfactualChange,
-        CounterfactualFailureCondition,
-        CounterfactualPrecondition,
-        CounterfactualRemediationCandidate,
-        CounterfactualRemediationContext,
-        CounterfactualRemediationRun,
-        HypothesisEligibilityResult,
-        MinimalChangeObjective,
-        MinimalChangePlan,
-        RemediationConstraint,
-        RemediationConstraintSet,
-        RemediationCounterfactualState,
-        RemediationCurrentState,
-        RemediationRiskSignal,
-        RemediationRollbackPlan,
-        RemediationTemplate,
-        RemediationVerificationRequirement,
-    )
+from app.domain.counterfactual_remediation.models import (
+    OPTIMIZATION_PRIORITIES,
+    CandidateStructuralValidationResult,
+    ConstraintConflict,
+    ConstraintExtractionResult,
+    CounterfactualChange,
+    CounterfactualFailureCondition,
+    CounterfactualPrecondition,
+    CounterfactualRemediationCandidate,
+    CounterfactualRemediationContext,
+    CounterfactualRemediationRun,
+    HypothesisEligibilityResult,
+    MinimalChangeObjective,
+    MinimalChangePlan,
+    RemediationConstraint,
+    RemediationConstraintSet,
+    RemediationCounterfactualState,
+    RemediationCurrentState,
+    RemediationRiskSignal,
+    RemediationRollbackPlan,
+    RemediationTemplate,
+    RemediationVerificationRequirement,
+)
 
 __all__ = [
     "OPTIMIZATION_PRIORITIES",
