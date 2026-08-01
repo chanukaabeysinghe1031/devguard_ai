@@ -118,17 +118,17 @@ class RuleBasedHypothesisGenerator:
                 level_2_code=path.level_2_code,
                 level_3_code=path.level_3_code,
                 observed_failure_node_id=self._pick_failure_node(context),
-                expected_observations=(
+                expected_observations=[
                     "Additional tool-specific diagnostics or policies become available",
-                ),
-                falsifying_observations=(
+                ],
+                falsifying_observations=[
                     "A deterministic signature maps confidently to a frozen category",
-                ),
-                proposed_verification_steps=(
+                ],
+                proposed_verification_steps=[
                     "Collect missing artifacts listed in the open-set assessment",
                     "Re-run analysis after acquiring policy/plan/workflow evidence",
-                ),
-                limitations=("Open-set status UNKNOWN — no forced known cause.",),
+                ],
+                limitations=["Open-set status UNKNOWN — no forced known cause."],
                 missing_evidence=list(context.missing_artifacts)[:12]
                 or ["additional_diagnostic_artifacts"],
                 generator_type=HypothesisGeneratorType.RULE,

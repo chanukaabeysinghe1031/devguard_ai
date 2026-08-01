@@ -1289,7 +1289,9 @@ class AnalysisExecutionService:
                 organization_id=str(context.organization_id),
                 analysis_id=str(run.id),
                 options=dict(context.options),
-                project_id=str(context.project_id) if context.project_id else None,
+                project_id=(
+                    str(pid) if (pid := getattr(context, "project_id", None)) else None
+                ),
                 incident_id=str(run.incident_id) if run.incident_id else None,
             )
             # Never overwrite diagnosis / recommendations / retrieved / evidence assessment.
@@ -1398,7 +1400,7 @@ class AnalysisExecutionService:
                 rem_run = CounterfactualRemediationRun(
                     id=str(foundation_payload.get("id") or run.id),
                     organization_id=str(context.organization_id or ""),
-                    project_id=str(context.project_id or ""),
+                    project_id=str(getattr(context, "project_id", None) or ""),
                     incident_id=str(run.incident_id or ""),
                     analysis_id=str(run.id),
                     status=status,
@@ -1513,7 +1515,7 @@ class AnalysisExecutionService:
             )
             report = await engine.run_async(
                 organization_id=str(context.organization_id),
-                project_id=str(context.project_id) if context.project_id else "",
+                project_id=str(getattr(context, "project_id", None) or ""),
                 incident_id=str(run.incident_id) if run.incident_id else "",
                 analysis_id=str(run.id),
                 candidates=candidates,
@@ -1539,7 +1541,9 @@ class AnalysisExecutionService:
                         "consensus_status": (
                             str(getattr(c, "validation_status", "") or "")
                             or (
-                                str(vrun.consensus.status.value)
+                                str(
+                                    getattr(vrun.consensus.status, "value", vrun.consensus.status)
+                                )
                                 if vrun and vrun.consensus is not None
                                 else None
                             )

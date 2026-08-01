@@ -16,20 +16,9 @@ logger = logging.getLogger(__name__)
 
 @runtime_checkable
 class VerificationPersistRepository(Protocol):
-    """Future ORM repository surface — not wired in this task."""
-
-    async def create_run(self, run: VerificationRun) -> VerificationRun | None: ...
+    """ORM repository surface used by VerificationPersistService.persist_report."""
 
     async def upsert_run(self, run: Any) -> Any: ...
-
-    async def create_results_batch(
-        self,
-        results: list[VerifierResult],
-        *,
-        run_id: str,
-    ) -> list[VerifierResult]: ...
-
-    async def save_report(self, report: VerificationReport) -> VerificationReport | None: ...
 
 
 # Alias for draft callers.

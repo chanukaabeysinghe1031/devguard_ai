@@ -304,8 +304,8 @@ class HierarchicalClassificationOrchestrator:
         if not isinstance(raw_list, list) or not raw_list:
             # Soft reuse of reasoner category only when already a frozen code.
             reasoner_cat = None
-            if context.fusion_result and getattr(context.fusion_result, "category_code", None):
-                reasoner_cat = context.fusion_result.category_code
+            if context.fusion_result:
+                reasoner_cat = getattr(context.fusion_result, "category_code", None)
             meta = context.options.get("llm_classification") or {}
             if isinstance(meta, dict) and meta.get("category_code"):
                 reasoner_cat = meta.get("category_code")
