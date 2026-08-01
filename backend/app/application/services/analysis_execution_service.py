@@ -117,6 +117,7 @@ class AnalysisExecutionService:
             await self._maybe_run_phase6a5_evidence_assessment(run, context)
             await self._maybe_run_phase6a6_counterfactual_foundation(run, context)
             await self._maybe_run_phase6a6_counterfactual_generation(run, context)
+            await self._maybe_run_phase6a6_verifier_engine(run, context)
             await self._persist_results(run, context, started)
             await self._session.flush()
             logger.info("analysis_run_completed", analysis_run_id=str(analysis_run_id))
@@ -231,6 +232,21 @@ class AnalysisExecutionService:
             options["remediation_reference_validation_enabled"] = False
         if not self._settings.remediation_constraint_validation_enabled:
             options["remediation_constraint_validation_enabled"] = False
+        # Phase 6A.6 Part 3 — request options cannot force verifier flags ON.
+        if not self._settings.verifier_engine_enabled:
+            options["verifier_engine_enabled"] = False
+        if not self._settings.terraform_verifier_enabled:
+            options["terraform_verifier_enabled"] = False
+        if not self._settings.actionlint_verifier_enabled:
+            options["actionlint_verifier_enabled"] = False
+        if not self._settings.checkov_verifier_enabled:
+            options["checkov_verifier_enabled"] = False
+        if not self._settings.opa_verifier_enabled:
+            options["opa_verifier_enabled"] = False
+        if not self._settings.security_verifier_enabled:
+            options["security_verifier_enabled"] = False
+        if not self._settings.verifier_persistence_enabled:
+            options["verifier_persistence_enabled"] = False
 
         # Clamp latency to server maximum.
         try:
@@ -1353,6 +1369,9 @@ class AnalysisExecutionService:
             candidates = list(
                 context.options.pop("_counterfactual_foundation_candidates", []) or []
             )
+            # Keep live objects for Part 3 verifier engine (never serialised into options summary).
+            if candidates:
+                context.options["_counterfactual_candidates_for_verification"] = candidates
             if self._settings.counterfactual_persistence_enabled and candidates:
                 from app.ai.counterfactual_remediation.persist import (
                     CounterfactualRemediationPersistService,
@@ -1427,6 +1446,113 @@ class AnalysisExecutionService:
                 "status": "FAILED",
                 "error": type(exc).__name__,
             }
+
+    async def _maybe_run_phase6a6_verifier_engine(
+        self,
+        run: AnalysisRun,
+        context: AnalysisContext,
+    ) -> None:
+        """Independent verifier engine (Part 3). Soft-fail. Never apply / overwrite recommendations."""
+        if not self._settings.verifier_engine_enabled:
+            context.options.pop("_counterfactual_candidates_for_verification", None)
+            return
+        if context.organization_id is None:
+            return
+        try:
+            from app.ai.counterfactual_remediation.verification import (
+                IndependentVerifierEngine,
+                VerificationPersistService,
+                build_summary,
+            )
+            from app.infrastructure.repositories.remediation_verification_repository import (
+                RemediationVerificationRepositoryImpl,
+            )
+
+            candidates = list(
+                context.options.pop("_counterfactual_candidates_for_verification", []) or []
+            )
+            if (
+                not candidates
+                and self._settings.counterfactual_persistence_enabled
+            ):
+                from app.infrastructure.repositories.counterfactual_remediation_repository import (
+                    CounterfactualRemediationRepositoryImpl,
+                )
+
+                cf_repo = CounterfactualRemediationRepositoryImpl(self._session)
+                rows = await cf_repo.list_candidates_by_analysis(
+                    organization_id=context.organization_id,
+                    analysis_run_id=run.id,
+                )
+                candidates = list(rows or [])
+
+            persist_service: VerificationPersistService | None = None
+            if self._settings.verifier_persistence_enabled:
+                persist_service = VerificationPersistService(
+                    enabled=True,
+                    repository=RemediationVerificationRepositoryImpl(self._session),
+                )
+
+            foundation = context.options.get("counterfactual_remediation") or {}
+            remediation_run_id = None
+            if isinstance(foundation, dict):
+                remediation_run_id = foundation.get("id")
+
+            engine = IndependentVerifierEngine(
+                self._settings,
+                persist_service=persist_service,
+            )
+            logger.info(
+                "counterfactual_verification_started",
+                analysis_run_id=str(run.id),
+                organization_id=str(context.organization_id),
+            )
+            report = await engine.run_async(
+                organization_id=str(context.organization_id),
+                project_id=str(context.project_id) if context.project_id else "",
+                incident_id=str(run.incident_id) if run.incident_id else "",
+                analysis_id=str(run.id),
+                candidates=candidates,
+                remediation_run_id=str(remediation_run_id) if remediation_run_id else None,
+                options=dict(context.options),
+            )
+            # Never overwrite diagnosis / recommendations.
+            context.options["counterfactual_verification"] = build_summary(report)
+            status_value = (
+                report.status.value
+                if hasattr(report.status, "value")
+                else str(report.status)
+            )
+            logger.info(
+                "counterfactual_verification_completed",
+                analysis_run_id=str(run.id),
+                status=status_value,
+                run_count=len(report.runs),
+            )
+            await self._record_event(
+                incident_id=run.incident_id,
+                title="Counterfactual verification completed",
+                description=f"{status_value}: temporary workspace only, not applied",
+                event_type="counterfactual_verification_completed",
+                metadata={
+                    "analysis_run_id": str(run.id),
+                    "status": status_value,
+                    "verified_count": len(report.candidate_ids_verified),
+                    "failed_count": len(report.candidate_ids_failed),
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "phase6a6_verifier_engine_failed",
+                analysis_run_id=str(run.id),
+                error=type(exc).__name__,
+            )
+            context.warnings.append(f"phase6a6_verifier_engine_failed:{type(exc).__name__}")
+            context.options["counterfactual_verification"] = {
+                "status": "FAILED",
+                "error": type(exc).__name__,
+            }
+            context.options.pop("_counterfactual_candidates_for_verification", None)
 
     async def _ensure_model_version(self) -> ModelVersion:
         stmt = select(ModelVersion).where(
