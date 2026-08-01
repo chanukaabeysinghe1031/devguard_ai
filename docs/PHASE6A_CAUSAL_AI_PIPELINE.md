@@ -17,7 +17,8 @@ Phase 6A extends the existing analysis spine with artifact acquisition, deep par
 | 6A.5 Part 3 | Done | Evidence assessment / ranking / candidate selection (flags OFF; candidates only; no migration 016) |
 | 6A.6 Part 1 | Done | Counterfactual remediation foundation (flags OFF; migration 016; no verifiers/apply) |
 | 6A.6 Part 2 | Complete (flags OFF) | Deterministic/LLM generation, risk, prioritisation; migration `017_phase6a6_cf_generation`; no apply/verifiers |
-| 6A.7–6A.9 | Not started | Verifiers, abstention, Causal UI |
+| 6A.6 Part 3 | Complete (flags OFF) | Independent verifier engine + consensus; migration `018_phase6a6_verifiers`; temp workspace only; no apply |
+| 6A.7–6A.9 | Not started | Abstention, Causal UI, apply path |
 
 ## Pipeline (flags OFF = unchanged production path)
 
@@ -36,15 +37,17 @@ flowchart TB
   R5 --> E5[Evidence assessment / ranking 6A.5 Part 3]
   E5 --> F6[Counterfactual remediation foundation 6A.6 Part 1]
   F6 --> G6[Candidate generation 6A.6 Part 2]
+  G6 --> V6[Independent verifiers 6A.6 Part 3]
   O --> D[Diagnosis + RAG + recommendations]
   Y -.-> D
   R5 -.-> D
   E5 -.-> D
   F6 -.-> D
   G6 -.-> D
+  V6 -.-> D
 ```
 
-6A.2–6A.6 stages soft-fail. Hypotheses are **competing candidates**, not verified causes. Part 1B retrieval items are evidence **candidates** only (`SUPPORT_CANDIDATE` ≠ proven support). Part 3 `RankingScore` ≠ root-cause confidence; selected candidates ≠ final diagnosis. Phase 6A.6 candidates are hypothesis-conditional, unverified, and never applied.
+6A.2–6A.6 stages soft-fail. Hypotheses are **competing candidates**, not verified causes. Part 1B retrieval items are evidence **candidates** only (`SUPPORT_CANDIDATE` ≠ proven support). Part 3 `RankingScore` ≠ root-cause confidence; selected candidates ≠ final diagnosis. Phase 6A.6 candidates are hypothesis-conditional; Part 3 `VERIFIED` consensus means temporary workspace checks passed — never applied and never proven root cause.
 
 ## Important
 
@@ -58,3 +61,4 @@ flowchart TB
 - Phase 6A.5 Part 3 assesses sufficiency/support/contradiction candidates and ranks hypotheses behind OFF-by-default flags; no migration 016; no PROVEN/VERIFIED language.
 - Phase 6A.6 Part 1 adds counterfactual remediation foundation behind OFF-by-default flags; migration `016_phase6a6_cf_foundation`; no verifier execution and no apply path. See `docs/PHASE6A6_COUNTERFACTUAL_REMEDIATION_FOUNDATION.md`.
 - Phase 6A.6 Part 2 adds structured candidate generation, patch rendering, static risk/blast/side-effects, dedupe, and prioritisation behind OFF-by-default flags; migration `017_phase6a6_cf_generation`. Candidates remain unverified and never applied. See `docs/PHASE6A6_RULE_REMEDIATION_GENERATION.md` and related Part 2 docs.
+- Phase 6A.6 Part 3 adds an independent verifier engine over temporary workspaces, deterministic consensus, persistence (`018_phase6a6_verifiers`), and debug APIs behind OFF-by-default flags. Missing tools → `UNAVAILABLE`. No apply path. See `docs/PHASE6A6_VERIFIER_ENGINE.md`.

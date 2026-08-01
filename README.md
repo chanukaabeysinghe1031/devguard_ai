@@ -30,6 +30,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 | **Phase 6A.5 Part 3 — Evidence assessment** | ✅ Sufficiency / contradiction / ranking / candidates (all flags OFF; no migration 016) |
 | **Phase 6A.6 Part 1 — Counterfactual foundation** | ✅ Constraints + skeletons (all flags OFF; migration 016; no apply/verifiers) |
 | **Phase 6A.6 Part 2 — Candidate generation** | ✅ Rule/LLM generation + risk/priority (all flags OFF; migration 017; no apply/verifiers) |
+| **Phase 6A.6 Part 3 — Independent verifiers** | ✅ Temp-workspace verifiers + consensus (all flags OFF; migration 018; no apply) |
 | **Step 3–4 — Chroma + MiniLM** | ✅ Persistent Chroma + local sentence-transformer embeddings |
 | **Phase 1 — Dataset corpus kit** | ✅ Schemas + GitHub Issues API collector (no full ingest / no GPT) |
 | **Frozen target architecture** | Incident-centred, organization-ready model (28 tables at head) |
@@ -78,6 +79,7 @@ DevGuard AI analyses CI/CD pipeline failures and Infrastructure-as-Code artefact
 - Phase 6A.5 Part 3 evidence assessment: `HYPOTHESIS_EVIDENCE_ASSESSMENT_ENABLED` and related flags default **false**. `RankingScore` ≠ root-cause confidence; candidates only. No migration 016. See `docs/PHASE6A5_EVIDENCE_ASSESSMENT.md`.
 - Phase 6A.6 Part 1 counterfactual remediation foundation: `COUNTERFACTUAL_REMEDIATION_ENABLED` and related flags default **false**. Candidates are hypothesis-conditional and unverified; no apply/verifiers. Migration `016_phase6a6_cf_foundation`. See `docs/PHASE6A6_COUNTERFACTUAL_REMEDIATION_FOUNDATION.md`.
 - Phase 6A.6 Part 2 generation: `RULE_REMEDIATION_GENERATION_ENABLED` / `LLM_REMEDIATION_GENERATION_ENABLED` and nested risk/ranking flags default **false**. Migration `017_phase6a6_cf_generation`. Priority score is not verification confidence. See `docs/PHASE6A6_RULE_REMEDIATION_GENERATION.md`.
+- Phase 6A.6 Part 3 verifiers: `VERIFIER_ENGINE_ENABLED` and related tool/persistence/debug flags default **false**. Temporary workspace only; missing CLIs → `UNAVAILABLE` (never fake PASS). Migration `018_phase6a6_verifiers`. Optional Docker tool installs are best-effort. See `docs/PHASE6A6_VERIFIER_ENGINE.md`.
 - Deterministic diagnostic signals, lexical exact-match, versioned hybrid weight profiles, dedupe/diversity reranking
 - Organization membership resolution and role-based authorization dependencies
 - Default organization + owner membership created on user registration
@@ -172,6 +174,8 @@ Edit `.env` and set at minimum:
 ```bash
 docker compose up --build
 ```
+
+The backend Dockerfile may optionally install verifier CLIs (terraform, actionlint, checkov, opa) best-effort; missing tools do not fail the build or healthcheck (`UNAVAILABLE` at runtime).
 
 | Service | URL |
 |---------|-----|
@@ -345,7 +349,7 @@ docker compose exec backend alembic upgrade head
 docker compose exec backend alembic current
 ```
 
-Expected head after Phase 6A.6 Part 2: `017_phase6a6_cf_generation` (Part 1 introduced `016_phase6a6_cf_foundation`).
+Expected head after Phase 6A.6 Part 3: `018_phase6a6_verifiers` (Part 2: `017_phase6a6_cf_generation`; Part 1: `016_phase6a6_cf_foundation`).
 
 Safe settings diagnostic (masks nothing itself — print only non-secret parts):
 
