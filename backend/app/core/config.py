@@ -564,7 +564,7 @@ class Settings(BaseSettings):
         default=False,
         alias="COUNTERFACTUAL_DEBUG_API_ENABLED",
     )
-    # Reserved for later Phase 6A.6 parts — do not activate in Part 1.
+    # Reserved Part 2 generation / analysis flags — remain OFF by default.
     rule_remediation_generation_enabled: bool = Field(
         default=False,
         alias="RULE_REMEDIATION_GENERATION_ENABLED",
@@ -584,6 +584,30 @@ class Settings(BaseSettings):
     remediation_ranking_enabled: bool = Field(
         default=False,
         alias="REMEDIATION_RANKING_ENABLED",
+    )
+    remediation_deduplication_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_DEDUPLICATION_ENABLED",
+    )
+    remediation_diversity_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_DIVERSITY_ENABLED",
+    )
+    remediation_patch_rendering_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_PATCH_RENDERING_ENABLED",
+    )
+    remediation_rollback_generation_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_ROLLBACK_GENERATION_ENABLED",
+    )
+    remediation_reference_validation_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_REFERENCE_VALIDATION_ENABLED",
+    )
+    remediation_constraint_validation_enabled: bool = Field(
+        default=False,
+        alias="REMEDIATION_CONSTRAINT_VALIDATION_ENABLED",
     )
     max_hypotheses_for_remediation: int = Field(
         default=3,
@@ -637,6 +661,84 @@ class Settings(BaseSettings):
     counterfactual_stage_timeout_seconds: float = Field(
         default=60.0,
         alias="COUNTERFACTUAL_STAGE_TIMEOUT_SECONDS",
+    )
+    # Phase 6A.6 Part 2 generation bounds (all generation still OFF by default).
+    max_rule_candidates_per_hypothesis: int = Field(
+        default=3,
+        alias="MAX_RULE_CANDIDATES_PER_HYPOTHESIS",
+    )
+    max_llm_candidates_per_hypothesis: int = Field(
+        default=2,
+        alias="MAX_LLM_CANDIDATES_PER_HYPOTHESIS",
+    )
+    max_final_candidates_per_hypothesis: int = Field(
+        default=3,
+        alias="MAX_FINAL_CANDIDATES_PER_HYPOTHESIS",
+    )
+    max_total_final_candidates: int = Field(
+        default=8,
+        alias="MAX_TOTAL_FINAL_CANDIDATES",
+    )
+    max_candidate_files: int = Field(default=5, alias="MAX_CANDIDATE_FILES")
+    max_candidate_changed_lines: int = Field(
+        default=200,
+        alias="MAX_CANDIDATE_CHANGED_LINES",
+    )
+    max_candidate_patch_characters: int = Field(
+        default=30_000,
+        alias="MAX_CANDIDATE_PATCH_CHARACTERS",
+    )
+    max_candidate_explanation_characters: int = Field(
+        default=8_000,
+        alias="MAX_CANDIDATE_EXPLANATION_CHARACTERS",
+    )
+    max_candidate_assumptions: int = Field(
+        default=20,
+        alias="MAX_CANDIDATE_ASSUMPTIONS",
+    )
+    max_candidate_limitations: int = Field(
+        default=20,
+        alias="MAX_CANDIDATE_LIMITATIONS",
+    )
+    max_candidate_expected_effects: int = Field(
+        default=20,
+        alias="MAX_CANDIDATE_EXPECTED_EFFECTS",
+    )
+    max_candidate_side_effects: int = Field(
+        default=20,
+        alias="MAX_CANDIDATE_SIDE_EFFECTS",
+    )
+    max_candidate_risk_signals: int = Field(
+        default=30,
+        alias="MAX_CANDIDATE_RISK_SIGNALS",
+    )
+    max_remediation_llm_calls_per_analysis: int = Field(
+        default=3,
+        alias="MAX_REMEDIATION_LLM_CALLS_PER_ANALYSIS",
+    )
+    remediation_llm_timeout_seconds: float = Field(
+        default=45.0,
+        alias="REMEDIATION_LLM_TIMEOUT_SECONDS",
+    )
+    remediation_stage_timeout_seconds: float = Field(
+        default=90.0,
+        alias="REMEDIATION_STAGE_TIMEOUT_SECONDS",
+    )
+    remediation_duplicate_similarity_threshold: float = Field(
+        default=0.88,
+        alias="REMEDIATION_DUPLICATE_SIMILARITY_THRESHOLD",
+    )
+    remediation_tie_epsilon: float = Field(
+        default=0.02,
+        alias="REMEDIATION_TIE_EPSILON",
+    )
+    remediation_high_risk_threshold: float = Field(
+        default=0.70,
+        alias="REMEDIATION_HIGH_RISK_THRESHOLD",
+    )
+    remediation_reject_risk_threshold: float = Field(
+        default=0.90,
+        alias="REMEDIATION_REJECT_RISK_THRESHOLD",
     )
 
     hybrid_weight_profile: str = Field(
@@ -831,6 +933,20 @@ class Settings(BaseSettings):
         "max_assumptions_per_candidate",
         "max_expected_effects_per_candidate",
         "max_rollback_steps_per_candidate",
+        "max_rule_candidates_per_hypothesis",
+        "max_llm_candidates_per_hypothesis",
+        "max_final_candidates_per_hypothesis",
+        "max_total_final_candidates",
+        "max_candidate_files",
+        "max_candidate_changed_lines",
+        "max_candidate_patch_characters",
+        "max_candidate_explanation_characters",
+        "max_candidate_assumptions",
+        "max_candidate_limitations",
+        "max_candidate_expected_effects",
+        "max_candidate_side_effects",
+        "max_candidate_risk_signals",
+        "max_remediation_llm_calls_per_analysis",
         mode="after",
     )
     @classmethod
@@ -850,13 +966,18 @@ class Settings(BaseSettings):
             raise ValueError("HYPOTHESIS_RETRIEVAL_TIMEOUT_SECONDS exceeds safe maximum")
         return float(value)
 
-    @field_validator("counterfactual_stage_timeout_seconds", mode="after")
+    @field_validator(
+        "counterfactual_stage_timeout_seconds",
+        "remediation_llm_timeout_seconds",
+        "remediation_stage_timeout_seconds",
+        mode="after",
+    )
     @classmethod
     def positive_counterfactual_stage_timeout(cls, value: float) -> float:
         if float(value) <= 0:
-            raise ValueError("COUNTERFACTUAL_STAGE_TIMEOUT_SECONDS must be greater than zero")
+            raise ValueError("remediation/counterfactual timeouts must be greater than zero")
         if float(value) > 600:
-            raise ValueError("COUNTERFACTUAL_STAGE_TIMEOUT_SECONDS exceeds safe maximum")
+            raise ValueError("remediation/counterfactual timeout exceeds safe maximum")
         return float(value)
 
     @field_validator("max_retrieval_total_duration_seconds", mode="after")
@@ -879,13 +1000,17 @@ class Settings(BaseSettings):
     @field_validator(
         "min_ranking_score_for_top_candidate",
         "ranking_tie_epsilon",
+        "remediation_duplicate_similarity_threshold",
+        "remediation_tie_epsilon",
+        "remediation_high_risk_threshold",
+        "remediation_reject_risk_threshold",
         mode="after",
     )
     @classmethod
     def evidence_assessment_score_bounds(cls, value: float) -> float:
         score = float(value)
         if score < 0.0 or score > 1.0:
-            raise ValueError("evidence assessment scores must be in [0, 1]")
+            raise ValueError("evidence assessment / remediation scores must be in [0, 1]")
         return score
 
     @field_validator("embedding_model", mode="after")
@@ -986,6 +1111,27 @@ class Settings(BaseSettings):
             )
         if self.max_patch_files_per_candidate > 50:
             problems.append("MAX_PATCH_FILES_PER_CANDIDATE exceeds safe maximum (50)")
+        if self.max_total_final_candidates < self.max_final_candidates_per_hypothesis:
+            problems.append(
+                "MAX_TOTAL_FINAL_CANDIDATES must be >= MAX_FINAL_CANDIDATES_PER_HYPOTHESIS"
+            )
+        if self.max_final_candidates_per_hypothesis < self.max_rule_candidates_per_hypothesis:
+            problems.append(
+                "MAX_FINAL_CANDIDATES_PER_HYPOTHESIS should be >= "
+                "MAX_RULE_CANDIDATES_PER_HYPOTHESIS"
+            )
+        if self.max_candidate_changed_lines > self.max_candidate_patch_characters:
+            problems.append(
+                "MAX_CANDIDATE_CHANGED_LINES is inconsistent with "
+                "MAX_CANDIDATE_PATCH_CHARACTERS"
+            )
+        if self.remediation_reject_risk_threshold < self.remediation_high_risk_threshold:
+            problems.append(
+                "REMEDIATION_REJECT_RISK_THRESHOLD must be >= "
+                "REMEDIATION_HIGH_RISK_THRESHOLD"
+            )
+        if self.max_remediation_llm_calls_per_analysis > 20:
+            problems.append("MAX_REMEDIATION_LLM_CALLS_PER_ANALYSIS exceeds safe maximum (20)")
         problems.extend(self._github_problems())
         if self.is_production:
             if self.debug:
