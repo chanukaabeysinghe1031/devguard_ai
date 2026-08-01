@@ -27,13 +27,7 @@ class RemediationCandidateDeduplicator:
             candidate.template_id or "",
             "|".join(sorted(candidate.affected_artifact_ids)),
             "|".join(
-                sorted(
-                    {
-                        (c.target_property or "")
-                        for c in candidate.changes
-                        if c.target_property
-                    }
-                )
+                sorted({(c.target_property or "") for c in candidate.changes if c.target_property})
             ),
             "|".join(
                 sorted(
@@ -124,8 +118,12 @@ class RemediationCandidateDeduplicator:
         }
         if types_a != types_b:
             return False
-        diffs_a = "\n".join(sorted((c.normalized_diff or c.proposed_fragment or "") for c in a.changes))
-        diffs_b = "\n".join(sorted((c.normalized_diff or c.proposed_fragment or "") for c in b.changes))
+        diffs_a = "\n".join(
+            sorted((c.normalized_diff or c.proposed_fragment or "") for c in a.changes)
+        )
+        diffs_b = "\n".join(
+            sorted((c.normalized_diff or c.proposed_fragment or "") for c in b.changes)
+        )
         if not diffs_a or not diffs_b:
             return a.summary == b.summary and a.title == b.title
         return self._similarity(diffs_a, diffs_b) >= self._threshold

@@ -11,7 +11,6 @@ from app.domain.counterfactual_remediation.enums import (
     VerifierType,
 )
 
-
 # Template IDs with Part 2 deterministic builders (see generation/rule_generator.py).
 IMPLEMENTED_TEMPLATE_BUILDERS: frozenset[str] = frozenset(
     {

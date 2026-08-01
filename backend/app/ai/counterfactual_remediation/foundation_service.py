@@ -47,7 +47,6 @@ from app.ai.counterfactual_remediation.versions import (
     REMEDIATION_CONSTRAINTS_VERSION,
     REMEDIATION_TEMPLATES_VERSION,
 )
-from app.domain.counterfactual_remediation.generation_models import RemediationGenerationContext
 from app.domain.counterfactual_remediation.enums import (
     CounterfactualCandidateStatus,
     CounterfactualRemediationRunStatus,
@@ -56,6 +55,7 @@ from app.domain.counterfactual_remediation.enums import (
     RollbackType,
     VerifierType,
 )
+from app.domain.counterfactual_remediation.generation_models import RemediationGenerationContext
 
 logger = logging.getLogger(__name__)
 

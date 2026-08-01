@@ -7,8 +7,6 @@ import re
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
-
 from app.application.services.analysis_run_service import AnalysisRunService
 from app.core.config import Settings
 from app.domain.exceptions.business import ResourceNotFoundError
@@ -209,7 +207,9 @@ class Phase6A6CounterfactualService:
             page_size=page_size,
         )
 
-    def _list_item(self, r: CounterfactualRemediationCandidateRow) -> CounterfactualRemediationCandidateListItem:
+    def _list_item(
+        self, r: CounterfactualRemediationCandidateRow
+    ) -> CounterfactualRemediationCandidateListItem:
         return CounterfactualRemediationCandidateListItem(
             id=r.id,
             candidate_key=r.candidate_key,

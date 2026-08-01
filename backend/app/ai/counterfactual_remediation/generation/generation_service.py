@@ -11,8 +11,8 @@ from app.ai.counterfactual_remediation.generation._helpers import (
     as_list,
     bound_float,
     bound_int,
-    flag,
     first_str,
+    flag,
 )
 from app.ai.counterfactual_remediation.generation.blast_radius import (
     RemediationBlastRadiusEstimator,
@@ -30,8 +30,8 @@ from app.ai.counterfactual_remediation.generation.historical_adapter import (
     HistoricalRemediationAdapter,
 )
 from app.ai.counterfactual_remediation.generation.llm_generator import (
-    LLMCounterfactualRemediationGenerator,
     LlmCall,
+    LLMCounterfactualRemediationGenerator,
 )
 from app.ai.counterfactual_remediation.generation.patch_renderer import RemediationPatchRenderer
 from app.ai.counterfactual_remediation.generation.previous_success import (
@@ -250,7 +250,10 @@ class CounterfactualRemediationGenerationService:
                         candidate.status = CounterfactualCandidateStatus.READY_FOR_VERIFICATION
         else:
             for candidate in enriched:
-                if candidate.status == CounterfactualCandidateStatus.STRUCTURED and candidate.changes:
+                if (
+                    candidate.status == CounterfactualCandidateStatus.STRUCTURED
+                    and candidate.changes
+                ):
                     candidate.status = CounterfactualCandidateStatus.READY_FOR_VERIFICATION
 
         final = self._merge_with_skeletons(skeletons, enriched)
@@ -263,9 +266,7 @@ class CounterfactualRemediationGenerationService:
         meta["status"] = self._overall_status(final, meta).value
         meta["duration_ms"] = int((datetime.now(UTC) - started).total_seconds() * 1000)
         snap = dict(run.configuration_snapshot or {})
-        snap["part2_generation_meta"] = {
-            k: v for k, v in meta.items() if k != "generator_results"
-        }
+        snap["part2_generation_meta"] = {k: v for k, v in meta.items() if k != "generator_results"}
         snap["part2_generator_result_count"] = len(meta.get("generator_results") or [])
         run.configuration_snapshot = snap
         if return_meta:
@@ -406,9 +407,7 @@ class CounterfactualRemediationGenerationService:
             candidate.risk_summary = list(risk.risk_signals)
             candidate.risk_score = risk.overall_risk_score
             candidate.risk_level = (
-                risk.risk_level.value
-                if hasattr(risk.risk_level, "value")
-                else str(risk.risk_level)
+                risk.risk_level.value if hasattr(risk.risk_level, "value") else str(risk.risk_level)
             )
             candidate.risk_components_json = dict(risk.component_scores)
             if risk.risk_level == RiskLevel.CRITICAL or risk.blocking_risks:
@@ -440,9 +439,7 @@ class CounterfactualRemediationGenerationService:
     ) -> list[CounterfactualRemediationCandidate]:
         if not generated:
             return list(skeletons)
-        covered: set[tuple[str, str | None]] = {
-            (c.hypothesis_id, c.template_id) for c in generated
-        }
+        covered: set[tuple[str, str | None]] = {(c.hypothesis_id, c.template_id) for c in generated}
         retained = [
             s
             for s in skeletons
@@ -536,7 +533,9 @@ def build_generation_context_from_foundation(
         eid = first_str(data.get("id"), data.get("evidence_id"))
         if eid:
             evidence_ids.append(eid)
-    artifact_ids = [a for a in [state.get("artifact_id"), getattr(context, "affected_artifact", None)] if a]
+    artifact_ids = [
+        a for a in [state.get("artifact_id"), getattr(context, "affected_artifact", None)] if a
+    ]
     template_ids = [t.template_id for t in templates if getattr(t, "template_id", None)]
     allowed_changes: list[str] = []
     for t in templates:

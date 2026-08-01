@@ -38,9 +38,12 @@ class RemediationReferenceValidator:
         for aid in candidate.affected_artifact_ids or []:
             if artifacts and str(aid) not in artifacts:
                 errors.append(f"fabricated_artifact_id:{aid}")
-        if candidate.primary_artifact_id and artifacts:
-            if str(candidate.primary_artifact_id) not in artifacts:
-                errors.append(f"fabricated_artifact_id:{candidate.primary_artifact_id}")
+        if (
+            candidate.primary_artifact_id
+            and artifacts
+            and str(candidate.primary_artifact_id) not in artifacts
+        ):
+            errors.append(f"fabricated_artifact_id:{candidate.primary_artifact_id}")
 
         if candidate.template_id and templates and candidate.template_id not in templates:
             errors.append(f"unknown_template_id:{candidate.template_id}")

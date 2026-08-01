@@ -136,6 +136,5 @@ def build_remediation_prompt(context_payload: dict[str, Any]) -> str:
     return (
         f"PROMPT_VERSION={COUNTERFACTUAL_REMEDIATION_PROMPT_VERSION}\n"
         f"SCHEMA_VERSION={COUNTERFACTUAL_REMEDIATION_SCHEMA_VERSION}\n"
-        'Return JSON: {"candidates":[...]}.\n'
-        + json.dumps(payload, ensure_ascii=True, default=str)
+        'Return JSON: {"candidates":[...]}.\n' + json.dumps(payload, ensure_ascii=True, default=str)
     )

@@ -78,9 +78,7 @@ class RemediationRiskAnalyzer:
             )
 
         rollback = candidate.rollback_plan
-        if not rollback or (
-            isinstance(rollback, dict) and not rollback.get("rollback_steps")
-        ):
+        if not rollback or (isinstance(rollback, dict) and not rollback.get("rollback_steps")):
             components["rollback_uncertainty"] = 0.35
             signals.append(
                 RemediationRiskSignal(
@@ -110,8 +108,7 @@ class RemediationRiskAnalyzer:
         blocking = [
             s.description
             for s in signals
-            if str(getattr(s.severity, "value", s.severity))
-            in {"BLOCKING", "HIGH"}
+            if str(getattr(s.severity, "value", s.severity)) in {"BLOCKING", "HIGH"}
             or s.risk_type == RemediationRiskType.WILDCARD_ACCESS
         ]
 

@@ -45,7 +45,7 @@ class RemediationConstraintValidator:
                     "skip_ci",
                     "continue-on-error: true",
                     "encryption = false",
-                    "acl\" = \"public",
+                    'acl" = "public',
                     "disable_scanner",
                 )
             ):

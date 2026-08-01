@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime
-from typing import Any
 from uuid import uuid4
 
 from app.ai.counterfactual_remediation.generation._helpers import (

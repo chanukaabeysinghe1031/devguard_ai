@@ -12,9 +12,7 @@ class RemediationBlastRadiusEstimator:
         files = {c.source_path for c in (candidate.changes or []) if c.source_path}
         file_count = max(candidate.changed_file_count, len(files), 0)
         change_types = {str(t).upper() for t in (candidate.change_types or [])}
-        cross = bool(
-            change_types & {"UPDATE_ENVIRONMENT_REFERENCE", "UPDATE_REGION"}
-        )
+        cross = bool(change_types & {"UPDATE_ENVIRONMENT_REFERENCE", "UPDATE_REGION"})
 
         reasoning: list[str] = []
         if file_count <= 1 and not cross:

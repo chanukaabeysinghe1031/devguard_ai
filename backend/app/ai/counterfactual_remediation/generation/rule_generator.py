@@ -5,8 +5,9 @@ from __future__ import annotations
 import json
 import logging
 import re
+from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Any, Callable
+from typing import Any
 from uuid import uuid4
 
 from app.ai.counterfactual_remediation.generation._helpers import (
@@ -111,9 +112,7 @@ class RuleBasedRemediationGenerator:
             )
 
         templates = templates or list(context.eligible_templates)
-        plan = plan or (
-            context.plan if isinstance(context.plan, MinimalChangePlan) else None
-        )
+        plan = plan or (context.plan if isinstance(context.plan, MinimalChangePlan) else None)
         state = as_dict(context.current_state)
         candidates: list[CounterfactualRemediationCandidate] = []
         rejected: list[str] = []
@@ -140,17 +139,13 @@ class RuleBasedRemediationGenerator:
                 continue
             if plan is not None:
                 candidate.change_types = list(
-                    dict.fromkeys(
-                        list(candidate.change_types) + list(plan.proposed_change_types)
-                    )
+                    dict.fromkeys(list(candidate.change_types) + list(plan.proposed_change_types))
                 )
             candidates.append(candidate)
             if len(candidates) >= self._max:
                 break
 
-        if not candidates and not templates:
-            status = RemediationGenerationStatus.NO_APPLICABLE_TEMPLATE
-        elif not candidates:
+        if not candidates and not templates or not candidates:
             status = RemediationGenerationStatus.NO_APPLICABLE_TEMPLATE
         elif warnings or rejected:
             status = RemediationGenerationStatus.PARTIAL
@@ -230,7 +225,9 @@ class RuleBasedRemediationGenerator:
         state: dict[str, Any],
     ) -> CounterfactualRemediationCandidate | None:
         values = get_current_values(state)
-        current_role = first_str(values.get("role_arn"), values.get("role"), values.get("current_role"))
+        current_role = first_str(
+            values.get("role_arn"), values.get("role"), values.get("current_role")
+        )
         expected_role = first_str(
             values.get("expected_role"),
             values.get("intended_role"),
@@ -263,7 +260,9 @@ class RuleBasedRemediationGenerator:
         state: dict[str, Any],
     ) -> CounterfactualRemediationCandidate | None:
         values = get_current_values(state)
-        current = first_str(state.get("current_region"), values.get("region"), values.get("provider_region"))
+        current = first_str(
+            state.get("current_region"), values.get("region"), values.get("provider_region")
+        )
         intended = first_str(
             values.get("intended_region"),
             values.get("expected_region"),
@@ -441,7 +440,9 @@ class RuleBasedRemediationGenerator:
     def _build_gha_secret_name(self, ctx, template, state):  # type: ignore[no-untyped-def]
         values = get_current_values(state)
         current = first_str(values.get("secret_reference"), values.get("current_secret_name"))
-        intended = first_str(values.get("expected_secret_name"), values.get("corrected_secret_name"))
+        intended = first_str(
+            values.get("expected_secret_name"), values.get("corrected_secret_name")
+        )
         fragment = get_source_fragment(state, ctx.source_fragment)
         if not current or not intended or not fragment:
             return None
@@ -632,9 +633,7 @@ class RuleBasedRemediationGenerator:
             rationale=f"Deterministic transform for {template.template_id}",
         )
 
-    def _insert_iam_statement(
-        self, fragment: str, statement: dict[str, Any]
-    ) -> str | None:
+    def _insert_iam_statement(self, fragment: str, statement: dict[str, Any]) -> str | None:
         try:
             data = json.loads(fragment)
         except json.JSONDecodeError:

@@ -120,9 +120,7 @@ def _ctx(**overrides: object) -> RemediationGenerationContext:
     if not data["eligible_templates"]:
         registry = RemediationTemplateRegistry()
         data["eligible_templates"] = [
-            t
-            for t in registry.all_templates()
-            if t.template_id == "iam.add_scoped_missing_action"
+            t for t in registry.all_templates() if t.template_id == "iam.add_scoped_missing_action"
         ]
     return RemediationGenerationContext(**data)  # type: ignore[arg-type]
 
@@ -147,7 +145,11 @@ def test_flags_off_no_generation() -> None:
     # Accept either (candidates, meta) or (run, candidates).
     if isinstance(second, dict):
         candidates, meta = first, second
-        assert candidates == [] or meta.get("generation_enabled") is False or meta.get("status") == "DISABLED"
+        assert (
+            candidates == []
+            or meta.get("generation_enabled") is False
+            or meta.get("status") == "DISABLED"
+        )
     else:
         out_run, candidates = first, second
         assert candidates == []
@@ -163,17 +165,14 @@ def test_rule_missing_iam_action_narrow_patch() -> None:
         c for c in result.candidates if c.status == CounterfactualCandidateStatus.STRUCTURED
     )
     assert any("s3:PutObject" in (c.proposed_fragment or "") for c in cand.changes)
-    assert "Action\": \"*\"" not in (cand.changes[0].proposed_fragment or "")
+    assert 'Action": "*"' not in (cand.changes[0].proposed_fragment or "")
 
 
 def test_rule_wrong_role_update_role() -> None:
     registry = RemediationTemplateRegistry()
     tmpl = registry.get("iam.correct_assumed_role_reference")
     assert tmpl is not None
-    original = (
-        "permissions:\n  id-token: write\n"
-        "  role: arn:aws:iam::123456789012:role/wrong\n"
-    )
+    original = "permissions:\n  id-token: write\n  role: arn:aws:iam::123456789012:role/wrong\n"
     ctx = _ctx(
         eligible_templates=[tmpl],
         current_state={
@@ -202,9 +201,7 @@ def test_wildcard_rejected() -> None:
     values = dict(state["current_values"])
     values["missing_action"] = "s3:*"
     # Avoid incidental * in original fragment confusing assertions.
-    state["source_fragment"] = json.dumps(
-        {"Version": "2012-10-17", "Statement": []}, indent=2
-    )
+    state["source_fragment"] = json.dumps({"Version": "2012-10-17", "Statement": []}, indent=2)
     state["current_values"] = values
     ctx.current_state = state
     result = RuleBasedRemediationGenerator(enabled=True).generate(ctx)
@@ -220,9 +217,7 @@ def test_explicit_deny_blocks_identity_add() -> None:
     state = dict(ctx.current_state)  # type: ignore[arg-type]
     values = dict(state["current_values"])
     values["explicit_denies"] = True
-    state["source_fragment"] = json.dumps(
-        {"Version": "2012-10-17", "Statement": []}, indent=2
-    )
+    state["source_fragment"] = json.dumps({"Version": "2012-10-17", "Statement": []}, indent=2)
     state["current_values"] = values
     ctx.current_state = state
     result = RuleBasedRemediationGenerator(enabled=True).generate(ctx)
@@ -231,6 +226,7 @@ def test_explicit_deny_blocks_identity_add() -> None:
         assert any("explicit_deny" in " ".join(c.assumptions) for c in result.candidates)
     else:
         assert "iam.add_scoped_missing_action" in (result.rejected_template_ids or [])
+
 
 def test_secret_reference_name_only() -> None:
     registry = RemediationTemplateRegistry()
@@ -275,9 +271,7 @@ def test_fabricated_artifact_id_rejected() -> None:
             )
         ],
     )
-    result = RemediationReferenceValidator().validate(
-        candidate, valid_artifact_ids=["art-1"]
-    )
+    result = RemediationReferenceValidator().validate(candidate, valid_artifact_ids=["art-1"])
     status = result["status"] if isinstance(result, dict) else getattr(result, "status", None)
     errors = result["errors"] if isinstance(result, dict) else getattr(result, "errors", [])
     assert str(status) in {"REJECTED", "INVALID", "FAILED"} or errors

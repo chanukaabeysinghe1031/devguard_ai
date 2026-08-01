@@ -82,7 +82,9 @@ class RemediationCandidatePrioritiser:
                 status = CandidatePriorityStatus.REJECTED_CANDIDATE
             elif not candidate.changes:
                 status = CandidatePriorityStatus.INCOMPLETE_CANDIDATE
-            elif risk >= reject_risk_threshold or (candidate.risk_level or "") == RiskLevel.CRITICAL:
+            elif (
+                risk >= reject_risk_threshold or (candidate.risk_level or "") == RiskLevel.CRITICAL
+            ):
                 status = CandidatePriorityStatus.REJECTED_CANDIDATE
             elif risk >= high_risk_threshold or (candidate.risk_level or "") == RiskLevel.HIGH:
                 status = CandidatePriorityStatus.HIGH_RISK_CANDIDATE
@@ -110,11 +112,7 @@ class RemediationCandidatePrioritiser:
             )
 
         no_safe = safe_count == 0 or all(
-            (
-                statuses[cid].value
-                if hasattr(statuses[cid], "value")
-                else str(statuses[cid])
-            )
+            (statuses[cid].value if hasattr(statuses[cid], "value") else str(statuses[cid]))
             in {
                 CandidatePriorityStatus.REJECTED_CANDIDATE.value,
                 CandidatePriorityStatus.INCOMPLETE_CANDIDATE.value,

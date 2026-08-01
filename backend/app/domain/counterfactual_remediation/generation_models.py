@@ -171,9 +171,7 @@ class RemediationGenerationContext:
                 if isinstance(self.objective, dict)
                 else _maybe_to_dict(self.objective)
             ),
-            "plan": (
-                dict(self.plan) if isinstance(self.plan, dict) else _maybe_to_dict(self.plan)
-            ),
+            "plan": (dict(self.plan) if isinstance(self.plan, dict) else _maybe_to_dict(self.plan)),
             "eligible_templates": _list_to_dict(self.eligible_templates),
             "prohibited_template_ids": list(self.prohibited_template_ids),
             "verification_requirements": list(self.verification_requirements),
@@ -183,9 +181,7 @@ class RemediationGenerationContext:
             "contradiction_candidates": [dict(c) for c in self.contradiction_candidates],
             "historical_candidates": [dict(c) for c in self.historical_candidates],
             "previous_successful_version": self.previous_successful_version,
-            "previous_success_differences": [
-                dict(d) for d in self.previous_success_differences
-            ],
+            "previous_success_differences": [dict(d) for d in self.previous_success_differences],
             "valid_artifact_ids": list(self.valid_artifact_ids),
             "valid_evidence_ids": list(self.valid_evidence_ids),
             "valid_graph_node_ids": list(self.valid_graph_node_ids),
@@ -276,9 +272,7 @@ class RemediationRiskAssessment:
     overall_risk_score: float = 0.0
     risk_level: RiskLevel = RiskLevel.UNKNOWN
     component_scores: dict[str, float] = field(default_factory=dict)
-    risk_signals: list[RemediationRiskSignal] | list[dict[str, Any]] = field(
-        default_factory=list
-    )
+    risk_signals: list[RemediationRiskSignal] | list[dict[str, Any]] = field(default_factory=list)
     blocking_risks: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     mitigations: list[str] = field(default_factory=list)
@@ -417,9 +411,7 @@ class PrioritisationResult:
 
     ordered_candidate_ids: list[str] = field(default_factory=list)
     priority_statuses: dict[str, CandidatePriorityStatus | str] = field(default_factory=dict)
-    quality_assessments: list[RemediationCandidateQualityAssessment] = field(
-        default_factory=list
-    )
+    quality_assessments: list[RemediationCandidateQualityAssessment] = field(default_factory=list)
     selected_for_verification: list[str] = field(default_factory=list)
     no_safe_candidate: bool = False
     warnings: list[str] = field(default_factory=list)
@@ -434,9 +426,7 @@ class PrioritisationResult:
     def to_dict(self) -> dict[str, Any]:
         return {
             "ordered_candidate_ids": list(self.ordered_candidate_ids),
-            "priority_statuses": {
-                k: _enum_value(v) for k, v in self.priority_statuses.items()
-            },
+            "priority_statuses": {k: _enum_value(v) for k, v in self.priority_statuses.items()},
             "quality_assessments": _list_to_dict(self.quality_assessments),
             "selected_for_verification": list(self.selected_for_verification),
             "no_safe_candidate": self.no_safe_candidate,

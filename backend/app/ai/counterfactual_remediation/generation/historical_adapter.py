@@ -138,13 +138,14 @@ class HistoricalRemediationAdapter:
         if artifact_type and current_type and artifact_type != current_type:
             return False
         mechanism = str(item.get("failure_mechanism") or item.get("category") or "").lower()
-        if mechanism and context.category and mechanism not in context.category.lower():
-            # Soft: allow if causal claim mentions mechanism.
-            if mechanism not in (context.causal_claim or "").lower():
-                return False
-        if item.get("trusted") is False:
+        if (
+            mechanism
+            and context.category
+            and mechanism not in context.category.lower()
+            and mechanism not in (context.causal_claim or "").lower()
+        ):
             return False
-        return True
+        return item.get("trusted") is not False
 
     def _build_candidate(
         self,
@@ -157,7 +158,9 @@ class HistoricalRemediationAdapter:
     ) -> CounterfactualRemediationCandidate:
         candidate_id = str(uuid4())
         artifact_id = first_str(state.get("artifact_id"))
-        change_type_raw = first_str(pattern.get("change_type"), "UPDATE_REFERENCE") or "UPDATE_REFERENCE"
+        change_type_raw = (
+            first_str(pattern.get("change_type"), "UPDATE_REFERENCE") or "UPDATE_REFERENCE"
+        )
         try:
             change_type = CounterfactualChangeType(change_type_raw)
         except ValueError:

@@ -207,9 +207,9 @@ class LLMCounterfactualRemediationGenerator:
             if extra:
                 errors.append(f"candidate_{idx}_unknown_fields:{sorted(extra)}")
                 continue
-            for req in COUNTERFACTUAL_REMEDIATION_JSON_SCHEMA["properties"]["candidates"][
-                "items"
-            ]["required"]:
+            for req in COUNTERFACTUAL_REMEDIATION_JSON_SCHEMA["properties"]["candidates"]["items"][
+                "required"
+            ]:
                 if req not in item:
                     errors.append(f"candidate_{idx}_missing:{req}")
                     break
@@ -296,7 +296,10 @@ class LLMCounterfactualRemediationGenerator:
                             graph_node_ids=[
                                 str(x) for x in as_list(change_raw.get("graph_node_ids"))
                             ],
-                            limitations=["candidates_are_not_verified", "llm_untrusted_until_validated"],
+                            limitations=[
+                                "candidates_are_not_verified",
+                                "llm_untrusted_until_validated",
+                            ],
                         )
                     )
         if not changes_out:

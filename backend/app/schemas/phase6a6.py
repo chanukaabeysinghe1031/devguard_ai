@@ -195,6 +195,7 @@ class CounterfactualPrioritisationResponse(BaseModel):
         "Not the fix; not verification confidence."
     )
 
+
 class CounterfactualStateSnapshotResponse(BaseModel):
     candidate_id: UUID
     analysis_run_id: UUID

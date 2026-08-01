@@ -158,7 +158,7 @@ class RemediationPatchRenderer:
             return PatchFormat.JSON_FRAGMENT
         if path.endswith((".yml", ".yaml")) or sample.startswith(("name:", "jobs:", "on:")):
             return PatchFormat.YAML_FRAGMENT
-        if path.endswith(".tf") or "resource \"" in sample or "provider \"" in sample:
+        if path.endswith(".tf") or 'resource "' in sample or 'provider "' in sample:
             return PatchFormat.HCL_FRAGMENT
         if path.endswith(("package.json", "requirements.txt", "Cargo.toml", "go.mod")):
             return PatchFormat.DEPENDENCY_MANIFEST

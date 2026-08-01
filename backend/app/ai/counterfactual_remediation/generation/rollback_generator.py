@@ -88,17 +88,11 @@ class RemediationRollbackGenerator:
             )
 
         rollback_type = (
-            RollbackType.RESTORE_ORIGINAL_FRAGMENT
-            if can_restore
-            else RollbackType.MANUAL_REQUIRED
+            RollbackType.RESTORE_ORIGINAL_FRAGMENT if can_restore else RollbackType.MANUAL_REQUIRED
         )
         # Prefer version restore when only version properties changed.
         if candidate.changes and all(
-            (
-                c.change_type.value
-                if hasattr(c.change_type, "value")
-                else str(c.change_type)
-            )
+            (c.change_type.value if hasattr(c.change_type, "value") else str(c.change_type))
             == "UPDATE_VERSION"
             for c in candidate.changes
         ):
