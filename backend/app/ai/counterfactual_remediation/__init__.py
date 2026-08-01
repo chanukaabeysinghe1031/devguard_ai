@@ -30,6 +30,11 @@ from app.ai.counterfactual_remediation.failure_condition import (
 from app.ai.counterfactual_remediation.foundation_service import (
     CounterfactualRemediationFoundationService,
 )
+from app.ai.counterfactual_remediation.generation import (
+    CounterfactualRemediationGenerationService,
+    RuleBasedRemediationGenerator,
+    implemented_builder_template_ids,
+)
 from app.ai.counterfactual_remediation.minimal_planner import (
     LOCALITY_RULES,
     DeterministicMinimalChangePlanner,
@@ -59,6 +64,7 @@ __all__ = [
     "CounterfactualCandidateStructuralValidator",
     "CounterfactualRemediationContextBuilder",
     "CounterfactualRemediationFoundationService",
+    "CounterfactualRemediationGenerationService",
     "CounterfactualRemediationPersistService",
     "CounterfactualRemediationRepository",
     "DeterministicMinimalChangePlanner",
@@ -71,6 +77,7 @@ __all__ = [
     "RemediationCurrentStateBuilder",
     "RemediationTemplateRegistry",
     "RepositoryProjectConstraintExtractor",
+    "RuleBasedRemediationGenerator",
     "SecurityRemediationConstraintExtractor",
     "TerraformRemediationConstraintExtractor",
     "WorkflowRemediationConstraintExtractor",
@@ -80,6 +87,7 @@ __all__ = [
     "build_minimal_change_objective",
     "build_remediation_current_state",
     "contains_secret_material",
+    "implemented_builder_template_ids",
     "mask_for_context",
     "sanitize_untrusted_instructions",
 ]

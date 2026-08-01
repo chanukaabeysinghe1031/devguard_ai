@@ -12,6 +12,36 @@ from app.domain.counterfactual_remediation.enums import (
 )
 
 
+# Template IDs with Part 2 deterministic builders (see generation/rule_generator.py).
+IMPLEMENTED_TEMPLATE_BUILDERS: frozenset[str] = frozenset(
+    {
+        "iam.add_scoped_missing_action",
+        "iam.correct_assumed_role_reference",
+        "iam.correct_region",
+        "iam.address_resource_policy_deny",
+        "terraform.correct_invalid_resource_reference",
+        "terraform.correct_missing_module_output",
+        "terraform.correct_invalid_variable_value",
+        "terraform.align_provider_alias_region",
+        "terraform.correct_dependency_relationship",
+        "terraform.align_provider_version",
+        "gha.correct_job_dependency",
+        "gha.correct_expression",
+        "gha.correct_secret_reference_name",
+        "gha.correct_reusable_workflow_input",
+        "gha.correct_action_version",
+        "gha.correct_environment_or_role_reference",
+        "deps.align_package_version",
+        "deps.restore_lockfile_consistency",
+        "deps.use_supported_runtime_version",
+        "container.correct_image_tag",
+        "container.correct_registry_reference",
+        "container.correct_deployment_resource_name",
+        "container.correct_environment_configuration",
+    }
+)
+
+
 def _skel(
     *,
     template_id: str,
@@ -24,6 +54,25 @@ def _skel(
     verifiers: list[str],
     prohibited: list[str] | None = None,
 ) -> RemediationTemplate:
+    implemented = template_id in IMPLEMENTED_TEMPLATE_BUILDERS
+    limitations = (
+        [
+            "candidate_builder_implemented=true",
+            "candidates_are_not_verified",
+            "builder_does_not_execute_verifiers",
+        ]
+        if implemented
+        else [
+            "candidate_builder_implemented=false",
+            "candidate_builder_not_implemented",
+            "no_final_patch_generation",
+        ]
+    )
+    risk_notes = (
+        ["part_2_deterministic_builder", f"family:{family}"]
+        if implemented
+        else ["part_1_skeleton_unimplemented_builder", f"family:{family}"]
+    )
     return RemediationTemplate(
         template_id=template_id,
         template_version=REMEDIATION_TEMPLATES_VERSION,
@@ -50,17 +99,13 @@ def _skel(
         ],
         default_verification_requirements=verifiers,
         default_rollback_strategy=RollbackType.RESTORE_ORIGINAL_FRAGMENT,
-        risk_notes=["part_1_skeleton_unimplemented_builder", f"family:{family}"],
-        limitations=[
-            "candidate_builder_implemented=false",
-            "candidate_builder_not_implemented",
-            "no_final_patch_generation",
-        ],
+        risk_notes=risk_notes,
+        limitations=limitations,
     )
 
 
 def build_initial_template_skeletons() -> list[RemediationTemplate]:
-    """Contract-level skeletons — builders marked unimplemented."""
+    """Template registry entries — Part 2 builders marked where implemented."""
     iam = RemediationArtifactType.IAM_POLICY.value
     resource_policy = RemediationArtifactType.RESOURCE_POLICY.value
     tf = RemediationArtifactType.TERRAFORM_CONFIGURATION.value

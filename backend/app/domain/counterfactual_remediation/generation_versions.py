@@ -1,0 +1,17 @@
+"""Stable version identifiers for Phase 6A.6 Part 2 remediation generation."""
+
+from __future__ import annotations
+
+RULE_REMEDIATION_GENERATOR_VERSION = "rule_remediation_generator_v1"
+COUNTERFACTUAL_REMEDIATION_PROMPT_VERSION = "counterfactual_remediation_prompt_v1"
+COUNTERFACTUAL_REMEDIATION_SCHEMA_VERSION = "counterfactual_remediation_schema_v1"
+REMEDIATION_PATCH_RENDERER_VERSION = "remediation_patch_renderer_v1"
+REMEDIATION_REFERENCE_VALIDATOR_VERSION = "remediation_reference_validator_v1"
+REMEDIATION_CONSTRAINT_VALIDATOR_VERSION = "remediation_constraint_validator_v1"
+REMEDIATION_DEDUPLICATOR_VERSION = "remediation_deduplicator_v1"
+REMEDIATION_DIVERSITY_VERSION = "remediation_diversity_v1"
+REMEDIATION_RISK_ANALYSIS_VERSION = "remediation_risk_analysis_v1"
+REMEDIATION_SIDE_EFFECTS_VERSION = "remediation_side_effects_v1"
+REMEDIATION_BLAST_RADIUS_VERSION = "remediation_blast_radius_v1"
+REMEDIATION_ROLLBACK_VERSION = "remediation_rollback_v1"
+REMEDIATION_CANDIDATE_PRIORITISER_VERSION = "remediation_candidate_prioritiser_v1"

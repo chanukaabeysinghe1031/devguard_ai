@@ -24,7 +24,7 @@ def template_family(template: RemediationTemplate) -> str:
 
 
 def candidate_builder_implemented(template: RemediationTemplate) -> bool:
-    """Part 1 skeletons must remain unimplemented."""
+    """True when a Part 2 deterministic builder is registered for this template."""
     markers = {m.lower() for m in template.limitations}
     if "candidate_builder_implemented=false" in markers:
         return False
@@ -54,13 +54,20 @@ class RemediationTemplateRegistry:
         logger.debug("template_registered id=%s", template.template_id)
 
     def validate_template(self, template: RemediationTemplate) -> list[str]:
+        """Validate template contract. Part 2 allows implemented builders."""
         errors: list[str] = []
         if not template.template_id:
             errors.append("missing_template_id")
         if not template.supported_artifact_types and not template.category_codes:
             errors.append("missing_category_or_artifact_types")
-        if candidate_builder_implemented(template):
-            errors.append("part_1_requires_candidate_builder_implemented_false")
+        markers = {m.lower() for m in template.limitations}
+        claims_implemented = "candidate_builder_implemented=true" in markers
+        claims_unimplemented = (
+            "candidate_builder_implemented=false" in markers
+            or "candidate_builder_not_implemented" in markers
+        )
+        if claims_implemented and claims_unimplemented:
+            errors.append("conflicting_candidate_builder_markers")
         return errors
 
     def get(self, template_id: str) -> RemediationTemplate | None:

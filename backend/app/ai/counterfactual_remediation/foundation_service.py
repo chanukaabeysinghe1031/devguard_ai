@@ -20,6 +20,10 @@ from app.ai.counterfactual_remediation.current_state import RemediationCurrentSt
 from app.ai.counterfactual_remediation.failure_condition import (
     build_counterfactual_failure_condition,
 )
+from app.ai.counterfactual_remediation.generation.generation_service import (
+    CounterfactualRemediationGenerationService,
+    build_generation_context_from_foundation,
+)
 from app.ai.counterfactual_remediation.minimal_planner import (
     DeterministicMinimalChangePlanner,
     build_minimal_change_objective,
@@ -43,6 +47,7 @@ from app.ai.counterfactual_remediation.versions import (
     REMEDIATION_CONSTRAINTS_VERSION,
     REMEDIATION_TEMPLATES_VERSION,
 )
+from app.domain.counterfactual_remediation.generation_models import RemediationGenerationContext
 from app.domain.counterfactual_remediation.enums import (
     CounterfactualCandidateStatus,
     CounterfactualRemediationRunStatus,
@@ -162,6 +167,7 @@ class CounterfactualRemediationFoundationService:
                 bounds.get("max_changed_lines", 200),
             ),
         )
+        self._generation = CounterfactualRemediationGenerationService(settings)
 
     def run(
         self,
@@ -241,6 +247,7 @@ class CounterfactualRemediationFoundationService:
             candidates: list[CounterfactualRemediationCandidate] = []
             all_constraints: list[Any] = []
             all_preconditions: list[Any] = []
+            generation_contexts: list[RemediationGenerationContext] = []
 
             for hypothesis in eligible:
                 hyp_result = self._process_hypothesis(
@@ -256,6 +263,28 @@ class CounterfactualRemediationFoundationService:
                 all_constraints.extend(hyp_result.get("constraints") or [])
                 all_preconditions.extend(hyp_result.get("preconditions") or [])
                 run.warnings.extend(hyp_result.get("warnings") or [])
+                gen_ctx = hyp_result.get("generation_context")
+                if gen_ctx is not None:
+                    generation_contexts.append(gen_ctx)
+
+            # Part 2 generation — only when at least one generation flag is ON.
+            # When ALL generation flags are OFF, behavior is identical to Part 1.
+            if self._generation.any_generation_enabled():
+                try:
+                    candidates, _gen_meta = self._generation.run(
+                        run=run,
+                        options=options,
+                        skeleton_candidates=candidates,
+                        generation_contexts=generation_contexts,
+                        return_meta=True,
+                    )
+                except Exception as exc:  # noqa: BLE001 — soft-fail generation
+                    logger.warning(
+                        "counterfactual_generation_failed analysis_id=%s error=%s",
+                        analysis_id,
+                        type(exc).__name__,
+                    )
+                    run.warnings.append(f"generation_failed:{type(exc).__name__}")
 
             run.candidate_count = len(candidates)
             run.safe_candidate_count = sum(
@@ -264,6 +293,7 @@ class CounterfactualRemediationFoundationService:
                 if c.status
                 in {
                     CounterfactualCandidateStatus.READY_FOR_GENERATION,
+                    CounterfactualCandidateStatus.READY_FOR_VERIFICATION,
                     CounterfactualCandidateStatus.STRUCTURED,
                 }
             )
@@ -369,8 +399,39 @@ class CounterfactualRemediationFoundationService:
                 self._bounds.get("template_registry_enabled", True),
             ),
             "persistence_enabled": self._persist.enabled,
-            "llm_remediation_generation_enabled": False,
-            "rule_remediation_generation_enabled": False,
+            "llm_remediation_generation_enabled": _flag(
+                self._settings, "llm_remediation_generation_enabled", False
+            ),
+            "rule_remediation_generation_enabled": _flag(
+                self._settings, "rule_remediation_generation_enabled", False
+            ),
+            "remediation_risk_analysis_enabled": _flag(
+                self._settings, "remediation_risk_analysis_enabled", False
+            ),
+            "remediation_side_effect_analysis_enabled": _flag(
+                self._settings, "remediation_side_effect_analysis_enabled", False
+            ),
+            "remediation_ranking_enabled": _flag(
+                self._settings, "remediation_ranking_enabled", False
+            ),
+            "remediation_deduplication_enabled": _flag(
+                self._settings, "remediation_deduplication_enabled", False
+            ),
+            "remediation_diversity_enabled": _flag(
+                self._settings, "remediation_diversity_enabled", False
+            ),
+            "remediation_patch_rendering_enabled": _flag(
+                self._settings, "remediation_patch_rendering_enabled", False
+            ),
+            "remediation_rollback_generation_enabled": _flag(
+                self._settings, "remediation_rollback_generation_enabled", False
+            ),
+            "remediation_reference_validation_enabled": _flag(
+                self._settings, "remediation_reference_validation_enabled", False
+            ),
+            "remediation_constraint_validation_enabled": _flag(
+                self._settings, "remediation_constraint_validation_enabled", False
+            ),
         }
 
     def _load_hypotheses(self, options: dict[str, Any]) -> list[dict[str, Any]]:
@@ -619,12 +680,24 @@ class CounterfactualRemediationFoundationService:
         if any(c.must_stop_generation for c in conflicts):
             warnings.append(f"conflicts_stop_generation:{context.hypothesis_id}")
 
+        generation_context = build_generation_context_from_foundation(
+            run=run,
+            context=context,
+            current_state=current_state,
+            constraint_set=constraint_set,
+            plan=plan,
+            objective=objective,
+            templates=templates,
+            conflicts=conflicts,
+        )
+
         return {
             "candidates": candidates,
             "constraints": list(constraint_set.constraints),
             "preconditions": list(preconditions),
             "warnings": warnings,
             "plan_status": plan.status.value,
+            "generation_context": generation_context,
         }
 
     def _build_candidate_skeleton(
