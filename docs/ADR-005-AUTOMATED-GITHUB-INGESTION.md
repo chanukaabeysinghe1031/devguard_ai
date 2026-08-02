@@ -29,6 +29,23 @@ Phase 5A delivers a complete **manual** incident workflow. The approved product 
 - New Integrations UI under Project Details.
 - Architecture scope amendment: automated ingestion is now in-scope for GitHub Actions only.
 
+## Amendment — Shared installations (2026-08-02)
+
+**Status:** Accepted  
+**Migration:** `019_shared_github_installations`
+
+Original ADR text implied an org-level installation registry. Production use requires **one GitHub App installation → many DevGuard organizations/projects** without weakening repository-scoped tenant isolation.
+
+Amendments:
+
+1. `github_installations` is a **global identity** (unique on GitHub installation id). `organization_id` on that table is legacy metadata only.
+2. Organization permission to use an installation is modeled by `github_installation_organization_access`.
+3. Project repository connections reference the access grant and remain org/project scoped.
+4. Webhook deliveries fan out to all matching active connections with per-connection idempotency (`webhook_delivery_connection_processing`).
+5. Setup no longer rejects `INSTALLATION_ALREADY_LINKED`; it upserts an access grant after a valid encrypted setup `state`.
+
+See `docs/SHARED_GITHUB_INSTALLATIONS.md` and the architecture audit.
+
 ## Alternatives considered
 
 | Alternative | Why rejected |

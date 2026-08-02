@@ -38,12 +38,12 @@ Brand marks and loading UX: `docs/PHASE5D_BRANDING_AND_LOADING_UX.md`.
 ## Automated GitHub Actions (Phase 5B)
 
 1. Open a project → **Integrations**.
-2. Connect **GitHub Actions** (requires GitHub App configured on the server).
+2. Connect **GitHub Actions** (requires GitHub App configured on the server). The same GitHub App installation can be linked to more than one DevGuard organization or project; each organization only sees its own connections and incidents.
 3. Select a repository and enable automatic incidents / analysis.
 4. When a monitored workflow fails, DevGuard creates an incident, collects logs, and runs the same AI pipeline as manual uploads.
 5. Incidents show a **GitHub** source badge and workflow context when available.
 
-See `docs/PHASE5B_GITHUB_APP_SETUP.md` and `docs/PHASE5B_LOCAL_GITHUB_SETUP.md`.
+See `docs/PHASE5B_GITHUB_APP_SETUP.md`, `docs/PHASE5B_LOCAL_GITHUB_SETUP.md`, and `docs/SHARED_GITHUB_INSTALLATIONS.md`.
 
 ## Tips
 

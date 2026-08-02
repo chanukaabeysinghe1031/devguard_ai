@@ -10725,6 +10725,138 @@
         }
       }
     },
+    "/api/v1/integrations/github/installations/{installation_id}/sync": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Sync Github Installation Repositories",
+        "description": "Refresh this organization's view of the installation's repositories.",
+        "operationId": "sync_github_installation_repositories_api_v1_integrations_github_installations__installation_id__sync_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "installation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Installation Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubRepositoryListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/github/installations/{installation_id}/link": {
+      "delete": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Unlink Github Installation",
+        "description": "Revoke this organization's access grant only.\n\nThe shared GitHub App installation itself, and any other organization's\naccess to it, are unaffected.",
+        "operationId": "unlink_github_installation_api_v1_integrations_github_installations__installation_id__link_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "installation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Installation Id"
+            }
+          },
+          {
+            "name": "X-Organization-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Organization-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/integrations": {
       "get": {
         "tags": [
@@ -16951,6 +17083,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "organization_access_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organization Access Status"
           }
         },
         "type": "object",

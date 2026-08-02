@@ -1,5 +1,7 @@
 # Phase 5B — Local GitHub Setup
 
+Shared installations across DevGuard organizations are supported after migration `019_shared_github_installations`. See `docs/SHARED_GITHUB_INSTALLATIONS.md`.
+
 ## Preferred for this smoke — Real App + tunnel (no fake mode)
 
 1. Expose local backend with HTTPS (ngrok, Cloudflare Tunnel, etc.).

@@ -169,7 +169,7 @@ export function GitHubSetupCallbackPage() {
             <Github className="h-6 w-6" /> GitHub setup
           </span>
         }
-        description="Finish connecting your GitHub App installation to a DevGuard AI project."
+        description="Link a GitHub App installation to this organization, then map a repository to your project. The same installation can be reused across organizations and projects."
       />
 
       {isSetupLoading ? (
@@ -266,9 +266,10 @@ export function GitHubSetupCallbackPage() {
           </CardBody>
         </Card>
       ) : setupResult ? (
-        <Alert variant="success" title="Installation linked" className="mb-6">
-          GitHub account <strong>{setupResult.installation.github_account_login}</strong> is connected to your
-          organization. Choose a repository below to map it to your project.
+        <Alert variant="success" title="GitHub installation found" className="mb-6">
+          GitHub account <strong>{setupResult.installation.github_account_login}</strong> is linked to this
+          organization and can be reused across multiple projects. Choose a repository below to map it to your
+          project.
         </Alert>
       ) : null}
 

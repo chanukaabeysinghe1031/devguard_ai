@@ -2,6 +2,8 @@
 
 Use the **real** GitHub provider only (`GITHUB_PROVIDER=github`). Do not use fake mode for local smoke testing against GitHub.
 
+**Shared installations:** One GitHub App installation can be linked to multiple DevGuard AI organizations and projects. Setup no longer fails when another organization already uses the same installation — it creates an organization access grant instead. See [SHARED_GITHUB_INSTALLATIONS.md](./SHARED_GITHUB_INSTALLATIONS.md).
+
 ## Create the GitHub App
 
 1. GitHub → Settings → Developer settings → GitHub Apps → New GitHub App
