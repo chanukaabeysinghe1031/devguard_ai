@@ -194,6 +194,28 @@ class GitHubInstallationStatus(StrEnum):
     DELETED = "deleted"
 
 
+class GitHubInstallationAccessStatus(StrEnum):
+    """Lifecycle of one organization's access grant to a shared GitHub App
+    installation (does not imply exclusive ownership of the installation)."""
+
+    ACTIVE = "active"
+    DISCONNECTED = "disconnected"
+    SUSPENDED = "suspended"
+    REVOKED = "revoked"
+    INSTALLATION_UNAVAILABLE = "installation_unavailable"
+
+
+class WebhookConnectionProcessingStatus(StrEnum):
+    """Per-connection fan-out processing state for one webhook delivery."""
+
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETE = "complete"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+    RETRYABLE = "retryable"
+
+
 class InvitationStatus(StrEnum):
     """Organization invitation lifecycle (link-based; SMTP deferred)."""
 

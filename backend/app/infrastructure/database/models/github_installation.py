@@ -1,4 +1,11 @@
-"""Organization-scoped GitHub App installation metadata (ADR-005).
+"""Global GitHub App installation identity (ADR-005).
+
+A row here represents one GitHub App installation on a GitHub account/org —
+it is a global identity, not the exclusive property of one DevGuard
+organization. Which DevGuard organizations may use it is recorded in
+``github_installation_organization_access``; ``organization_id`` on this
+table is retained only as legacy/original-linker metadata and must not be
+used as an authorization check.
 
 No installation access tokens are ever persisted here — tokens are minted on
 demand and held in memory only.
@@ -22,6 +29,9 @@ from app.infrastructure.database.base import (
 )
 
 if TYPE_CHECKING:
+    from app.infrastructure.database.models.github_installation_organization_access import (
+        GitHubInstallationOrganizationAccess,
+    )
     from app.infrastructure.database.models.github_repository_connection import (
         GitHubRepositoryConnection,
     )
@@ -29,7 +39,12 @@ if TYPE_CHECKING:
 
 
 class GitHubInstallation(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin):
-    """A GitHub App installation bound to a DevGuard organization."""
+    """A global GitHub App installation identity (not exclusive org ownership).
+
+    Organization access is granted/revoked independently via
+    ``organization_accesses``; this row's ``organization_id`` is legacy
+    metadata (the original linker) only.
+    """
 
     __tablename__ = "github_installations"
     __table_args__ = (
@@ -40,9 +55,9 @@ class GitHubInstallation(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMix
         Index("ix_github_installations_organization_id", "organization_id"),
     )
 
-    organization_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("organizations.id", ondelete="CASCADE"),
-        nullable=False,
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("organizations.id", ondelete="SET NULL"),
+        nullable=True,
     )
     github_installation_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     github_account_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
@@ -54,8 +69,12 @@ class GitHubInstallation(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMix
     installed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    organization: Mapped[Organization] = relationship()
+    organization: Mapped[Organization | None] = relationship()
     connections: Mapped[list[GitHubRepositoryConnection]] = relationship(
+        back_populates="installation",
+        cascade="all, delete-orphan",
+    )
+    organization_accesses: Mapped[list[GitHubInstallationOrganizationAccess]] = relationship(
         back_populates="installation",
         cascade="all, delete-orphan",
     )

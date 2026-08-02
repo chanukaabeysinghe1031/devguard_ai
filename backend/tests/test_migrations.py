@@ -49,6 +49,8 @@ KEY_TABLES = frozenset(
         "knowledge_documents",
         "knowledge_chunks",
         "refresh_tokens",
+        "github_installation_organization_access",
+        "webhook_delivery_connection_processing",
     }
 )
 

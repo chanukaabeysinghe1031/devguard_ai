@@ -28,6 +28,9 @@ from app.infrastructure.database.models.evidence_item import EvidenceItem
 from app.infrastructure.database.models.failure_category import FailureCategory
 from app.infrastructure.database.models.feedback import Feedback
 from app.infrastructure.database.models.github_installation import GitHubInstallation
+from app.infrastructure.database.models.github_installation_organization_access import (
+    GitHubInstallationOrganizationAccess,
+)
 from app.infrastructure.database.models.github_repository_connection import (
     GitHubRepositoryConnection,
 )
@@ -83,6 +86,9 @@ from app.infrastructure.database.models.temporal_evidence_graph import (
 from app.infrastructure.database.models.uploaded_file import UploadedFile
 from app.infrastructure.database.models.user import User
 from app.infrastructure.database.models.webhook_delivery import WebhookDelivery
+from app.infrastructure.database.models.webhook_delivery_connection_processing import (
+    WebhookDeliveryConnectionProcessing,
+)
 
 __all__ = [
     "Base",
@@ -99,6 +105,7 @@ __all__ = [
     "FailureCategory",
     "Feedback",
     "GitHubInstallation",
+    "GitHubInstallationOrganizationAccess",
     "GitHubRepositoryConnection",
     "GraphConsistencyReportRow",
     "ClassificationCandidateRow",
@@ -152,4 +159,5 @@ __all__ = [
     "UploadedFile",
     "User",
     "WebhookDelivery",
+    "WebhookDeliveryConnectionProcessing",
 ]

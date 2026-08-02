@@ -19,6 +19,9 @@ from app.infrastructure.database.base import (
 
 if TYPE_CHECKING:
     from app.infrastructure.database.models.github_installation import GitHubInstallation
+    from app.infrastructure.database.models.github_installation_organization_access import (
+        GitHubInstallationOrganizationAccess,
+    )
     from app.infrastructure.database.models.project import Project
 
 
@@ -27,6 +30,8 @@ class GitHubRepositoryConnection(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, Upda
 
     Partial unique indexes (see migration 009) allow only one live connection
     per repository within an organization and one live connection per project.
+    ``installation_access_id`` records which organization access grant this
+    connection was created under (shared-installation support, migration 019).
     """
 
     __tablename__ = "github_repository_connections"
@@ -34,6 +39,10 @@ class GitHubRepositoryConnection(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, Upda
         Index("ix_github_repository_connections_github_repository_id", "github_repository_id"),
         Index("ix_github_repository_connections_project_id", "project_id"),
         Index("ix_github_repository_connections_installation_id", "github_installation_id"),
+        Index(
+            "ix_github_repository_connections_installation_access_id",
+            "installation_access_id",
+        ),
     )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(
@@ -47,6 +56,10 @@ class GitHubRepositoryConnection(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, Upda
     github_installation_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("github_installations.id", ondelete="CASCADE"),
         nullable=False,
+    )
+    installation_access_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("github_installation_organization_access.id", ondelete="SET NULL"),
+        nullable=True,
     )
     github_repository_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     repository_full_name: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -78,4 +91,5 @@ class GitHubRepositoryConnection(Base, UUIDPrimaryKeyMixin, CreatedAtMixin, Upda
     )
 
     installation: Mapped[GitHubInstallation] = relationship(back_populates="connections")
+    installation_access: Mapped[GitHubInstallationOrganizationAccess | None] = relationship()
     project: Mapped[Project] = relationship()
