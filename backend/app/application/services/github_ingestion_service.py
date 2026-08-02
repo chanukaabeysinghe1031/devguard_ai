@@ -9,6 +9,7 @@ this module ever writes to GitHub.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -27,10 +28,12 @@ from app.application.services.webhook_delivery_service import WebhookDeliverySer
 from app.core.config import Settings
 from app.domain.enums import (
     CiProvider,
+    GitHubInstallationAccessStatus,
+    GitHubInstallationStatus,
     IncidentSeverity,
     IncidentStatus,
     PipelineRunStatus,
-    WebhookProcessingStatus,
+    WebhookConnectionProcessingStatus,
 )
 from app.domain.exceptions.integration import GitHubProviderError, LogArchiveError
 from app.domain.interfaces.github_provider import GitHubProvider
@@ -39,6 +42,10 @@ from app.domain.services.github_event_filters import (
     evaluate_workflow_run,
     resolve_environment,
     resolve_severity,
+)
+from app.infrastructure.database.models.github_installation import GitHubInstallation
+from app.infrastructure.database.models.github_installation_organization_access import (
+    GitHubInstallationOrganizationAccess,
 )
 from app.infrastructure.database.models.github_repository_connection import (
     GitHubRepositoryConnection,
@@ -73,6 +80,15 @@ def _parse_timestamp(value: Any) -> datetime | None:
     except ValueError:
         return None
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+
+
+@dataclass
+class _ConnectionOutcome:
+    """Result of processing one delivery for one repository connection."""
+
+    pipeline_run: PipelineRun | None = None
+    incident: Incident | None = None
+    skip_reason: str | None = None
 
 
 class GitHubIngestionService:
@@ -146,6 +162,14 @@ class GitHubIngestionService:
         *,
         background_tasks: BackgroundTasks | None,
     ) -> None:
+        """Fan a single delivery out to every matching tenant connection.
+
+        A GitHub App installation may be shared by many DevGuard
+        organizations, so one delivery can legitimately match several
+        repository connections across different tenants. Each connection is
+        processed and settled independently — one tenant's failure must
+        never mask or abort another's outcome.
+        """
         snapshot = delivery.sanitised_snapshot or {}
         run = snapshot.get("workflow_run") or {}
         run_id = run.get("id")
@@ -153,11 +177,159 @@ class GitHubIngestionService:
             await self._deliveries.mark_ignored(delivery, "missing_repository_or_run")
             return
 
-        connection = await self._find_connection(delivery.repository_id)
-        if connection is None:
+        connections = await self._find_active_connections(
+            repository_id=delivery.repository_id,
+            github_installation_numeric_id=delivery.installation_id,
+        )
+        if not connections:
             await self._deliveries.mark_ignored(delivery, "no_active_connection")
             return
 
+        logger.info(
+            "github_webhook_fan_out",
+            delivery_id=delivery.delivery_id,
+            repository_id=delivery.repository_id,
+            fan_out_count=len(connections),
+        )
+        await self._deliveries.mark_processing_started(delivery)
+
+        outcome_statuses: list[WebhookConnectionProcessingStatus] = []
+        last_pipeline_run_id: UUID | None = None
+        last_incident_id: UUID | None = None
+
+        for connection in connections:
+            processing = await self._deliveries.ensure_connection_processing(
+                delivery=delivery, connection=connection
+            )
+            if processing.status in (
+                WebhookConnectionProcessingStatus.COMPLETE.value,
+                WebhookConnectionProcessingStatus.SKIPPED.value,
+            ):
+                # Already settled for this connection (e.g. a replayed or
+                # concurrently retried delivery) — do not reprocess.
+                outcome_statuses.append(WebhookConnectionProcessingStatus(processing.status))
+                last_pipeline_run_id = processing.pipeline_run_id or last_pipeline_run_id
+                last_incident_id = processing.incident_id or last_incident_id
+                continue
+
+            try:
+                await self._deliveries.mark_connection_processing_started(processing)
+                outcome = await self._process_workflow_run_for_connection(
+                    connection=connection,
+                    run=run,
+                    background_tasks=background_tasks,
+                )
+            except (GitHubProviderError, LogArchiveError) as exc:
+                await self._deliveries.mark_connection_processing_failed(
+                    processing,
+                    error_code=exc.error_code,
+                    error_message=exc.message,
+                    retriable=getattr(exc, "retriable", False),
+                )
+                outcome_statuses.append(
+                    WebhookConnectionProcessingStatus.RETRYABLE
+                    if getattr(exc, "retriable", False)
+                    else WebhookConnectionProcessingStatus.FAILED
+                )
+                continue
+            except Exception as exc:  # noqa: BLE001 - one tenant must never abort others
+                logger.exception(
+                    "github_connection_processing_error",
+                    delivery_id=delivery.delivery_id,
+                    connection_id=str(connection.id),
+                )
+                await self._deliveries.mark_connection_processing_failed(
+                    processing,
+                    error_code="INGESTION_ERROR",
+                    error_message=type(exc).__name__,
+                    retriable=False,
+                )
+                outcome_statuses.append(WebhookConnectionProcessingStatus.FAILED)
+                continue
+
+            if outcome.skip_reason is not None:
+                await self._deliveries.mark_connection_processing_skipped(
+                    processing, outcome.skip_reason
+                )
+                outcome_statuses.append(WebhookConnectionProcessingStatus.SKIPPED)
+                continue
+
+            await self._deliveries.mark_connection_processing_completed(
+                processing,
+                pipeline_run_id=outcome.pipeline_run.id if outcome.pipeline_run else None,
+                incident_id=outcome.incident.id if outcome.incident else None,
+            )
+            outcome_statuses.append(WebhookConnectionProcessingStatus.COMPLETE)
+            if outcome.pipeline_run is not None:
+                last_pipeline_run_id = outcome.pipeline_run.id
+            if outcome.incident is not None:
+                last_incident_id = outcome.incident.id
+
+        await self._settle_fan_out_delivery(
+            delivery,
+            outcome_statuses=outcome_statuses,
+            pipeline_run_id=last_pipeline_run_id,
+            incident_id=last_incident_id,
+        )
+
+    async def _settle_fan_out_delivery(
+        self,
+        delivery: WebhookDelivery,
+        *,
+        outcome_statuses: list[WebhookConnectionProcessingStatus],
+        pipeline_run_id: UUID | None,
+        incident_id: UUID | None,
+    ) -> None:
+        """Aggregate independent per-connection outcomes into one delivery status.
+
+        The delivery's own ``related_*`` fields are best-effort pointers to
+        the last successful connection outcome; the authoritative per-tenant
+        record is ``webhook_delivery_connection_processing``.
+        """
+        has_retryable = any(
+            status == WebhookConnectionProcessingStatus.RETRYABLE for status in outcome_statuses
+        )
+        has_failed = any(
+            status == WebhookConnectionProcessingStatus.FAILED for status in outcome_statuses
+        )
+        has_complete = any(
+            status == WebhookConnectionProcessingStatus.COMPLETE for status in outcome_statuses
+        )
+        if has_retryable:
+            await self._deliveries.mark_failed(
+                delivery,
+                error_code="CONNECTION_PROCESSING_RETRYABLE",
+                error_message="One or more organization connections require a retry.",
+                retriable=True,
+                max_attempts=self._settings.github_max_delivery_attempts,
+            )
+        elif has_failed:
+            await self._deliveries.mark_failed(
+                delivery,
+                error_code="CONNECTION_PROCESSING_FAILED",
+                error_message=(
+                    "One or more organization connections failed to process this delivery."
+                ),
+                retriable=False,
+                max_attempts=self._settings.github_max_delivery_attempts,
+            )
+        elif has_complete:
+            await self._deliveries.mark_completed(
+                delivery,
+                pipeline_run_id=pipeline_run_id,
+                incident_id=incident_id,
+            )
+        else:
+            await self._deliveries.mark_ignored(delivery, "all_connections_skipped")
+
+    async def _process_workflow_run_for_connection(
+        self,
+        *,
+        connection: GitHubRepositoryConnection,
+        run: dict[str, Any],
+        background_tasks: BackgroundTasks | None,
+    ) -> _ConnectionOutcome:
+        """Apply this connection's filters/automation to one workflow run."""
         decision = evaluate_workflow_run(
             conclusion=run.get("conclusion"),
             workflow_name=run.get("name"),
@@ -169,63 +341,45 @@ class GitHubIngestionService:
         )
         connection.last_webhook_at = datetime.now(UTC)
         if not decision.should_ingest:
-            await self._deliveries.mark_ignored(delivery, decision.reason)
-            return
+            await self._session.flush()
+            return _ConnectionOutcome(skip_reason=decision.reason)
 
-        await self._deliveries.mark_processing_started(delivery)
         run = await self._enrich_run_metadata(connection, run)
-
         pipeline_run = await self._upsert_pipeline_run(connection, run)
-        delivery.related_pipeline_run_id = pipeline_run.id
 
         if not connection.auto_create_incidents:
             connection.last_successful_sync_at = datetime.now(UTC)
-            await self._deliveries.mark_completed(delivery, pipeline_run_id=pipeline_run.id)
-            return
+            return _ConnectionOutcome(pipeline_run=pipeline_run)
 
-        await self._deliveries.mark_status(delivery, WebhookProcessingStatus.CREATING_INCIDENT)
         incident, created = await self._get_or_create_incident(connection, pipeline_run, run)
-        delivery.related_incident_id = incident.id
 
         if not created:
             connection.last_successful_sync_at = datetime.now(UTC)
-            await self._deliveries.mark_completed(
-                delivery,
-                pipeline_run_id=pipeline_run.id,
-                incident_id=incident.id,
-            )
-            return
+            return _ConnectionOutcome(pipeline_run=pipeline_run, incident=incident)
 
         if connection.notify_on_failure:
             await self._notify_incident_created(connection, incident, run)
 
         if connection.auto_start_analysis:
-            await self._ingest_logs_and_analyse(
+            await self._ingest_logs_and_analyse_for_connection(
                 connection=connection,
                 incident=incident,
                 run=run,
-                delivery=delivery,
                 background_tasks=background_tasks,
             )
 
         connection.last_successful_sync_at = datetime.now(UTC)
         connection.last_error = None
-        await self._deliveries.mark_completed(
-            delivery,
-            pipeline_run_id=pipeline_run.id,
-            incident_id=incident.id,
-        )
         logger.info(
             "github_incident_ingested",
             incident_id=str(incident.id),
+            organization_id=str(connection.organization_id),
             project_id=str(connection.project_id),
             repository_id=connection.github_repository_id,
         )
+        return _ConnectionOutcome(pipeline_run=pipeline_run, incident=incident)
 
     async def _process_installation_event(self, delivery: WebhookDelivery) -> None:
-        from app.domain.enums import GitHubInstallationStatus
-        from app.infrastructure.database.models.github_installation import GitHubInstallation
-
         action = delivery.event_action or ""
         status_by_action = {
             "suspend": GitHubInstallationStatus.SUSPENDED,
@@ -251,26 +405,91 @@ class GitHubIngestionService:
             datetime.now(UTC) if new_status == GitHubInstallationStatus.SUSPENDED else None
         )
         await self._session.flush()
+
+        # Propagate to every organization's independent access grant — a
+        # shared installation being suspended/deleted/restored on GitHub
+        # affects all tenants using it, except those who already manually
+        # disconnected (which must not be silently reactivated).
+        access_status_by_action = {
+            "suspend": GitHubInstallationAccessStatus.SUSPENDED,
+            "deleted": GitHubInstallationAccessStatus.INSTALLATION_UNAVAILABLE,
+        }
+        new_access_status = access_status_by_action.get(action)
+        accesses = list(
+            (
+                await self._session.scalars(
+                    select(GitHubInstallationOrganizationAccess).where(
+                        GitHubInstallationOrganizationAccess.installation_id == installation.id
+                    )
+                )
+            ).all()
+        )
+        updated = 0
+        for access in accesses:
+            if access.status == GitHubInstallationAccessStatus.DISCONNECTED.value:
+                continue
+            if action == "unsuspend":
+                access.status = GitHubInstallationAccessStatus.ACTIVE.value
+                updated += 1
+            elif new_access_status is not None:
+                access.status = new_access_status.value
+                updated += 1
+        await self._session.flush()
+
+        logger.info(
+            "github_installation_status_changed",
+            github_installation_id=delivery.installation_id,
+            action=action,
+            access_grants_updated=updated,
+        )
         await self._deliveries.mark_completed(delivery)
 
     # ------------------------------------------------------------------
     # Steps
     # ------------------------------------------------------------------
-    async def _find_connection(self, repository_id: int) -> GitHubRepositoryConnection | None:
+    async def _find_active_connections(
+        self,
+        *,
+        repository_id: int,
+        github_installation_numeric_id: int | None,
+    ) -> list[GitHubRepositoryConnection]:
+        """Every live, active-access connection to this repository.
+
+        Joined through the connection's own ``installation_access_id`` so
+        that each tenant's fan-out eligibility is judged by that tenant's
+        independent access grant, not by the (legacy, single-value)
+        installation-level organization link.
+        """
         stmt = (
             select(GitHubRepositoryConnection)
+            .join(
+                GitHubInstallation,
+                GitHubInstallation.id == GitHubRepositoryConnection.github_installation_id,
+            )
+            .join(
+                GitHubInstallationOrganizationAccess,
+                GitHubInstallationOrganizationAccess.id
+                == GitHubRepositoryConnection.installation_access_id,
+            )
             .where(
                 GitHubRepositoryConnection.github_repository_id == repository_id,
                 GitHubRepositoryConnection.disconnected_at.is_(None),
                 GitHubRepositoryConnection.is_active.is_(True),
                 GitHubRepositoryConnection.is_paused.is_(False),
+                GitHubInstallationOrganizationAccess.status
+                == GitHubInstallationAccessStatus.ACTIVE.value,
+                GitHubInstallation.status == GitHubInstallationStatus.ACTIVE.value,
             )
             .options(
                 selectinload(GitHubRepositoryConnection.installation),
                 selectinload(GitHubRepositoryConnection.project),
             )
         )
-        return await self._session.scalar(stmt)
+        if github_installation_numeric_id is not None:
+            stmt = stmt.where(
+                GitHubInstallation.github_installation_id == github_installation_numeric_id
+            )
+        return list((await self._session.scalars(stmt)).all())
 
     async def _enrich_run_metadata(
         self,
@@ -434,16 +653,14 @@ class GitHubIngestionService:
         await self._session.flush()
         return incident, True
 
-    async def _ingest_logs_and_analyse(
+    async def _ingest_logs_and_analyse_for_connection(
         self,
         *,
         connection: GitHubRepositoryConnection,
         incident: Incident,
         run: dict[str, Any],
-        delivery: WebhookDelivery,
         background_tasks: BackgroundTasks | None,
     ) -> None:
-        await self._deliveries.mark_status(delivery, WebhookProcessingStatus.DOWNLOADING_LOGS)
         try:
             archive = await self._provider.download_workflow_run_logs(
                 installation_id=connection.installation.github_installation_id,
@@ -473,7 +690,6 @@ class GitHubIngestionService:
             await self._session.flush()
             return
 
-        await self._deliveries.mark_status(delivery, WebhookProcessingStatus.EXTRACTING_LOGS)
         try:
             entries = extract_log_files(archive, settings=self._settings)
         except LogArchiveError as exc:
@@ -515,7 +731,6 @@ class GitHubIngestionService:
             await self._session.flush()
             return
 
-        await self._deliveries.mark_status(delivery, WebhookProcessingStatus.STARTING_ANALYSIS)
         from app.application.services.analysis_run_service import AnalysisRunService
 
         analysis_file_ids = [item.id for item in stored.files]
