@@ -48,6 +48,21 @@ export async function listInstallationRepositories(
   );
 }
 
+export async function syncInstallationRepositories(
+  installationId: string,
+): Promise<GitHubRepositoryListResponse> {
+  return apiFetch<GitHubRepositoryListResponse>(
+    `/integrations/github/installations/${installationId}/sync`,
+    { method: "POST" },
+  );
+}
+
+export async function unlinkGithubInstallation(installationId: string): Promise<MessageResponse> {
+  return apiFetch<MessageResponse>(`/integrations/github/installations/${installationId}/link`, {
+    method: "DELETE",
+  });
+}
+
 export async function listProjectIntegrations(projectId: string): Promise<ProjectIntegrationListResponse> {
   return apiFetch<ProjectIntegrationListResponse>(`/projects/${projectId}/integrations`);
 }

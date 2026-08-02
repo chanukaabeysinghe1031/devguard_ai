@@ -50,6 +50,9 @@ export interface GitHubInstallationResponse {
   permissions: Record<string, string> | null;
   installed_at: string | null;
   created_at: string;
+  /** This organization's own access grant status (a shared installation may
+   * be active while this organization's grant is disconnected, or vice versa). */
+  organization_access_status: string | null;
 }
 
 export interface GitHubInstallationListResponse {

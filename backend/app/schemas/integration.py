@@ -59,6 +59,10 @@ class GitHubInstallationResponse(BaseModel):
     permissions: dict[str, str] | None = None
     installed_at: datetime | None = None
     created_at: datetime
+    # This organization's independent access grant status — a shared GitHub
+    # App installation (``status`` above) may be ACTIVE while a particular
+    # organization's own grant is disconnected/suspended, or vice versa.
+    organization_access_status: str | None = None
 
 
 class GitHubInstallationListResponse(BaseModel):

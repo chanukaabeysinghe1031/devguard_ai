@@ -222,6 +222,45 @@ async def list_github_installation_repositories(
     )
 
 
+@router.post(
+    "/integrations/github/installations/{installation_id}/sync",
+    response_model=GitHubRepositoryListResponse,
+)
+async def sync_github_installation_repositories(
+    installation_id: UUID,
+    ctx: tuple = Depends(require_org_admin),
+    service: GitHubSetupService = Depends(_setup_service),
+) -> GitHubRepositoryListResponse:
+    """Refresh this organization's view of the installation's repositories."""
+    _, organization_id, _ = ctx
+    return await service.sync_repositories(
+        organization_id=organization_id,
+        installation_row_id=installation_id,
+    )
+
+
+@router.delete(
+    "/integrations/github/installations/{installation_id}/link",
+    response_model=MessageResponse,
+)
+async def unlink_github_installation(
+    installation_id: UUID,
+    ctx: tuple = Depends(require_org_admin),
+    service: GitHubSetupService = Depends(_setup_service),
+) -> MessageResponse:
+    """Revoke this organization's access grant only.
+
+    The shared GitHub App installation itself, and any other organization's
+    access to it, are unaffected.
+    """
+    _, organization_id, _ = ctx
+    await service.disconnect_organization_access(
+        organization_id=organization_id,
+        installation_row_id=installation_id,
+    )
+    return MessageResponse(message="GitHub installation access removed from this organization.")
+
+
 # ----------------------------------------------------------------------
 # Project-scoped integration management
 # ----------------------------------------------------------------------

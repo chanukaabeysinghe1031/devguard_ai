@@ -18,7 +18,11 @@ from sqlalchemy.orm import selectinload
 
 from app.application.services.webhook_delivery_service import WebhookDeliveryService
 from app.core.config import Settings
-from app.domain.enums import GitHubInstallationStatus
+from app.domain.enums import (
+    GitHubInstallationAccessStatus,
+    GitHubInstallationStatus,
+    WebhookConnectionProcessingStatus,
+)
 from app.domain.exceptions.business import (
     ConflictError,
     ResourceNotFoundError,
@@ -31,11 +35,17 @@ from app.domain.services.github_event_filters import (
     DEFAULT_SEVERITY_RULES,
 )
 from app.infrastructure.database.models.github_installation import GitHubInstallation
+from app.infrastructure.database.models.github_installation_organization_access import (
+    GitHubInstallationOrganizationAccess,
+)
 from app.infrastructure.database.models.github_repository_connection import (
     GitHubRepositoryConnection,
 )
 from app.infrastructure.database.models.project import Project
 from app.infrastructure.database.models.webhook_delivery import WebhookDelivery
+from app.infrastructure.database.models.webhook_delivery_connection_processing import (
+    WebhookDeliveryConnectionProcessing,
+)
 from app.infrastructure.security.integration_crypto import (
     decrypt_state,
     encrypt_state,
@@ -67,6 +77,18 @@ logger = structlog.get_logger(__name__)
 
 GITHUB_PROVIDER_KEY = "github_actions"
 
+# Maps the internal per-connection fan-out state to the same external
+# vocabulary the (pre-fan-out) delivery-level ``WebhookProcessingStatus``
+# used, so activity feeds and the frontend badge/tone map stay unchanged.
+_CONNECTION_STATUS_LABELS: dict[str, str] = {
+    WebhookConnectionProcessingStatus.PENDING.value: "queued",
+    WebhookConnectionProcessingStatus.PROCESSING.value: "fetching_metadata",
+    WebhookConnectionProcessingStatus.COMPLETE.value: "completed",
+    WebhookConnectionProcessingStatus.FAILED.value: "failed",
+    WebhookConnectionProcessingStatus.SKIPPED.value: "ignored",
+    WebhookConnectionProcessingStatus.RETRYABLE.value: "retrying",
+}
+
 # Providers shown in the UI but not connectable in Phase 5B (ADR-005 §10).
 _DEFERRED_PROVIDERS: tuple[tuple[str, str], ...] = (
     ("gitlab", "GitLab CI"),
@@ -97,8 +119,12 @@ class GitHubSetupService:
         installation_count = int(
             await self._session.scalar(
                 select(func.count())
-                .select_from(GitHubInstallation)
-                .where(GitHubInstallation.organization_id == organization_id)
+                .select_from(GitHubInstallationOrganizationAccess)
+                .where(
+                    GitHubInstallationOrganizationAccess.organization_id == organization_id,
+                    GitHubInstallationOrganizationAccess.status
+                    == GitHubInstallationAccessStatus.ACTIVE.value,
+                )
             )
             or 0
         )
@@ -190,35 +216,85 @@ class GitHubSetupService:
                 error_code="INTEGRATION_STATE_MISMATCH",
             )
 
+        # A GitHub App installation is a global identity: it may already be
+        # registered because another organization linked it first. That is
+        # never a conflict — organization access is a separate grant below.
         info = await self._provider.get_installation(installation_id)
-        existing = await self._session.scalar(
+        installation = await self._session.scalar(
             select(GitHubInstallation).where(
                 GitHubInstallation.github_installation_id == installation_id
             )
         )
-        if existing is not None and existing.organization_id != organization_id:
-            raise ConflictError(
-                "This GitHub installation is already linked to another organization.",
-                error_code="INSTALLATION_ALREADY_LINKED",
-            )
 
         now = datetime.now(UTC)
-        if existing is None:
-            existing = GitHubInstallation(
+        if installation is None:
+            # organization_id here is retained only as legacy "original
+            # linker" metadata; it is never treated as exclusive ownership.
+            installation = GitHubInstallation(
                 organization_id=organization_id,
                 github_installation_id=installation_id,
                 installed_at=info.created_at or now,
             )
-            self._session.add(existing)
+            self._session.add(installation)
 
-        existing.github_account_id = info.account_id
-        existing.github_account_login = info.account_login or str(installation_id)
-        existing.account_type = info.account_type
-        existing.status = GitHubInstallationStatus.ACTIVE.value
-        existing.permissions_json = dict(info.permissions) if info.permissions else None
-        existing.repository_selection = info.repository_selection
-        existing.suspended_at = None
+        installation.github_account_id = info.account_id
+        installation.github_account_login = info.account_login or str(installation_id)
+        installation.account_type = info.account_type
+        installation.status = GitHubInstallationStatus.ACTIVE.value
+        installation.permissions_json = dict(info.permissions) if info.permissions else None
+        installation.repository_selection = info.repository_selection
+        installation.suspended_at = None
         await self._session.flush()
+
+        permissions_snapshot = dict(info.permissions) if info.permissions else None
+        user_id_raw = payload.get("user_id")
+        linked_by_user_id = UUID(str(user_id_raw)) if user_id_raw else None
+
+        access = await self._session.scalar(
+            select(GitHubInstallationOrganizationAccess).where(
+                GitHubInstallationOrganizationAccess.installation_id == installation.id,
+                GitHubInstallationOrganizationAccess.organization_id == organization_id,
+            )
+        )
+        if access is None:
+            access = GitHubInstallationOrganizationAccess(
+                installation_id=installation.id,
+                organization_id=organization_id,
+                status=GitHubInstallationAccessStatus.ACTIVE.value,
+                linked_by_user_id=linked_by_user_id,
+                linked_at=now,
+                permissions_snapshot=permissions_snapshot,
+                repository_selection=info.repository_selection,
+            )
+            self._session.add(access)
+            await self._session.flush()
+            logger.info(
+                "github_organization_access_created",
+                organization_id=str(organization_id),
+                github_installation_id=installation_id,
+            )
+        elif access.status != GitHubInstallationAccessStatus.ACTIVE.value:
+            access.status = GitHubInstallationAccessStatus.ACTIVE.value
+            access.disconnected_at = None
+            access.permissions_snapshot = permissions_snapshot
+            access.repository_selection = info.repository_selection
+            if linked_by_user_id is not None:
+                access.linked_by_user_id = linked_by_user_id
+            await self._session.flush()
+            logger.info(
+                "github_organization_access_reactivated",
+                organization_id=str(organization_id),
+                github_installation_id=installation_id,
+            )
+        else:
+            access.permissions_snapshot = permissions_snapshot
+            access.repository_selection = info.repository_selection
+            await self._session.flush()
+            logger.info(
+                "github_organization_access_reused",
+                organization_id=str(organization_id),
+                github_installation_id=installation_id,
+            )
 
         project_id = payload.get("project_id")
         logger.info(
@@ -227,7 +303,7 @@ class GitHubSetupService:
             github_installation_id=installation_id,
         )
         return SetupCompleteResponse(
-            installation=self._installation_response(existing),
+            installation=self._installation_response(installation, access_status=access.status),
             project_id=UUID(str(project_id)) if project_id else None,
             redirect_url=self._settings.github_setup_redirect_url or None,
         )
@@ -238,13 +314,24 @@ class GitHubSetupService:
         organization_id: UUID,
     ) -> GitHubInstallationListResponse:
         stmt = (
-            select(GitHubInstallation)
-            .where(GitHubInstallation.organization_id == organization_id)
+            select(GitHubInstallation, GitHubInstallationOrganizationAccess.status)
+            .join(
+                GitHubInstallationOrganizationAccess,
+                GitHubInstallationOrganizationAccess.installation_id == GitHubInstallation.id,
+            )
+            .where(
+                GitHubInstallationOrganizationAccess.organization_id == organization_id,
+                GitHubInstallationOrganizationAccess.status
+                == GitHubInstallationAccessStatus.ACTIVE.value,
+            )
             .order_by(GitHubInstallation.created_at.desc())
         )
-        rows = list((await self._session.scalars(stmt)).all())
+        rows = (await self._session.execute(stmt)).all()
         return GitHubInstallationListResponse(
-            items=[self._installation_response(row) for row in rows]
+            items=[
+                self._installation_response(installation, access_status=access_status)
+                for installation, access_status in rows
+            ]
         )
 
     async def list_repositories(
@@ -337,7 +424,9 @@ class GitHubSetupService:
     ) -> ConnectionResponse:
         self._require_enabled()
         await self._load_project(organization_id, project_id)
-        installation = await self._load_installation(organization_id, body.installation_id)
+        installation, access = await self._load_installation_with_access(
+            organization_id, body.installation_id
+        )
 
         if await self._find_connection(organization_id, project_id) is not None:
             raise ConflictError(
@@ -361,6 +450,7 @@ class GitHubSetupService:
             organization_id=organization_id,
             project_id=project_id,
             github_installation_id=installation.id,
+            installation_access_id=access.id,
             github_repository_id=body.github_repository_id,
             repository_full_name=body.repository_full_name.strip(),
             repository_url=body.repository_url,
@@ -515,12 +605,73 @@ class GitHubSetupService:
         limit: int = 50,
     ) -> WebhookActivityListResponse:
         connection = await self._require_connection(organization_id, project_id)
-        deliveries = await WebhookDeliveryService(self._session).list_for_repository(
-            repository_id=connection.github_repository_id,
+        rows = await WebhookDeliveryService(self._session).list_for_connection(
+            connection_id=connection.id,
             limit=limit,
         )
         return WebhookActivityListResponse(
-            items=[self._activity_item(delivery) for delivery in deliveries]
+            items=[self._activity_item(delivery, processing) for delivery, processing in rows]
+        )
+
+    # ------------------------------------------------------------------
+    # Shared-installation access lifecycle
+    # ------------------------------------------------------------------
+    async def disconnect_organization_access(
+        self,
+        *,
+        organization_id: UUID,
+        installation_row_id: UUID,
+    ) -> None:
+        """Revoke this organization's access grant only.
+
+        The underlying installation and any other organization's access to
+        it are left untouched — access is independent per organization.
+        """
+        installation, access = await self._load_installation_with_access(
+            organization_id, installation_row_id
+        )
+        now = datetime.now(UTC)
+        access.status = GitHubInstallationAccessStatus.DISCONNECTED.value
+        access.disconnected_at = now
+        await self._session.flush()
+
+        connections = list(
+            (
+                await self._session.scalars(
+                    select(GitHubRepositoryConnection).where(
+                        GitHubRepositoryConnection.organization_id == organization_id,
+                        GitHubRepositoryConnection.github_installation_id == installation.id,
+                        GitHubRepositoryConnection.disconnected_at.is_(None),
+                    )
+                )
+            ).all()
+        )
+        for connection in connections:
+            connection.disconnected_at = now
+            connection.is_active = False
+        await self._session.flush()
+        logger.info(
+            "github_organization_access_disconnected",
+            organization_id=str(organization_id),
+            github_installation_id=installation.github_installation_id,
+            connections_deactivated=len(connections),
+        )
+
+    async def sync_repositories(
+        self,
+        *,
+        organization_id: UUID,
+        installation_row_id: UUID,
+    ) -> GitHubRepositoryListResponse:
+        self._require_enabled()
+        _, access = await self._load_installation_with_access(
+            organization_id, installation_row_id
+        )
+        access.last_repository_sync_at = datetime.now(UTC)
+        await self._session.flush()
+        return await self.list_repositories(
+            organization_id=organization_id,
+            installation_row_id=installation_row_id,
         )
 
     # ------------------------------------------------------------------
@@ -532,14 +683,41 @@ class GitHubSetupService:
             raise ResourceNotFoundError("Project not found.")
         return project
 
+    async def _find_active_access(
+        self,
+        installation_id: UUID,
+        organization_id: UUID,
+    ) -> GitHubInstallationOrganizationAccess | None:
+        return await self._session.scalar(
+            select(GitHubInstallationOrganizationAccess).where(
+                GitHubInstallationOrganizationAccess.installation_id == installation_id,
+                GitHubInstallationOrganizationAccess.organization_id == organization_id,
+                GitHubInstallationOrganizationAccess.status
+                == GitHubInstallationAccessStatus.ACTIVE.value,
+            )
+        )
+
+    async def _load_installation_with_access(
+        self,
+        organization_id: UUID,
+        installation_row_id: UUID,
+    ) -> tuple[GitHubInstallation, GitHubInstallationOrganizationAccess]:
+        installation = await self._session.get(GitHubInstallation, installation_row_id)
+        if installation is None:
+            raise ResourceNotFoundError("GitHub installation not found.")
+        access = await self._find_active_access(installation.id, organization_id)
+        if access is None:
+            raise ResourceNotFoundError("GitHub installation not found.")
+        return installation, access
+
     async def _load_installation(
         self,
         organization_id: UUID,
         installation_row_id: UUID,
     ) -> GitHubInstallation:
-        installation = await self._session.get(GitHubInstallation, installation_row_id)
-        if installation is None or installation.organization_id != organization_id:
-            raise ResourceNotFoundError("GitHub installation not found.")
+        installation, _ = await self._load_installation_with_access(
+            organization_id, installation_row_id
+        )
         return installation
 
     async def _find_connection(
@@ -573,7 +751,11 @@ class GitHubSetupService:
     # Mapping
     # ------------------------------------------------------------------
     @staticmethod
-    def _installation_response(row: GitHubInstallation) -> GitHubInstallationResponse:
+    def _installation_response(
+        row: GitHubInstallation,
+        *,
+        access_status: str | None = None,
+    ) -> GitHubInstallationResponse:
         return GitHubInstallationResponse(
             id=row.id,
             github_installation_id=row.github_installation_id,
@@ -584,6 +766,7 @@ class GitHubSetupService:
             permissions=row.permissions_json,
             installed_at=row.installed_at,
             created_at=row.created_at,
+            organization_access_status=access_status,
         )
 
     @staticmethod
@@ -621,22 +804,48 @@ class GitHubSetupService:
         )
 
     @staticmethod
-    def _activity_item(delivery: WebhookDelivery) -> WebhookActivityItem:
+    def _activity_item(
+        delivery: WebhookDelivery,
+        processing: WebhookDeliveryConnectionProcessing | None = None,
+    ) -> WebhookActivityItem:
+        """Render one delivery for a single connection's activity feed.
+
+        When a per-connection processing outcome exists, it — not the shared
+        delivery row — is authoritative for this tenant's status, timing,
+        error, and incident/pipeline-run references (see
+        ``list_for_connection``).
+        """
         snapshot = delivery.sanitised_snapshot or {}
         run = snapshot.get("workflow_run") or {}
+        if processing is not None:
+            processing_status = _CONNECTION_STATUS_LABELS.get(
+                processing.status, processing.status
+            )
+            processed_at = processing.completed_at or processing.failed_at
+            error_code = processing.error_code
+            error_message = processing.error_message_sanitized
+            related_incident_id = processing.incident_id
+            related_pipeline_run_id = processing.pipeline_run_id
+        else:
+            processing_status = delivery.processing_status
+            processed_at = delivery.processed_at
+            error_code = delivery.error_code
+            error_message = delivery.error_message_sanitized
+            related_incident_id = delivery.related_incident_id
+            related_pipeline_run_id = delivery.related_pipeline_run_id
         return WebhookActivityItem(
             id=delivery.id,
             delivery_id=delivery.delivery_id,
             event_name=delivery.event_name,
             event_action=delivery.event_action,
-            processing_status=delivery.processing_status,
+            processing_status=processing_status,
             received_at=delivery.received_at,
-            processed_at=delivery.processed_at,
-            error_code=delivery.error_code,
-            error_message=delivery.error_message_sanitized,
+            processed_at=processed_at,
+            error_code=error_code,
+            error_message=error_message,
             workflow_name=run.get("name"),
             branch=run.get("head_branch"),
             conclusion=run.get("conclusion"),
-            related_incident_id=delivery.related_incident_id,
-            related_pipeline_run_id=delivery.related_pipeline_run_id,
+            related_incident_id=related_incident_id,
+            related_pipeline_run_id=related_pipeline_run_id,
         )
